@@ -1,12 +1,12 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const { SOURCE_NASDAQ, SOURCE_YAHOO } = require("../backend/src/common/constants");
+const { SOURCE_NASDAQ, SOURCE_YAHOO } = require("../src/common/constants");
 const {
   buildTwoSourceQuotePacket,
   getGateThresholdPct,
-} = require("../backend/src/gates/priceGate");
-const { buildNasdaqQuoteSource } = require("../backend/src/sources/quoteSources");
+} = require("../src/gates/priceGate");
+const { buildNasdaqQuoteSource } = require("../src/sources/quoteSources");
 
 function source(name, price) {
   return {

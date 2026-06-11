@@ -1,7 +1,7 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert");
 const request = require("supertest");
-const { app } = require("../backend/server");
+const { app } = require("../server");
 
 describe("Express Server - Static Serving", () => {
   it("should serve static frontend files on the root route", async () => {
