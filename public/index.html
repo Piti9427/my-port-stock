@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MyPortStock Investment Agent</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">Local-first Investment Decision OS</p>
+          <h1>MyPortStock</h1>
+        </div>
+        <div id="pixelAgent" class="pixel-agent yellow" title="Pixel agent state">
+          <div class="pixel-face">
+            <span></span><span></span>
+          </div>
+          <strong id="pixelLabel">WAIT</strong>
+        </div>
+      </section>
+
+      <section class="controls" aria-label="Analyze ticker">
+        <label>
+          Ticker
+          <input id="tickerInput" value="NVDA" autocomplete="off" />
+        </label>
+        <label>
+          Decision Mode
+          <select id="modeInput">
+            <option>Swing Trade</option>
+            <option>Quick Trade</option>
+            <option>Long-Term/Core</option>
+            <option>Existing Position / Exit Review</option>
+          </select>
+        </label>
+        <button id="analyzeButton" type="button">Analyze</button>
+      </section>
+
+      <section class="decision-grid">
+        <article class="panel decision-panel">
+          <h2>Decision Snapshot</h2>
+          <dl id="decisionSnapshot"></dl>
+        </article>
+        <article class="panel">
+          <h2>Data Quality</h2>
+          <pre id="dataQuality">Run an analysis.</pre>
+        </article>
+        <article class="panel">
+          <h2>Risk Plan</h2>
+          <pre id="riskPlan">No risk plan supplied.</pre>
+        </article>
+        <article class="panel">
+          <h2>Journal Status</h2>
+          <pre id="journalStatus">No ticker loaded.</pre>
+        </article>
+        <article class="panel wide">
+          <h2>Watch Triggers</h2>
+          <ul id="watchTriggers"></ul>
+        </article>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
