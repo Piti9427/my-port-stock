@@ -1,5 +1,5 @@
 // tests/aiAnalyst.test.js
-const { analyzeTicker } = require("../backend/src/services/aiAnalyst');
+const { analyzeTicker } = require("../src/");
 
 jest.mock('@google/genai', () => {
   return {

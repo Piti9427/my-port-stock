@@ -4,7 +4,7 @@ const assert = require("node:assert/strict");
 const {
   calculateConvictionScore,
   evaluateDecision,
-} = require("../backend/src/decision/decisionEngine");
+} = require("../src/decision/decisionEngine");
 
 function packet(overrides = {}) {
   return {

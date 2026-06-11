@@ -1,6 +1,6 @@
 const request = require('supertest');
 const express = require('express');
-const apiRoutes = require("../backend/src/routes/api');
+const apiRoutes = require("../src/");
 
 // Mock dependencies
 jest.mock('../src/services/marketData', () => ({ getLivePrice: jest.fn().mockResolvedValue(150.50) }));

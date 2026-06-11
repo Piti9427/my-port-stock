@@ -1,4 +1,4 @@
-const { getLivePrice } = require("../backend/src/services/marketData');
+const { getLivePrice } = require("../src/");
 
 jest.mock('yahoo-finance2', () => ({
   default: {
