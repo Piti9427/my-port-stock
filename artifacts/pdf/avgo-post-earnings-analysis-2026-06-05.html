@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <title>AVGO Post-Earnings Analysis - 2026-06-05</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 16mm 15mm 17mm 15mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: #17202a;
+      background: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Arial Unicode MS", Thonburi, "Noto Sans Thai", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: 25px;
+      line-height: 1.22;
+      margin-bottom: 7px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 17px;
+      line-height: 1.35;
+      margin: 22px 0 8px;
+      padding-top: 2px;
+      border-top: 1px solid #d7dde5;
+    }
+
+    h3 {
+      font-size: 14px;
+      margin: 13px 0 5px;
+      color: #263645;
+    }
+
+    p {
+      margin-bottom: 8px;
+    }
+
+    ul {
+      margin: 5px 0 9px 18px;
+      padding: 0;
+    }
+
+    li {
+      margin: 3px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      border: 1px solid #d4dbe4;
+      padding: 7px 8px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: #eef3f8;
+      color: #17202a;
+      font-weight: 700;
+    }
+
+    a {
+      color: #0b5cad;
+      text-decoration: none;
+      word-break: break-word;
+    }
+
+    .header {
+      border-bottom: 3px solid #17202a;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+
+    .meta {
+      color: #566573;
+      font-size: 12px;
+    }
+
+    .tldr {
+      background: #f2f7f4;
+      border-left: 5px solid #2e7d32;
+      padding: 10px 12px;
+      margin: 11px 0 14px;
+      page-break-inside: avoid;
+    }
+
+    .snapshot {
+      border: 1px solid #d4dbe4;
+      border-radius: 0;
+      padding: 10px 12px;
+      background: #fbfcfd;
+      page-break-inside: avoid;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #fff3cd;
+      border: 1px solid #e5c76a;
+      font-weight: 700;
+    }
+
+    .note {
+      color: #4b5b68;
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .warn {
+      background: #fff8e6;
+      border-left: 4px solid #d69200;
+      padding: 8px 10px;
+      margin: 8px 0 10px;
+    }
+
+    .metric-grid {
+      display: table;
+      width: 100%;
+      border-spacing: 0;
+      margin: 8px 0 12px;
+      page-break-inside: avoid;
+    }
+
+    .metric {
+      display: table-cell;
+      width: 25%;
+      border: 1px solid #d4dbe4;
+      border-right: 0;
+      padding: 8px;
+      background: #fbfcfd;
+    }
+
+    .metric:last-child {
+      border-right: 1px solid #d4dbe4;
+    }
+
+    .metric-label {
+      display: block;
+      color: #5d6d7e;
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+
+    .metric-value {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .sources {
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .footer-note {
+      color: #5d6d7e;
+      font-size: 11px;
+      border-top: 1px solid #d7dde5;
+      margin-top: 18px;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>AVGO Post-Earnings Deep Dive</h1>
+    <div class="meta">Prepared: 2026-06-05 Asia/Bangkok | Ticker: Broadcom Inc. (AVGO) | Mode: Swing Trade / Watchlist Entry Review</div>
+  </div>
+
+  <div class="tldr">
+    <strong>TL;DR:</strong> AVGO ยังไม่ใช่กรณี AI thesis พัง แต่เป็น expectation-gap selloff หลังราคาวิ่งแรงเกินงบจริงไปมากแล้ว Verdict ตอนนี้คือ <strong>Yellow / Wait</strong>. ไม่ควรไล่ซื้อทันที รอฐานแถว <strong>400-410</strong> หรือ reclaim <strong>426-432</strong> พร้อม volume ก่อนค่อยคิด entry.
+  </div>
+
+  <div class="snapshot">
+    <p><span class="status">Yellow / Wait</span></p>
+    <table>
+      <tr><th>Field</th><th>Decision-Critical View</th></tr>
+      <tr><td>Ticker / Mode</td><td>AVGO / Swing Trade</td></tr>
+      <tr><td>Score</td><td>6.1 / 10</td></tr>
+      <tr><td>Gate Status</td><td>Regular close price gate: Pass. After-hours execution gate: Fail because only one timestamped source was available.</td></tr>
+      <tr><td>One-Line Reason</td><td>ธุรกิจยังแข็งมาก แต่ราคาพังเพราะ market priced perfection และ AI guidance ต่ำกว่า whisper/consensus ที่ตลาดตั้งไว้</td></tr>
+      <tr><td>Immediate Action</td><td>รอ 2-3 วันให้ฐานนิ่ง ห้าม FOMO buy ตอน gap-down day</td></tr>
+    </table>
+  </div>
+
+  <h2>Data Quality</h2>
+  <div class="metric-grid">
+    <div class="metric"><span class="metric-label">Regular Close</span><span class="metric-value">418.91-419.02</span></div>
+    <div class="metric"><span class="metric-label">After-Hours Context</span><span class="metric-value">413.60</span></div>
+    <div class="metric"><span class="metric-label">Q2 Revenue</span><span class="metric-value">$22.187B</span></div>
+    <div class="metric"><span class="metric-label">Q3 Revenue Guide</span><span class="metric-value">$29.4B</span></div>
+  </div>
+
+  <ul>
+    <li>StockAnalysis showed AVGO close at <strong>418.91</strong> on Jun 4, 2026, 4:00 PM EDT, and after-hours at <strong>413.60</strong> on 7:59 PM EDT.</li>
+    <li>Stooq CSV showed AVGO close at <strong>419.02</strong> on Jun 4, 2026. The two regular-close sources differed by less than 0.5%.</li>
+    <li>After-hours price was treated as context, not execution evidence, because the second timestamped after-hours source was not available.</li>
+    <li>Journal check: trade_journal.md has no active AVGO trade. AVGO is a tactical watchlist name, not a held position.</li>
+  </ul>
+
+  <h2>Diagnosis / Root Cause</h2>
+  <p>สาเหตุหลักไม่ใช่งบแย่ แต่เป็นความคาดหวังสูงเกินงบที่ดีอยู่แล้ว. Broadcom รายงาน Q2 FY2026 revenue <strong>$22.187B</strong>, โต <strong>48% YoY</strong>, non-GAAP EPS <strong>$2.44</strong>, free cash flow <strong>$10.262B</strong>, และ Q3 revenue guidance <strong>$29.4B</strong>, โต <strong>84% YoY</strong>.</p>
+  <p>AI semiconductor revenue Q2 อยู่ที่ <strong>$10.8B</strong>, โต <strong>143% YoY</strong>; Q3 คาด <strong>$16.0B</strong>, โตเกิน <strong>200% YoY</strong>. แต่ตลาดตั้ง bar สูงกว่านั้น: บาง analysis ระบุว่า consensus/whisper ฝั่ง AI Q3 อยู่แถว <strong>$17.2B</strong>, ทำให้ guide ที่แข็งมากยังถูกตีความเป็น miss.</p>
+  <div class="warn">สรุป root cause: นี่คือ catalyst gap และ valuation reset ไม่ใช่ demand collapse. แต่เพราะ valuation ยังสูง การรีบซื้อทันทีหลัง gap-down ยังเป็น false-buy risk.</div>
+
+  <h2>Thesis</h2>
+  <h3>Bull Case</h3>
+  <ul>
+    <li>AI semiconductor bookings ใน transcript ระบุว่าเกิน <strong>$30B</strong> เทียบกับ Q2 shipments <strong>$10.8B</strong>, สะท้อน demand visibility.</li>
+    <li>ลูกค้าหลักยังเป็น hyperscaler/frontier labs เช่น Google, Anthropic, OpenAI, Meta.</li>
+    <li>Networking เป็นเกือบ <strong>40%</strong> ของ AI revenue และ AVGO ยังมี moat ใน custom ASIC, Ethernet switching, fabric, DSP และ co-packaged optics.</li>
+  </ul>
+
+  <h3>Bear Case</h3>
+  <ul>
+    <li>Valuation ยังแพง: StockAnalysis showed trailing PE <strong>81.64</strong>, forward PE <strong>26.74</strong>, P/FCF <strong>60.54</strong>.</li>
+    <li>หุ้นวิ่งจาก low ปลายมีนาคมแถว <strong>293</strong> ไป high <strong>495</strong> ก่อนงบ การลงแรงอาจเป็น de-rating ไม่ใช่ dip วันเดียวจบ.</li>
+    <li>ถ้า hyperscaler เริ่ม diversify supplier หรือ AI capex เข้าสู่ rational phase, multiple อาจถูกกดต่อ.</li>
+  </ul>
+
+  <h2>Technical</h2>
+  <table>
+    <tr><th>Level</th><th>Meaning</th><th>Action</th></tr>
+    <tr><td>400-410</td><td>First support / panic-low zone</td><td>Watch for reversal candle or absorption before considering entry</td></tr>
+    <tr><td>397</td><td>50-day moving average area from StockAnalysis</td><td>If price closes below this, downgrade setup quality</td></tr>
+    <tr><td>426-432</td><td>First reclaim zone</td><td>Reclaim with volume can trigger a fresh swing review</td></tr>
+    <tr><td>459-480</td><td>Supply zone from pre-earnings range</td><td>Target / scale-out zone, not automatic hold-through area</td></tr>
+    <tr><td>355</td><td>200-day moving average area</td><td>Long-term trend damage if reached and fails</td></tr>
+  </table>
+
+  <h2>Investment Plan</h2>
+  <table>
+    <tr><th>Option</th><th>Pros</th><th>Cons</th><th>Recommendation</th></tr>
+    <tr><td>Buy immediately</td><td>ได้ราคาใกล้ panic low</td><td>ยังเป็น falling knife; after-hours gate ไม่ผ่าน</td><td>ไม่แนะนำ</td></tr>
+    <tr><td>Wait for 400-410 base</td><td>R/R ดีสุด; stop วางง่ายกว่า</td><td>อาจพลาด V-shape bounce</td><td>แนะนำที่สุด</td></tr>
+    <tr><td>Buy reclaim 426-432</td><td>ได้ confirmation</td><td>R/R แคบลง</td><td>ใช้ได้ถ้า volume กลับมา</td></tr>
+    <tr><td>Long-term starter small</td><td>ได้ exposure ใน leader</td><td>Valuation ยังไม่ถูกจริง</td><td>ทำได้เฉพาะมี risk budget ชัด</td></tr>
+  </table>
+
+  <h2>Risk Plan</h2>
+  <ul>
+    <li>Entry watch: <strong>400-410</strong> เฉพาะเมื่อมี reversal candle หรือ absorption.</li>
+    <li>Stop idea: ใต้ <strong>388-392</strong> หรือใต้ฐานที่เกิดจริงหลังตลาดนิ่ง.</li>
+    <li>Target 1: <strong>426-432</strong>.</li>
+    <li>Target 2: <strong>459-480</strong>.</li>
+    <li>Position sizing formula: shares = risk_THB / ((entry - stop) x USDTHB).</li>
+  </ul>
+
+  <h2>Prevention Guidance</h2>
+  <p>อย่าซื้อ AVGO ด้วยเหตุผลว่า "ลงมา 12-15% แล้วถูก" เพราะก่อนลงหุ้นเพิ่งวิ่งแรงมากและยังอยู่เหนือ 50D. ให้แยก great company ออกจาก great entry. ถ้าราคาเด้งแต่ volume อ่อนและปิดต่ำกว่า 426-432 ให้ถือว่าเป็น technical bounce ไม่ใช่ confirmation.</p>
+
+  <h2>Observability / Verification Steps</h2>
+  <ol>
+    <li>ปิดเหนือ 426-432 ได้ไหม.</li>
+    <li>หลุด 403 หรือ 50D ประมาณ 397 ไหม.</li>
+    <li>Volume หลัง gap-down ลดลงหรือยัง panic ต่อ.</li>
+    <li>Analyst revision หลังงบ: AI revenue FY2026/FY2027 ถูกปรับขึ้นหรือลง.</li>
+    <li>Peer confirmation: NVDA, ANET, MRVL, MU, SOXX ฟื้นพร้อมกันหรือ AVGO ยัง underperform เฉพาะตัว.</li>
+  </ol>
+
+  <h2>Actionable Next Steps</h2>
+  <ol>
+    <li>ตอนนี้ verdict: <strong>Wait</strong>, ไม่ chase.</li>
+    <li>ตั้ง alert ที่ <strong>410, 403, 397, 426, 432, 459</strong>.</li>
+    <li>ถ้าเปิดตลาดแล้ว AVGO ยืน 400-410 ได้พร้อมแท่ง reversal ให้ทำ risk plan ใหม่.</li>
+    <li>ถ้าราคา reclaim 426-432 พร้อม volume สูงกว่า 20D avg ค่อยประเมิน swing entry.</li>
+    <li>ก่อนส่งคำสั่งจริง ให้ใช้ broker quote หรือ TradingView visible quote พร้อม session เพื่อ confirm current price gate และคำนวณ stop/R/R/THB risk.</li>
+  </ol>
+
+  <h2>Sources</h2>
+  <div class="sources">
+    <p>Broadcom Q2 FY2026 release: <a href="https://investors.broadcom.com/node/64371/pdf">https://investors.broadcom.com/node/64371/pdf</a></p>
+    <p>Broadcom Q2 FY2026 earnings transcript: <a href="https://www.fool.com/earnings/call-transcripts/2026/06/03/broadcom-avgo-q2-2026-earnings-transcript/">https://www.fool.com/earnings/call-transcripts/2026/06/03/broadcom-avgo-q2-2026-earnings-transcript/</a></p>
+    <p>StockAnalysis AVGO quote/history: <a href="https://stockanalysis.com/stocks/avgo/">https://stockanalysis.com/stocks/avgo/</a> and <a href="https://stockanalysis.com/stocks/avgo/history/">https://stockanalysis.com/stocks/avgo/history/</a></p>
+    <p>StockAnalysis AVGO statistics: <a href="https://stockanalysis.com/stocks/avgo/statistics/">https://stockanalysis.com/stocks/avgo/statistics/</a></p>
+    <p>Investing.com post-earnings reaction: <a href="https://www.investing.com/news/stock-market-news/why-is-broadcom-stock-tumbling-afterhours-93CH-4725349">https://www.investing.com/news/stock-market-news/why-is-broadcom-stock-tumbling-afterhours-93CH-4725349</a></p>
+    <p>TradingKey market expectation analysis: <a href="https://www.tradingkey.com/analysis/stocks/us-stocks/261945656-broadcom-avgo-earnings-ai-semiconductor-guidance-miss-chips-only-order-backlog-valuation-correction-profit-taking-tradingkey">https://www.tradingkey.com/analysis/stocks/us-stocks/261945656-broadcom-avgo-earnings-ai-semiconductor-guidance-miss-chips-only-order-backlog-valuation-correction-profit-taking-tradingkey</a></p>
+  </div>
+
+  <div class="footer-note">This report is for investment analysis workflow use only. It is not a guarantee of return or personalized financial advice. Execution requires fresh broker-visible quote confirmation, stop-loss, R/R >= 1:2, and hard THB risk sizing.</div>
+</body>
+</html>
