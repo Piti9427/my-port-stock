@@ -1,0 +1,13 @@
+node_modules/
+.DS_Store
+
+# Runtime / generated scratch space
+tmp/
+.playwright-mcp/
+
+# Local environment files
+.env
+.env.*
+
+# Keep generated artifacts local unless intentionally committed.
+artifacts/playwright-mcp/

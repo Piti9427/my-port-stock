@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const path = require("path");
+const { createAgentEventBus } = require("./src/ws/agentEventBus");
 
 const {
   CACHE_TTL_MS,
@@ -41,7 +42,7 @@ const HOST = process.env.HOST || "127.0.0.1";
 const quoteCache = new Map();
 
 app.use(express.json({ limit: "256kb" }));
-app.use(express.static(path.join(__dirname, "frontend/dist")));
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 const apiRoutes = require('./src/routes/api');
 app.use('/api', apiRoutes);
@@ -205,7 +206,7 @@ app.get("/api/journal/:ticker", (req, res) => {
 });
 
 app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/dist", "index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
 });
 
 if (require.main === module) {
@@ -219,6 +220,7 @@ if (require.main === module) {
   server.listen(PORT, HOST, () => {
     console.log(`Investment Agent listening on http://${HOST}:${PORT}`);
   });
+  createAgentEventBus(server);
 }
 
 module.exports = {

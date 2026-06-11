@@ -1,5 +1,5 @@
 // tests/supabaseClient.test.js
-const { supabase } = require('../src/db/supabaseClient');
+const { supabase } = require("../backend/src/db/supabaseClient');
 
 describe('Supabase Client', () => {
   it('should initialize the supabase client with mock env vars', () => {
