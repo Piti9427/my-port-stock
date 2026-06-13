@@ -1,18 +1,20 @@
-import { useState } from 'react';
-
-const MOCK_TRADES = [
-  { id: 1, date: '2026-06-09 14:30', ticker: 'AAPL', type: 'BUY', shares: 50, price: 210.50, mode: 'Swing Trade', rr: 2.5, status: 'OPEN' },
-  { id: 2, date: '2026-06-08 10:15', ticker: 'TSLA', type: 'SELL', shares: 100, price: 185.20, mode: 'Quick Trade', rr: 1.8, status: 'CLOSED', profit: +450 },
-  { id: 3, date: '2026-06-05 09:45', ticker: 'NVDA', type: 'BUY', shares: 20, price: 115.00, mode: 'Core', rr: 3.0, status: 'OPEN' },
-  { id: 4, date: '2026-06-01 15:50', ticker: 'AMZN', type: 'SELL', shares: 30, price: 215.10, mode: 'Swing Trade', rr: 1.2, status: 'CLOSED', profit: -120 },
-];
+import { useState, useEffect } from 'react';
+import { BarChart3 } from 'lucide-react';
 
 export default function JournalPage() {
   const [filter, setFilter] = useState('ALL');
+  const [trades, setTrades] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredTrades = MOCK_TRADES.filter(t => filter === 'ALL' || t.status === filter);
+  useEffect(() => {
+    fetch('/api/journal')
+      .then(res => res.json())
+      .then(data => setTrades(data.trades || []))
+      .catch(() => setTrades([]))
+      .finally(() => setLoading(false));
+  }, []);
 
-  return (
+  const filteredTrades = trades.filter(t => filter === 'ALL' || t.status === filter);
     <div className="journal-page">
       <div className="glass-panel journal-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -47,38 +49,64 @@ export default function JournalPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredTrades.map(t => (
-                <tr key={t.id} className="watchlist-row">
-                  <td style={{ color: 'var(--text-secondary)' }}>{t.date}</td>
-                  <td style={{ fontWeight: 600 }}>{t.ticker}</td>
-                  <td>
-                    <span style={{ 
-                      color: t.type === 'BUY' ? 'var(--fin-profit)' : 'var(--fin-loss)',
-                      fontWeight: 700, fontSize: '0.8rem' 
-                    }}>
-                      {t.type}
-                    </span>
-                  </td>
-                  <td>{t.shares}</td>
-                  <td className="price-mono">฿{t.price.toFixed(2)}</td>
-                  <td><span className="panel-badge" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }}>{t.mode}</span></td>
-                  <td>
-                    <span className="panel-badge" style={{ 
-                      background: t.status === 'OPEN' ? 'var(--brand-glow)' : 'rgba(255,255,255,0.1)', 
-                      color: t.status === 'OPEN' ? '#60a5fa' : 'var(--text-secondary)' 
-                    }}>
-                      {t.status}
-                    </span>
-                  </td>
-                  <td>
-                    {t.profit ? (
-                      <span className="price-mono" style={{ color: t.profit >= 0 ? 'var(--fin-profit)' : 'var(--fin-loss)' }}>
-                        {t.profit >= 0 ? '+' : ''}฿{t.profit}
-                      </span>
-                    ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
+            <tbody>
+              {loading ? (
+                Array(4).fill(0).map((_, i) => (
+                  <tr key={`skel-${i}`}>
+                    <td><div className="skeleton" style={{ width: '120px', height: '20px' }} /></td>
+                    <td><div className="skeleton" style={{ width: '60px', height: '20px' }} /></td>
+                    <td><div className="skeleton" style={{ width: '50px', height: '20px' }} /></td>
+                    <td><div className="skeleton" style={{ width: '40px', height: '20px' }} /></td>
+                    <td><div className="skeleton" style={{ width: '70px', height: '20px' }} /></td>
+                    <td><div className="skeleton" style={{ width: '80px', height: '20px' }} /></td>
+                    <td><div className="skeleton" style={{ width: '60px', height: '20px' }} /></td>
+                    <td><div className="skeleton" style={{ width: '50px', height: '20px' }} /></td>
+                  </tr>
+                ))
+              ) : filteredTrades.length === 0 ? (
+                <tr>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>
+                    <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+                      <BarChart3 size={40} opacity={0.4} />
+                    </div>
+                    <div style={{ fontWeight: 500, color: '#fff' }}>ไม่มีบันทึกการเทรด{filter !== 'ALL' && 'ในสถานะนี้'}</div>
+                    <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>สร้างแผนการเทรดและบันทึกเพื่อติดตามผลได้ที่นี่</div>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredTrades.map(t => (
+                  <tr key={t.id || t.created_at} className="watchlist-row">
+                    <td style={{ color: 'var(--text-secondary)' }}>{t.date ? t.date : (t.created_at && !isNaN(Date.parse(t.created_at)) ? new Date(t.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-')}</td>
+                    <td style={{ fontWeight: 600 }}>{t.ticker}</td>
+                    <td>
+                      <span style={{ 
+                        color: t.type === 'BUY' ? 'var(--fin-profit)' : 'var(--fin-loss)',
+                        fontWeight: 700, fontSize: '0.8rem' 
+                      }}>
+                        {t.type || 'TRADE'}
+                      </span>
+                    </td>
+                    <td>{t.shares || '-'}</td>
+                    <td className="price-mono">฿{(Number.isFinite(parseFloat(t.price)) ? parseFloat(t.price).toFixed(2) : (Number.isFinite(parseFloat(t.entry)) ? parseFloat(t.entry).toFixed(2) : '0.00'))}</td>
+                    <td><span className="panel-badge" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }}>{t.mode || 'N/A'}</span></td>
+                    <td>
+                      <span className="panel-badge" style={{ 
+                        background: t.status === 'OPEN' ? 'var(--brand-glow)' : 'rgba(255,255,255,0.1)', 
+                        color: t.status === 'OPEN' ? '#60a5fa' : 'var(--text-secondary)' 
+                      }}>
+                        {t.status || 'OPEN'}
+                      </span>
+                    </td>
+                    <td>
+                      {t.profit ? (
+                        <span className="price-mono" style={{ color: t.profit >= 0 ? 'var(--fin-profit)' : 'var(--fin-loss)' }}>
+                          {t.profit >= 0 ? '+' : ''}฿{t.profit}
+                        </span>
+                      ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

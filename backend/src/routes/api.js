@@ -17,73 +17,7 @@ function getAgentsForMode(decisionMode) {
   return DECISION_MODE_AGENT_MAP[decisionMode] || ['fundamental-auditor', 'quant-technician', 'macro-strategist'];
 }
 
-router.post('/analyze', async (req, res) => {
-  const { ticker, portfolioData, decision_mode: decisionMode = 'Swing Trade' } = req.body;
-  const agents = getAgentsForMode(decisionMode);
-  const totalAgents = agents.length;
-  let completed = 0;
-
-  try {
-    // CIO begins
-    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'TYPING', ticker, message: `Dispatching ${totalAgents} sub-agents for ${ticker}...` });
-
-    // Spawn all agents
-    agents.forEach((agent) => {
-      broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SPAWNED', ticker });
-    });
-
-    // Simulate sequential walking & working (in parallel with analysis)
-    const agentAnimDelay = (agent, idx) => {
-      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'WALKING', ticker }), idx * 400);
-      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SITTING', ticker }), idx * 400 + 600);
-      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'TYPING', ticker, message: getAgentWorkingMessage(agent, ticker) }), idx * 400 + 900);
-    };
-    agents.forEach(agentAnimDelay);
-
-    // Run actual analysis
-    const price = await getLivePrice(ticker);
-    const analysis = await analyzeTicker(ticker, portfolioData, price);
-
-    // Signal completion for each agent with stagger
-    agents.forEach((agent, idx) => {
-      setTimeout(() => {
-        completed++;
-        broadcast({ type: 'ANALYSIS_PROGRESS', agent, ticker, payload: { progress: completed, total: totalAgents } });
-        broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'PRESENTING', ticker });
-        setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'DONE', ticker }), 800);
-        setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'EXITED', ticker }), 1500);
-      }, (totalAgents - idx) * 600 + 1000);
-    });
-
-    // CIO presents final verdict
-    setTimeout(() => {
-      broadcast({
-        type: 'ANALYSIS_COMPLETE',
-        agent: 'cio',
-        ticker,
-        payload: { verdict: 'Analysis Complete', price, analysis },
-      });
-      broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'PRESENTING', ticker, message: `Analysis complete for ${ticker}` });
-      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }), 2000);
-    }, totalAgents * 600 + 2500);
-
-    res.json({ ticker, price, analysis });
-  } catch (error) {
-    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker });
-    res.status(500).json({ error: error.message });
-  }
-});
-
-function getAgentWorkingMessage(agent, ticker) {
-  const messages = {
-    'fundamental-auditor': `Reviewing ${ticker} fundamentals & earnings...`,
-    'quant-technician': `Analyzing ${ticker} RSI, MACD & order flow...`,
-    'macro-strategist': `Evaluating macro regime for ${ticker}...`,
-    'portfolio-risk-manager': `Calculating position sizing for ${ticker}...`,
-    'catalyst-hunter': `Scanning upcoming catalysts for ${ticker}...`,
-  };
-  return messages[agent] || `Analyzing ${ticker}...`;
-}
+// Mock /analyze route removed, actual implementation is now in server.js
 
 router.get('/price/:ticker', async (req, res) => {
   const { ticker } = req.params;

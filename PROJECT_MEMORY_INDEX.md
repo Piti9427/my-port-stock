@@ -97,3 +97,10 @@
 - Decision: Integrated PEG Ratio (< 1.5) and Free Cash Flow Margin checks into the Master SOP to validate Growth/AI stocks.
 - Action: Updated `ELITE_INVESTOR_SOP.md` (Dimension 3 and Nightly Scan Protocol) to include Fundamental Valuation Gate before technical checks.
 - Source: Conversation regarding DCF/PEG modeling.
+
+### 2026-06-12 - Dashboard UI Quality & Anti-Slop Fixes
+
+- Keywords: `dashboard`, `ui-ux`, `impeccable-critique`, `color-contrast`, `mobile-accessibility`
+- Decision: Applied impeccable critique fixes to remove "AI Slop" neon halation, fix mobile card deletion, and harden search inputs.
+- Action: Updated `index.css` colors to deep graphite, adjusted hover states for touch screens, and improved search regex in `Dashboard.jsx`.
+- Detail: `notes/2026-06-12-dashboard-ui-critique-fixes.md`

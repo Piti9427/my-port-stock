@@ -12,6 +12,9 @@
 - Do not propose paid market-data plans unless the user explicitly asks.
 - Sub-agents must use only the Orchestrator-provided verified data packet and must not perform independent searches.
 - If current data is missing, stale, or contradictory, report `data is inconclusive` and default to `Wait`.
+- **Manual Price Override**: Explicitly provided `manual_price` by the user is treated as "Tier 1" source, but MUST be strictly validated (positive numeric, within reasonable bounds) before execution.
+- **Execution Security**: NEVER use `exec()` or string interpolation for child processes (e.g., calling Python scripts). ALWAYS use `execFile` or `spawn` with an array of arguments and a strict execution timeout (e.g., 10s) to prevent command injection and hanging processes.
+- **Database Types**: Always use `TIMESTAMP WITH TIME ZONE` (TIMESTAMPTZ) for Postgres/Supabase date tracking to avoid timezone parsing errors.
 
 ## Minimum Verification Stamp
 
