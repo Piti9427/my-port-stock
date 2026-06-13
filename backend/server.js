@@ -2,7 +2,7 @@ const express = require("express");
 const http = require("http");
 const path = require("path");
 const { createAgentEventBus, broadcast } = require("./src/ws/agentEventBus");
-const { exec } = require("child_process");
+const { execFile } = require("child_process");
 const { analyzeTicker } = require("./src/services/aiAnalyst");
 
 const DECISION_MODE_AGENT_MAP = {
@@ -29,7 +29,10 @@ function getAgentWorkingMessage(agent, ticker) {
 
 function runMarketOracle(ticker) {
   return new Promise((resolve) => {
-    exec(`python3 tools/market_oracle.py ${ticker}`, { cwd: path.join(__dirname, '..') }, (error, stdout, stderr) => {
+    execFile('python3', ['tools/market_oracle.py', ticker], { 
+      cwd: path.join(__dirname, '..'),
+      timeout: 10000 
+    }, (error, stdout, stderr) => {
       if (error) {
         console.error(`Error running market_oracle: ${error.message}`);
         return resolve({ error: error.message });

@@ -34,6 +34,7 @@ Ensure you return a JSON object ONLY, with the following properties:
   "analysis": "detailed analysis..."
 }`;
 
+  let timeoutId;
   try {
     const apiCall = ai.models.generateContent({
       model: 'gemini-2.5-flash',
@@ -42,7 +43,7 @@ Ensure you return a JSON object ONLY, with the following properties:
 
     // SRE best practice: enforce timeout to prevent request hanging indefinitely
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Gemini API request timed out')), 8000)
+      timeoutId = setTimeout(() => reject(new Error('Gemini API request timed out')), 8000)
     );
 
     const response = await Promise.race([apiCall, timeoutPromise]);
@@ -54,6 +55,8 @@ Ensure you return a JSON object ONLY, with the following properties:
     console.error('Gemini API Error:', error.message);
     // Fallback to mock data so the UI doesn't crash on 503 or 400 errors
     return getMockData();
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
 }
 

@@ -21,12 +21,13 @@ async function getUsdThbRate() {
 }
 
 async function getLivePrice(ticker) {
+  let timeoutId;
   try {
     const apiCall = yahooFinance.quote(ticker);
     
     // SRE best practice: enforce timeout for external API requests
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Yahoo Finance API request timed out')), 6000)
+      timeoutId = setTimeout(() => reject(new Error('Yahoo Finance API request timed out')), 6000)
     );
 
     const result = await Promise.race([apiCall, timeoutPromise]);
@@ -37,6 +38,8 @@ async function getLivePrice(ticker) {
   } catch (err) {
     console.error(`[MarketData] Error getting price for ${ticker}:`, err.message);
     throw err;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
 }
 
