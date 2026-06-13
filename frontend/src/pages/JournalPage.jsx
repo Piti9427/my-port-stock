@@ -15,6 +15,8 @@ export default function JournalPage() {
   }, []);
 
   const filteredTrades = trades.filter(t => filter === 'ALL' || t.status === filter);
+
+  return (
     <div className="journal-page">
       <div className="glass-panel journal-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -48,7 +50,6 @@ export default function JournalPage() {
                 <th>P/L</th>
               </tr>
             </thead>
-            <tbody>
             <tbody>
               {loading ? (
                 Array(4).fill(0).map((_, i) => (
@@ -121,5 +122,5 @@ export default function JournalPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
