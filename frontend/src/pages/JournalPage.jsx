@@ -49,7 +49,6 @@ export default function JournalPage() {
               </tr>
             </thead>
             <tbody>
-            <tbody>
               {loading ? (
                 Array(4).fill(0).map((_, i) => (
                   <tr key={`skel-${i}`}>
