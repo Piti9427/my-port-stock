@@ -278,25 +278,76 @@ export default function DashboardPage() {
   const [showScenario, setShowScenario]       = useState(false);
   const [activeRow, setActiveRow]             = useState(null);
 
-  // If navigated here from Market Explorer, update ticker
+  // New states for API Binding & Hardening
+  const [watchlist, setWatchlist]             = useState([]);
+  const [loadingWatchlist, setLoadingWatchlist] = useState(true);
+  const [manualQuote, setManualQuote]         = useState('');
+  const [showQuoteInput, setShowQuoteInput]   = useState(false);
+  const [analyzeError, setAnalyzeError]       = useState(null);
+
   useEffect(() => {
     if (incomingTicker) setSelectedTicker(incomingTicker);
   }, [incomingTicker]);
 
-  const handleAnalyze = useCallback(async () => {
+  // Fetch Watchlist
+  useEffect(() => {
+    fetch('/api/portfolio')
+      .then(res => res.json())
+      .then(data => {
+        const holdingsData = data.holdings || (data.portfolios && data.portfolios['main']?.holdings) || [];
+        const mapped = holdingsData.map(h => ({
+           ticker: h.ticker, 
+           name: h.ticker, 
+           price: h.avg_cost || 0, 
+           change: 0, changePct: 0, 
+           bg: 'rgba(255,255,255,0.05)', 
+           spark: [100,100,100,100] // placeholder
+        }));
+        setWatchlist(mapped.length > 0 ? mapped : WATCHLIST); // Fallback to WATCHLIST for demo if empty
+      })
+      .catch(() => setWatchlist(WATCHLIST))
+      .finally(() => setLoadingWatchlist(false));
+  }, []);
+
+  const handleAnalyze = useCallback(async (manualPrice = null) => {
     if (!selectedTicker || loading) return;
     setLoading(true);
     setAnalysis(null);
+    setAnalyzeError(null);
+    setShowQuoteInput(false);
+
     try {
+      const payload = { ticker: selectedTicker.toUpperCase(), decision_mode: decisionMode };
+      if (manualPrice && typeof manualPrice === 'string') payload.manual_price = manualPrice;
+
+      // 15s timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticker: selectedTicker.toUpperCase(), decision_mode: decisionMode }),
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+
       const data = await res.json();
-      setAnalysis(data);
+      
+      if (data.status === 'INSUFFICIENT_DATA') {
+        setAnalysis(data);
+        setShowQuoteInput(true);
+      } else if (!res.ok) {
+        setAnalyzeError(data.error || 'API Error: Failed to analyze ticker.');
+      } else {
+        setAnalysis(data);
+      }
     } catch (err) {
-      setAnalysis({ error: 'Connection failed — check backend.' });
+      if (err.name === 'AbortError') {
+        setAnalyzeError('Request timed out after 15 seconds. The API might be slow.');
+      } else {
+        setAnalyzeError('Connection failed — check network or backend server.');
+      }
     }
     setLoading(false);
   }, [selectedTicker, loading, decisionMode]);
@@ -349,39 +400,62 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {WATCHLIST.map(row => (
-                <tr
-                  key={row.ticker}
-                  className={`watchlist-row${activeRow === row.ticker ? ' active-row' : ''}`}
-                  onClick={() => handleRowClick(row.ticker)}
-                >
-                  <td>
-                    <div className="ticker-cell">
-                      <div className="ticker-icon" style={{ background: row.bg, fontWeight: 'bold', fontSize: '12px', color: 'var(--text-muted)' }}>{row.ticker.charAt(0)}</div>
-                      <div>
-                        <div className="ticker-symbol">{row.ticker}</div>
-                        <div className="ticker-name">{row.name}</div>
-                      </div>
+              {loadingWatchlist ? (
+                Array(3).fill(0).map((_, i) => (
+                  <tr key={`skel-${i}`}>
+                    <td><div className="skeleton" style={{ width: '100px', height: '24px', borderRadius: '4px' }} /></td>
+                    <td><div className="skeleton" style={{ width: '60px', height: '20px', borderRadius: '4px' }} /></td>
+                    <td><div className="skeleton" style={{ width: '50px', height: '20px', borderRadius: '4px' }} /></td>
+                    <td><div className="skeleton" style={{ width: '80px', height: '32px', borderRadius: '4px' }} /></td>
+                    <td><div className="skeleton" style={{ width: '60px', height: '24px', borderRadius: '4px' }} /></td>
+                  </tr>
+                ))
+              ) : watchlist.length === 0 ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
+                    <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
+                      <BarChart3 size={32} opacity={0.5} />
                     </div>
-                  </td>
-                  <td><span className="price-mono">฿{row.price.toFixed(2)}</span></td>
-                  <td>
-                    <span className={`change-pill ${row.change >= 0 ? 'up' : 'down'}`}>
-                      {row.change >= 0 ? '▲' : '▼'} {Math.abs(row.changePct).toFixed(2)}%
-                    </span>
-                  </td>
-                  <td><Sparkline data={row.spark} positive={row.change >= 0} /></td>
-                  <td>
-                    <button
-                      className="btn-secondary"
-                      style={{ width: 'auto', padding: '5px 12px', fontSize: '0.75rem', marginTop: 0 }}
-                      onClick={e => { e.stopPropagation(); handleRowClick(row.ticker); setShowScenario(true); }}
-                    >
-                      วางแผน
-                    </button>
+                    <div style={{ fontWeight: 500, color: '#fff' }}>ไม่มีข้อมูลในพอร์ตโฟลิโอ</div>
+                    <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>เริ่มต้นวิเคราะห์และบันทึกการเทรดเพื่อดูข้อมูลตรงนี้</div>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                watchlist.map(row => (
+                  <tr
+                    key={row.ticker}
+                    className={`watchlist-row${activeRow === row.ticker ? ' active-row' : ''}`}
+                    onClick={() => handleRowClick(row.ticker)}
+                  >
+                    <td>
+                      <div className="ticker-cell">
+                        <div className="ticker-icon" style={{ background: row.bg, fontWeight: 'bold', fontSize: '12px', color: 'var(--text-muted)' }}>{row.ticker.charAt(0)}</div>
+                        <div>
+                          <div className="ticker-symbol">{row.ticker}</div>
+                          <div className="ticker-name">{row.name}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><span className="price-mono">฿{row.price.toFixed(2)}</span></td>
+                    <td>
+                      <span className={`change-pill ${row.change >= 0 ? 'up' : 'down'}`}>
+                        {row.change >= 0 ? '▲' : '▼'} {Math.abs(row.changePct).toFixed(2)}%
+                      </span>
+                    </td>
+                    <td><Sparkline data={row.spark} positive={row.change >= 0} /></td>
+                    <td>
+                      <button
+                        className="btn-secondary"
+                        style={{ width: 'auto', padding: '5px 12px', fontSize: '0.75rem', marginTop: 0 }}
+                        onClick={e => { e.stopPropagation(); handleRowClick(row.ticker); setShowScenario(true); }}
+                        aria-label={`วางแผนเทรด ${row.ticker}`}
+                      >
+                        วางแผน
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -423,12 +497,49 @@ export default function DashboardPage() {
 
         <PixelTradingFloor />
 
-        {analysis && !analysis.error && (
+        {showQuoteInput && (
+          <div className="glass-card" style={{ padding: '16px', border: '1px solid var(--fin-warning)', marginTop: '16px' }}>
+            <h4 style={{ color: 'var(--fin-warning)', marginTop: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <AlertTriangle size={16} /> ยืนยันราคา (Price Gate)
+            </h4>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              ระบบไม่พบข้อมูลราคาแหล่งที่สองสำหรับหุ้นไทย โปรดกรอกราคาปัจจุบันจาก Streaming เพื่อยืนยัน (Tier 1 Source)
+            </p>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+              <input 
+                type="number" 
+                className="form-input" 
+                placeholder="e.g. 34.50" 
+                value={manualQuote}
+                onChange={e => setManualQuote(e.target.value)}
+                min="0"
+                step="0.01"
+              />
+              <button className="btn-analyze" onClick={() => handleAnalyze(manualQuote)} disabled={!manualQuote || loading}>
+                {loading ? 'กำลังส่ง...' : 'ยืนยัน'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {analysis && !analysis.error && analysis.status !== 'INSUFFICIENT_DATA' && (
           <VerdictCard analysis={analysis} />
         )}
 
-        {analysis && analysis.error && (
-          <div className="glass-card verdict-card error" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {analyzeError && (
+          <div className="glass-card verdict-card error" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '16px', marginTop: '16px' }}>
+            <AlertTriangle size={16} color="var(--fin-loss)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <p style={{ color: 'var(--fin-loss)', fontSize: '0.875rem', margin: 0, fontWeight: 500 }}>{analyzeError}</p>
+              <button className="btn-secondary" style={{ marginTop: '12px', padding: '4px 12px', fontSize: '0.8rem' }} onClick={() => handleAnalyze()}>
+                <RotateCcw size={12} style={{ marginRight: '4px', display: 'inline' }} /> ลองใหม่อีกครั้ง
+              </button>
+            </div>
+          </div>
+        )}
+
+        {analysis && analysis.error && !analyzeError && (
+          <div className="glass-card verdict-card error" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px' }}>
             <AlertTriangle size={16} color="var(--fin-loss)" />
             <p style={{ color: 'var(--fin-loss)', fontSize: '0.875rem', margin: 0 }}>{analysis.error}</p>
           </div>
