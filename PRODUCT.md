@@ -1,8 +1,5 @@
 # Product
 
-## Register
-
-product
 
 ## Users
 Traders and investors who rely on a systematic, quantitative Standard Operating Procedure (SOP) to make buy/sell/hold decisions. They need quick, dense, and reliable snapshots of market data.

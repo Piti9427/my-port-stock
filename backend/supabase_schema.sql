@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.portfolio (
 CREATE TABLE IF NOT EXISTS public.journal (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    date TEXT,
+    date TIMESTAMP WITH TIME ZONE,
     ticker TEXT NOT NULL,
     type TEXT DEFAULT 'BUY', -- 'BUY' or 'SELL'
     mode TEXT,               -- 'Quick Trade', 'Swing Trade', 'Core', etc.
@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS public.journal (
     risk_reward NUMERIC,
     profit NUMERIC
 );
+
+CREATE INDEX IF NOT EXISTS idx_journal_ticker ON public.journal(ticker);
 
 -- ใส่ข้อมูลตัวอย่าง (Mock Data) ลงในตารางเพื่อทดสอบหน้า UI
 INSERT INTO public.portfolio (ticker, name, shares, avg_cost)

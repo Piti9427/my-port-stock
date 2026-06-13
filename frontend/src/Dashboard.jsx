@@ -23,9 +23,11 @@ export default function Dashboard() {
     
     setTickerInput('');
 
+    const seen = new Set();
     for (const t of tickers) {
-      if (results.some((r) => r.ticker === t)) continue;
+      if (seen.has(t) || results.some((r) => r.ticker === t)) continue;
       fetchAnalysis(t);
+      seen.add(t);
     }
   };
 

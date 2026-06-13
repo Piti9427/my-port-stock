@@ -223,7 +223,7 @@ app.post("/api/analyze", async (req, res) => {
     let packet;
     const manualPrice = req.body.manual_price ? parseFloat(req.body.manual_price) : null;
     
-    if (manualPrice && !isNaN(manualPrice)) {
+    if (manualPrice && !isNaN(manualPrice) && manualPrice > 0 && manualPrice < 1000000) {
        const quotePacket = {
           as_of: new Date().toISOString(),
           ticker,
@@ -350,6 +350,22 @@ app.get("/api/journal/:ticker", async (req, res) => {
 app.post("/api/journal", async (req, res) => {
   const { ticker, entry, target, stop_loss, risk_reward, shares } = req.body;
   if (!ticker) return res.status(400).json({ error: "Ticker is required" });
+
+  if (shares !== undefined && (isNaN(shares) || shares <= 0)) {
+    return res.status(400).json({ error: "Shares must be a positive number" });
+  }
+  if (entry !== undefined && (isNaN(entry) || entry <= 0)) {
+    return res.status(400).json({ error: "Entry price must be a positive number" });
+  }
+  if (target !== undefined && (isNaN(target) || target <= 0)) {
+    return res.status(400).json({ error: "Target price must be a positive number" });
+  }
+  if (stop_loss !== undefined && (isNaN(stop_loss) || stop_loss <= 0)) {
+    return res.status(400).json({ error: "Stop loss must be a positive number" });
+  }
+  if (risk_reward !== undefined && (isNaN(risk_reward) || risk_reward < 0)) {
+    return res.status(400).json({ error: "Risk/reward must be non-negative" });
+  }
 
   if (process.env.SUPABASE_URL && process.env.SUPABASE_URL !== 'https://mock.supabase.co') {
     const { data, error } = await supabase.from('journal').insert([{ ticker, entry, target, stop_loss, risk_reward, shares }]);

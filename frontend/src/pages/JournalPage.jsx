@@ -76,7 +76,7 @@ export default function JournalPage() {
               ) : (
                 filteredTrades.map(t => (
                   <tr key={t.id || t.created_at} className="watchlist-row">
-                    <td style={{ color: 'var(--text-secondary)' }}>{t.date || new Date(t.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                    <td style={{ color: 'var(--text-secondary)' }}>{t.date ? t.date : (t.created_at && !isNaN(Date.parse(t.created_at)) ? new Date(t.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-')}</td>
                     <td style={{ fontWeight: 600 }}>{t.ticker}</td>
                     <td>
                       <span style={{ 
@@ -87,7 +87,7 @@ export default function JournalPage() {
                       </span>
                     </td>
                     <td>{t.shares || '-'}</td>
-                    <td className="price-mono">฿{t.price ? t.price.toFixed(2) : (t.entry ? t.entry.toFixed(2) : '0.00')}</td>
+                    <td className="price-mono">฿{(Number.isFinite(parseFloat(t.price)) ? parseFloat(t.price).toFixed(2) : (Number.isFinite(parseFloat(t.entry)) ? parseFloat(t.entry).toFixed(2) : '0.00'))}</td>
                     <td><span className="panel-badge" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }}>{t.mode || 'N/A'}</span></td>
                     <td>
                       <span className="panel-badge" style={{ 

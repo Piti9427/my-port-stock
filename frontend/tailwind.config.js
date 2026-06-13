@@ -51,9 +51,9 @@ module.exports = {
         },
       },
       borderRadius: {
-        lg: "6px",
-        md: "4px",
-        sm: "2px",
+        lg: "16px",
+        md: "12px",
+        sm: "8px",
       },
     },
   },

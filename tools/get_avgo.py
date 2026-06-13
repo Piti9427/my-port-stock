@@ -4,14 +4,14 @@ import pandas as pd
 ticker = "AVGO"
 t = yf.Ticker(ticker)
 info = t.info
-hist = t.history(period="1mo")
+hist = t.history(period="6mo")
 
 if not hist.empty:
     last_price = hist["Close"].iloc[-1]
     vol = hist["Volume"].iloc[-1]
     peg = info.get("pegRatio", "N/A")
     fwd_pe = info.get("forwardPE", "N/A")
-    ma50 = hist["Close"].rolling(window=50, min_periods=1).mean().iloc[-1]
+    ma50 = hist["Close"].rolling(window=50, min_periods=50).mean().iloc[-1]
     
     # Calculate ATR
     high_low = hist["High"] - hist["Low"]

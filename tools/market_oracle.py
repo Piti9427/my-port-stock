@@ -7,14 +7,14 @@ def analyze_stock(ticker_symbol):
     try:
         t = yf.Ticker(ticker_symbol)
         info = t.info
-        hist = t.history(period="6mo")
+        hist = t.history(period="1y")
         
         # Fallback for SET (Thai) stocks if no data
         if hist.empty and "." not in ticker_symbol:
             ticker_symbol = f"{ticker_symbol}.BK"
             t = yf.Ticker(ticker_symbol)
             info = t.info
-            hist = t.history(period="6mo")
+            hist = t.history(period="1y")
 
         if hist.empty:
             return {"error": f"No data found for {ticker_symbol}"}
@@ -26,8 +26,8 @@ def analyze_stock(ticker_symbol):
         fwd_pe = info.get("forwardPE")
         
         # Technicals
-        ma50 = hist["Close"].rolling(window=50, min_periods=1).mean().iloc[-1]
-        ma200 = hist["Close"].rolling(window=200, min_periods=1).mean().iloc[-1] if len(hist) >= 100 else None
+        ma50 = hist["Close"].rolling(window=50, min_periods=50).mean().iloc[-1]
+        ma200 = hist["Close"].rolling(window=200, min_periods=200).mean().iloc[-1] if len(hist) >= 200 else None
         # RSI (14 period)
         delta = hist["Close"].diff()
         gain = delta.clip(lower=0)
