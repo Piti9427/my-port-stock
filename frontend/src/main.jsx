@@ -41,15 +41,6 @@ const clerkAppearance = {
   },
 };
 
-const clerkAppearance = {
-  variables: {
-    colorBackground: '#111111',
-    colorForeground: '#ededed',
-    colorInput: '#171717',
-    colorBorder: '#262626',
-  },
-};
-
 if (!PUBLISHABLE_KEY) {
   createRoot(document.getElementById('root')).render(
     <div
