@@ -4,6 +4,7 @@ const path = require("path");
 const { createAgentEventBus, broadcast } = require("./src/ws/agentEventBus");
 const { execFile } = require("child_process");
 const { analyzeTicker } = require("./src/services/aiAnalyst");
+const { clerkMiddleware } = require('@clerk/express');
 
 const DECISION_MODE_AGENT_MAP = {
   'Quick Trade': ['catalyst-hunter', 'quant-technician'],
@@ -87,6 +88,7 @@ const HOST = process.env.HOST || "127.0.0.1";
 const quoteCache = new Map();
 
 app.use(express.json({ limit: "256kb" }));
+app.use(clerkMiddleware());
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 const apiRoutes = require('./src/routes/api');

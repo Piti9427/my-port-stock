@@ -8,6 +8,7 @@
     "test": "node --check server.js && node --test tests/*.test.js"
   },
   "dependencies": {
+    "@clerk/express": "^2.1.26",
     "@google/genai": "^2.8.0",
     "@supabase/supabase-js": "^2.108.1",
     "dotenv": "^17.4.2",
