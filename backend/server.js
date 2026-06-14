@@ -1,4 +1,6 @@
+require("./instrument");
 require("dotenv").config({ path: require("node:path").resolve(__dirname, ".env") });
+const Sentry = require("@sentry/node");
 const express = require("express");
 const http = require("node:http");
 const path = require("node:path");
@@ -419,6 +421,8 @@ app.post("/api/journal", async (req, res) => {
   }
   return res.status(200).json({ status: 'Mock save successful', data: req.body });
 });
+
+Sentry.setupExpressErrorHandler(app);
 
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));

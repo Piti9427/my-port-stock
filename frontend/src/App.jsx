@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
 import { LayoutDashboard, Bot, BookOpen, ShieldAlert, BarChart2, Crosshair, Settings2 } from 'lucide-react';
 import { Show, UserButton } from '@clerk/react';
 import DashboardPage from './pages/DashboardPage';
@@ -86,15 +87,17 @@ function App() {
 
           {/* Page Content */}
           <main className="app-content" id="main-content">
-            <Routes>
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/risk" element={<PortfolioRiskPage />} />
-              <Route path="/market" element={<MarketExplorerPage />} />
-              <Route path="/command-center" element={<CommandCenterPage />} />
-              <Route path="/journal" element={<JournalPage />} />
-              <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/config" element={<ConfigPage />} />
-            </Routes>
+            <Sentry.ErrorBoundary fallback={<p>An error has occurred.</p>}>
+              <Routes>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/risk" element={<PortfolioRiskPage />} />
+                <Route path="/market" element={<MarketExplorerPage />} />
+                <Route path="/command-center" element={<CommandCenterPage />} />
+                <Route path="/journal" element={<JournalPage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/config" element={<ConfigPage />} />
+              </Routes>
+            </Sentry.ErrorBoundary>
           </main>
         </div>
       </Show>
