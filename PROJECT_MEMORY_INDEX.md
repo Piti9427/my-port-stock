@@ -27,6 +27,13 @@
 
 ## Durable Entries
 
+### 2026-06-14 - Verify Before Mutating (Code Injection Post-Mortem)
+
+- Keywords: `blind-injection`, `test-failure`, `duplicate-declaration`, `view_file`, `post-mortem`
+- Decision: Never inject or replace code blocks based solely on automated test failure output without inspecting the file's current state first.
+- Action: If a test fails on an expected configuration object, verify if the object exists and modify it, rather than blindly appending a duplicate. Logged as a learning loop.
+- Detail: `notes/2026-06-14-blind-code-injection-error.md`
+
 ### 2026-06-14 - TDD Gate Before Code
 
 - Keywords: `tdd-gate`, `agent-workflow`, `test-first`, `code-change`, `red-green`
