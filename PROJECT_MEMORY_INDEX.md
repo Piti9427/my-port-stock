@@ -27,6 +27,13 @@
 
 ## Durable Entries
 
+### 2026-06-14 - Agent Skill Workflow Guide
+
+- Keywords: `skill-workflow`, `agent-skills`, `superpowers`, `impeccable`, `frontend-verification`, `workflow-gate`
+- Decision: Added a repo-level skill selection matrix to keep agents using skills as workflow helpers while preserving Orchestrator ownership of current market data and investment gates.
+- Action: Updated `AGENTS.md` with required/preferred skills by task type plus guardrails for market data, Impeccable UI critique/polish/harden work, frontend verification, security, and autonomous scans.
+- Source: `AGENTS.md`
+
 ### 2026-06-05 - MyPortStock Skill Scope Matrix
 
 - Keywords: `skill-scope`, `find-skills`, `agent-skills`, `dashboard`, `risk-gate`

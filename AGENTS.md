@@ -30,6 +30,45 @@ This is the canonical instruction entrypoint for the MyPortStock workspace.
 - When a discussion creates a durable decision, plan, watchlist update, risk rule, or unresolved follow-up, append one compact keyword entry to `PROJECT_MEMORY_INDEX.md`. Create a detailed note under `notes/` only when the index entry would become too long.
 - Do not bloat context by reading all notes. Read `PROJECT_MEMORY_INDEX.md` first, then open only the linked note whose keyword matches the current request.
 
+## Skill Workflow Guide
+
+Use skills as scoped workflow helpers, not as replacements for this repo's investment rules. Before choosing a skill, follow the read order above and classify the task. If a skill touches prices, investment advice, portfolio decisions, or market-moving data, it must stay under the Orchestrator Data Contract, Current Price Acceptance Gate, and journal review rules below.
+
+### Skill Selection Matrix
+
+| Task Type | Required / Preferred Skills | Use When |
+|---|---|---|
+| Start any non-trivial repo task | `superpowers:using-superpowers` | Select the right workflow before asking detailed questions, editing files, or running implementation steps. |
+| New feature, UI, behavior, config, or durable workflow change | `superpowers:brainstorming` | Design first, compare approaches, and get user approval before implementation. |
+| Implementation planning | `superpowers:writing-plans` | Convert an approved design into a concrete plan before multi-step changes. |
+| Executing an approved plan | `superpowers:executing-plans` | Work through a written plan and update progress as tasks complete. |
+| Bug, broken behavior, data mismatch, or uncertain root cause | `superpowers:systematic-debugging` or `diagnose` | Reproduce, classify, and diagnose before changing code. |
+| Logic with regression risk | `superpowers:test-driven-development` or `tdd` | Add or update tests first for gates, API contracts, packet building, decision rules, and bug fixes. |
+| Frontend React/Vite work | `build-web-apps:react-best-practices` or `vercel:react-best-practices` | Component structure, state/data flow, performance, and maintainability. |
+| Dashboard UI, visual polish, accessibility, and anti-slop review | `impeccable`, `design-taste-frontend`, `gpt-taste`, or `web-design-guidelines` | Dashboard, Command Center, Pixel Agent, mobile layout, visual hierarchy, accessibility, interaction quality, and anti-slop checks. |
+| Impeccable UI critique backlog | `impeccable critique`, `impeccable audit`, `impeccable polish`, `impeccable harden`, `impeccable clarify`, `impeccable animate` | Use the command that matches the UI issue; read the latest relevant `.impeccable/critique/*` file before applying critique-driven fixes. |
+| Browser or visual verification | `build-web-apps:frontend-testing-debugging`, `playwright`, or Browser plugin | After meaningful UI changes, verify the local app with browser checks, screenshots, and layout inspection. |
+| shadcn/ui or local UI primitives | `build-web-apps:shadcn` or `vercel:shadcn` | Changes under `frontend/src/components/ui/*` or component-system conventions. |
+| Supabase or Postgres changes | `supabase:supabase` and `supabase-postgres-best-practices` | Schema, queries, RLS/auth implications, migrations, and database performance. |
+| API/backend/security-sensitive work | `security-best-practices`; use OpenAI-specific skills only when touching OpenAI APIs | Express routes, validation, auth, external calls, secrets, permissions, and predictable failure behavior. |
+| Code review / milestone audit | `review`, `coderabbit:code-review`, or `superpowers:requesting-code-review` | Review behavioral risk, missing tests, regressions, security issues, and maintainability before handoff. |
+| Final verification before claiming completion | `superpowers:verification-before-completion` | Run the appropriate checks and inspect outputs before saying the task is done. |
+| Deployment or Vercel workflow | `vercel:deployments-cicd`, `vercel:vercel-cli`, or `deploy-to-vercel` | Deployments, environment variables, build failures, preview/prod verification, and CI/CD issues. |
+| Discovering or installing new skills | `find-skills` | Search, evaluate source reputation/install count, and avoid adding low-trust skills to durable workflows. |
+| Creating custom MyPortStock workflows | `skill-creator` or `write-a-skill` | Only after a repeated repo-specific pattern stabilizes, such as quote-gate review or dashboard quality review. |
+
+### Skill Guardrails
+
+- Skills may guide workflow, implementation, review, or verification, but they are not investment-decision authority.
+- No skill or sub-agent may bypass the Main Orchestrator for current market data.
+- Do not use analyst targets, fair value estimates, 52-week ranges, search snippets, or chart-only labels as `Last Price`.
+- Do not install or require paid market-data skills, APIs, or plans unless the user explicitly asks for paid options.
+- Treat external finance skills as experimental unless their source, install count, behavior, and risks have been reviewed.
+- For autonomous scans or alert loops, define max tickers, max API calls, timeout, retry limit, cost cap, and kill switch before implementation.
+- For frontend changes, verify both automated checks and visible UI behavior when practical.
+- For Impeccable-driven work, run its setup/context step, use the product UI register for this dashboard, preserve the dark-first high-legibility design language, and avoid AI-slop patterns such as decorative glow, gradient text, over-rounded cards, glassmorphism by default, and motion that does not communicate state.
+- For investment logic changes, add tests for fail-closed behavior and false `Buy/Add` prevention.
+
 ## Orchestrator Data Contract
 
 The Main Orchestrator owns all current-data fetching and validation.
