@@ -2,6 +2,8 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Play, Target, Check, BarChart3, AlertTriangle, RotateCcw } from 'lucide-react';
 import PixelTradingFloor from '../components/PixelTradingFloor';
+import { useAuth } from '@clerk/clerk-react';
+import { fetchWithAuth } from '../lib/api';
 
 /* ─── Sparkline component (pure SVG) ───────────────────────── */
 const Sparkline = React.memo(function Sparkline({ data, positive }) {
@@ -21,15 +23,6 @@ const Sparkline = React.memo(function Sparkline({ data, positive }) {
     </svg>
   );
 });
-
-/* ─── Mock watchlist data ─────────────────────────────────── */
-const WATCHLIST = [
-  { ticker: 'AAPL', name: 'Apple Inc.',      price: 213.49, change: +1.23, changePct: +0.58, bg: 'rgba(255,255,255,0.05)', spark: [210,208,212,213,211,214,213] },
-  { ticker: 'NVDA', name: 'NVIDIA Corp.',    price: 125.61, change: +4.21, changePct: +3.46, bg: 'rgba(255,255,255,0.05)', spark: [110,115,118,122,120,124,126] },
-  { ticker: 'TSLA', name: 'Tesla Inc.',      price:  177.9, change: -2.15, changePct: -1.19, bg: 'rgba(255,255,255,0.05)', spark: [185,182,180,181,179,178,178] },
-  { ticker: 'MSFT', name: 'Microsoft Corp.', price: 419.32, change: +1.87, changePct: +0.45, bg: 'rgba(255,255,255,0.05)', spark: [415,416,418,417,419,420,419] },
-  { ticker: 'AMZN', name: 'Amazon.com Inc.', price: 222.18, change: +3.44, changePct: +1.57, bg: 'rgba(255,255,255,0.05)', spark: [215,217,218,219,221,222,222] },
-];
 
 /* ─── Scenario Planner Drawer ─────────────────────────────── */
 function ScenarioPlannerDrawer({ ticker, onClose }) {
@@ -289,25 +282,15 @@ export default function DashboardPage() {
     if (incomingTicker) setSelectedTicker(incomingTicker);
   }, [incomingTicker]);
 
+  const { getToken } = useAuth();
+
   // Fetch Watchlist
   useEffect(() => {
-    fetch('/api/portfolio')
-      .then(res => res.json())
-      .then(data => {
-        const holdingsData = data.holdings || (data.portfolios && data.portfolios['main']?.holdings) || [];
-        const mapped = holdingsData.map(h => ({
-           ticker: h.ticker, 
-           name: h.ticker, 
-           price: h.avg_cost || 0, 
-           change: 0, changePct: 0, 
-           bg: 'rgba(255,255,255,0.05)', 
-           spark: [100,100,100,100] // placeholder
-        }));
-        setWatchlist(mapped.length > 0 ? mapped : WATCHLIST); // Fallback to WATCHLIST for demo if empty
-      })
-      .catch(() => setWatchlist(WATCHLIST))
+    fetchWithAuth('/api/holdings', getToken)
+      .then(data => setWatchlist(data))
+      .catch(err => console.error(err))
       .finally(() => setLoadingWatchlist(false));
-  }, []);
+  }, [getToken]);
 
   const handleAnalyze = useCallback(async (manualPrice = null) => {
     if (!selectedTicker || loading) return;

@@ -1,14 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, BellOff, Trash2, Plus, TrendingUp, TrendingDown, Minus, RotateCcw, Clock } from 'lucide-react';
-
-const INITIAL_WATCHLIST = [
-  { ticker: 'NVDA', name: 'NVIDIA Corp', last: 131.50, change: +2.84, changePct: +2.21, volume: '42.3M', alertPrice: 125.00, alertType: 'below', aiSignal: 'accumulate', setup: 'Bullish Retest of 21-EMA', sector: 'Technology' },
-  { ticker: 'AAPL', name: 'Apple Inc', last: 210.50, change: -1.20, changePct: -0.57, volume: '58.1M', alertPrice: 215.00, alertType: 'above', aiSignal: 'wait', setup: 'Inside Bar — waiting for breakout', sector: 'Technology' },
-  { ticker: 'META', name: 'Meta Platforms', last: 528.30, change: +8.50, changePct: +1.63, volume: '17.8M', alertPrice: 510.00, alertType: 'below', aiSignal: 'buy-zone', setup: 'Breakout from bull flag', sector: 'Communication' },
-  { ticker: 'LLY', name: 'Eli Lilly', last: 810.20, change: -3.40, changePct: -0.42, volume: '3.2M', alertPrice: 790.00, alertType: 'below', aiSignal: 'monitor', setup: 'Base building near ATH', sector: 'Healthcare' },
-  { ticker: 'PLTR', name: 'Palantir Tech', last: 88.70, change: +3.20, changePct: +3.75, volume: '61.4M', alertPrice: 95.00, alertType: 'above', aiSignal: 'wait', setup: 'Extended — needs pullback to 80', sector: 'Technology' },
-  { ticker: 'CRWD', name: 'CrowdStrike', last: 398.00, change: +5.60, changePct: +1.43, volume: '8.6M', alertPrice: 380.00, alertType: 'below', aiSignal: 'buy-zone', setup: 'Tight consolidation above support', sector: 'Technology' },
-];
+import { useAuth } from '@clerk/clerk-react';
+import { fetchWithAuth } from '../lib/api';
 
 const SIGNAL_META = {
   'buy-zone':   { label: 'Buy Zone',   color: 'var(--fin-profit)',   bg: 'var(--fin-profit-dim)' },
@@ -51,7 +44,9 @@ function UndoToast({ ticker, onUndo, onDismiss }) {
 }
 
 export default function WatchlistPage() {
-  const [watchlist, setWatchlist] = useState(INITIAL_WATCHLIST);
+  const { getToken } = useAuth();
+  const [watchlist, setWatchlist] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState(INITIAL_ALERTS);
   const [signalFilter, setSignalFilter] = useState('All');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -59,6 +54,22 @@ export default function WatchlistPage() {
   const [addError, setAddError] = useState('');
   const [toast, setToast] = useState(null); // { ticker, item }
   const toastTimerRef = useRef(null);
+
+  useEffect(() => {
+    fetchWithAuth('/api/watchlists', getToken)
+      .then(data => {
+        const mapped = data.map(item => ({
+          ...item,
+          last: item.price || 0,
+          aiSignal: item.aiSignal || 'monitor',
+          setup: item.setup || 'Tracked in watchlist',
+          sector: item.sector || 'Unknown'
+        }));
+        setWatchlist(mapped);
+      })
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false));
+  }, [getToken]);
 
   const signals = ['All', 'buy-zone', 'accumulate', 'wait', 'monitor'];
   const filtered = signalFilter === 'All' ? watchlist : watchlist.filter(s => s.aiSignal === signalFilter);
@@ -169,7 +180,13 @@ export default function WatchlistPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
+                      Loading watchlists...
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={8}>
                       <div className="empty-state">
