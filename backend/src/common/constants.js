@@ -7,9 +7,10 @@ const US_EQUITY_PATTERN = /^[A-Z][A-Z0-9.-]{0,17}$/;
 const PRICE_GATE_REGULAR_THRESHOLD_PCT = 0.5;
 const PRICE_GATE_EXTENDED_THRESHOLD_PCT = 1.0;
 
-const SOURCE_YAHOO = "Yahoo Finance API";
+const SOURCE_FINNHUB = "Finnhub API";
 const SOURCE_NASDAQ = "Nasdaq Quote API";
 const SOURCE_STOOQ = "Stooq Delayed CSV";
+const SOURCE_YAHOO = "Yahoo Finance API";
 
 const VALID_DECISION_MODES = new Set([
   "Quick Trade",
@@ -23,6 +24,7 @@ module.exports = {
   PRICE_GATE_EXTENDED_THRESHOLD_PCT,
   PRICE_GATE_REGULAR_THRESHOLD_PCT,
   REQUEST_TIMEOUT_MS,
+  SOURCE_FINNHUB,
   SOURCE_NASDAQ,
   SOURCE_STOOQ,
   SOURCE_YAHOO,

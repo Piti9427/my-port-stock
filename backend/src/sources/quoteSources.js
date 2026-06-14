@@ -2,6 +2,7 @@ const YahooFinance = require("yahoo-finance2").default;
 
 const {
   REQUEST_TIMEOUT_MS,
+  SOURCE_FINNHUB,
   SOURCE_NASDAQ,
   SOURCE_STOOQ,
   SOURCE_YAHOO,
@@ -256,6 +257,33 @@ function buildStooqQuoteSource(ticker, csvText) {
   };
 }
 
+function buildFinnhubQuoteSource(ticker, data) {
+  if (!US_EQUITY_PATTERN.test(ticker)) {
+    return insufficientData("Finnhub supports US equity symbols only");
+  }
+
+  if (!data || typeof data !== "object") {
+    return insufficientData("Finnhub returned no quote data");
+  }
+
+  const price = data.c;
+  const timestamp = data.t ? new Date(data.t * 1000).toISOString() : null;
+
+  if (!isFiniteNumber(price) || price === 0 || !timestamp) {
+    return insufficientData("Missing valid Finnhub price or timestamp");
+  }
+
+  return {
+    source: SOURCE_FINNHUB,
+    tier: "Tier 2",
+    last_price: price,
+    quote_timestamp: timestamp,
+    quote_timestamp_raw: data.t,
+    market_session: getNewYorkMarketSession(new Date(timestamp)),
+    quote_delay_status: "Real-time for US",
+  };
+}
+
 async function fetchNasdaqQuotePayload(ticker) {
   const url = `https://api.nasdaq.com/api/quote/${encodeURIComponent(
     ticker,
@@ -309,6 +337,26 @@ async function fetchYahooQuoteSource(ticker, asOf) {
   }
 }
 
+async function fetchFinnhubQuoteSource(ticker) {
+  try {
+    if (!process.env.FINNHUB_API_KEY) {
+       return insufficientData("Finnhub API key not configured");
+    }
+    const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(ticker)}&token=${process.env.FINNHUB_API_KEY}`;
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      throw new Error(`Finnhub HTTP ${response.status}`);
+    }
+    const data = await response.json();
+    return buildFinnhubQuoteSource(ticker, data);
+  } catch (error) {
+    console.error(`Finnhub quote failed for ${ticker}: ${error.message}`);
+    return insufficientData("Finnhub request failed");
+  }
+}
+
 async function fetchNasdaqQuoteSource(ticker) {
   try {
     const payload = await fetchNasdaqQuotePayload(ticker);
@@ -330,18 +378,21 @@ async function fetchStooqQuoteSource(ticker) {
 }
 
 async function fetchQuoteSources(ticker, asOf = new Date()) {
-  const [yahooSource, nasdaqSource] = await Promise.all([
+  const [yahooSource, nasdaqSource, finnhubSource] = await Promise.all([
     fetchYahooQuoteSource(ticker, asOf),
     fetchNasdaqQuoteSource(ticker),
+    fetchFinnhubQuoteSource(ticker),
   ]);
 
-  return [yahooSource, nasdaqSource];
+  return [yahooSource, nasdaqSource, finnhubSource];
 }
 
 module.exports = {
+  buildFinnhubQuoteSource,
   buildNasdaqQuoteSource,
   buildStooqQuoteSource,
   buildYahooQuoteSource,
+  fetchFinnhubQuoteSource,
   fetchQuoteSources,
   fetchStooqQuoteSource,
   normalizeNasdaqTimestamp,

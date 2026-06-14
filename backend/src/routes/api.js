@@ -6,7 +6,7 @@ const { broadcast } = require('../ws/agentEventBus');
 
 const router = express.Router();
 
-const { requireAuth: clerkRequireAuth } = require('@clerk/express');
+const { requireAuth: clerkRequireAuth, getAuth } = require('@clerk/express');
 const requireAuth = () => {
   if (process.env.CLERK_SECRET_KEY) return clerkRequireAuth();
   if (process.env.NODE_ENV !== 'production') {
@@ -17,6 +17,14 @@ const requireAuth = () => {
   }
   return clerkRequireAuth();
 };
+
+function getUserId(req) {
+  if (typeof req.auth === 'function') {
+    return getAuth(req).userId;
+  }
+  return req.auth ? req.auth.userId : null;
+}
+
 const { getUserHoldings, getUserWatchlists } = require('../db');
 const { default: YahooFinance } = require('yahoo-finance2');
 
@@ -62,7 +70,8 @@ async function enrichWithMarketData(items) {
 // Routes
 router.get('/holdings', requireAuth(), async (req, res) => {
   try {
-    const holdings = await getUserHoldings(req.auth.userId);
+    const userId = getUserId(req);
+    const holdings = await getUserHoldings(userId);
     const enriched = await enrichWithMarketData(holdings);
     res.json(enriched);
   } catch (err) {
@@ -72,7 +81,8 @@ router.get('/holdings', requireAuth(), async (req, res) => {
 
 router.get('/watchlists', requireAuth(), async (req, res) => {
   try {
-    const watchlists = await getUserWatchlists(req.auth.userId);
+    const userId = getUserId(req);
+    const watchlists = await getUserWatchlists(userId);
     const enriched = await enrichWithMarketData(watchlists);
     res.json(enriched);
   } catch (err) {

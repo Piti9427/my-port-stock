@@ -1,9 +1,9 @@
-require("dotenv").config({ path: require("path").resolve(__dirname, ".env") });
+require("dotenv").config({ path: require("node:path").resolve(__dirname, ".env") });
 const express = require("express");
-const http = require("http");
-const path = require("path");
+const http = require("node:http");
+const path = require("node:path");
 const { createAgentEventBus, broadcast } = require("./src/ws/agentEventBus");
-const { execFile } = require("child_process");
+const { execFile } = require("node:child_process");
 const { analyzeTicker } = require("./src/services/aiAnalyst");
 const { clerkMiddleware } = require('@clerk/express');
 
@@ -43,6 +43,7 @@ function runMarketOracle(ticker) {
         const result = JSON.parse(stdout);
         resolve(result[ticker] || { error: 'No data returned' });
       } catch (e) {
+        console.error('Oracle JSON parse error:', e.message);
         resolve({ error: 'Failed to parse oracle output' });
       }
     });
@@ -53,12 +54,14 @@ const {
   CACHE_TTL_MS,
   PRICE_GATE_EXTENDED_THRESHOLD_PCT,
   PRICE_GATE_REGULAR_THRESHOLD_PCT,
+  SOURCE_FINNHUB,
   SOURCE_NASDAQ,
   SOURCE_STOOQ,
   SOURCE_YAHOO,
 } = require("./src/common/constants");
 const { insufficientData, normalizeDecisionMode, normalizeTicker } = require("./src/common/format");
 const {
+  buildFinnhubQuoteSource,
   buildNasdaqQuoteSource,
   buildStooqQuoteSource,
   buildYahooQuoteSource,
@@ -94,15 +97,15 @@ if (process.env.CLERK_SECRET_KEY) {
     publishableKey: process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY,
     secretKey: process.env.CLERK_SECRET_KEY
   }));
-} else if (process.env.NODE_ENV !== 'production') {
+} else if (process.env.NODE_ENV === 'production') {
+  // In production, force clerkMiddleware to throw or handle missing key securely
+  app.use(clerkMiddleware());
+} else {
   console.warn("⚠️ CLERK_SECRET_KEY is missing! Bypassing Clerk auth for development.");
   app.use((req, res, next) => {
     req.auth = { userId: "dev_mock_user_123" };
     next();
   });
-} else {
-  // In production, force clerkMiddleware to throw or handle missing key securely
-  app.use(clerkMiddleware());
 }
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
@@ -180,7 +183,7 @@ app.get("/health", (req, res) => {
       ttl_seconds: CACHE_TTL_MS / 1000,
       entries: quoteCache.size,
     },
-    providers: [SOURCE_YAHOO, SOURCE_NASDAQ, SOURCE_STOOQ],
+    providers: [SOURCE_YAHOO, SOURCE_NASDAQ, SOURCE_STOOQ, SOURCE_FINNHUB],
     acceptance_gate: {
       required_valid_sources: 2,
       regular_threshold_pct: PRICE_GATE_REGULAR_THRESHOLD_PCT,
@@ -243,7 +246,7 @@ app.get("/api/packet/:ticker", async (req, res) => {
 });
 
 app.post("/api/analyze", async (req, res) => {
-  const ticker = normalizeTicker(req.body && req.body.ticker);
+  const ticker = normalizeTicker(req.body?.ticker);
   if (!ticker) {
     return res.status(200).json(insufficientData("Invalid ticker format"));
   }
@@ -263,9 +266,9 @@ app.post("/api/analyze", async (req, res) => {
     });
 
     let packet;
-    const manualPrice = req.body.manual_price ? parseFloat(req.body.manual_price) : null;
+    const manualPrice = req.body.manual_price ? Number.parseFloat(req.body.manual_price) : null;
     
-    if (manualPrice && !isNaN(manualPrice) && manualPrice > 0 && manualPrice < 1000000) {
+    if (manualPrice && !Number.isNaN(manualPrice) && manualPrice > 0 && manualPrice < 1000000) {
        const quotePacket = {
           as_of: new Date().toISOString(),
           ticker,
@@ -368,10 +371,10 @@ app.get("/api/journal", async (req, res) => {
     return res.status(200).json({ trades: data || [] });
   }
   return res.status(200).json({ trades: [
-    { id: 1, date: '2026-06-09 14:30', ticker: 'AAPL', type: 'BUY', shares: 50, price: 210.50, mode: 'Swing Trade', rr: 2.5, status: 'OPEN' },
-    { id: 2, date: '2026-06-08 10:15', ticker: 'TSLA', type: 'SELL', shares: 100, price: 185.20, mode: 'Quick Trade', rr: 1.8, status: 'CLOSED', profit: +450 },
-    { id: 3, date: '2026-06-05 09:45', ticker: 'NVDA', type: 'BUY', shares: 20, price: 115.00, mode: 'Core', rr: 3.0, status: 'OPEN' },
-    { id: 4, date: '2026-06-01 15:50', ticker: 'AMZN', type: 'SELL', shares: 30, price: 215.10, mode: 'Swing Trade', rr: 1.2, status: 'CLOSED', profit: -120 },
+    { id: 1, date: '2026-06-09 14:30', ticker: 'AAPL', type: 'BUY', shares: 50, price: 210.5, mode: 'Swing Trade', rr: 2.5, status: 'OPEN' },
+    { id: 2, date: '2026-06-08 10:15', ticker: 'TSLA', type: 'SELL', shares: 100, price: 185.2, mode: 'Quick Trade', rr: 1.8, status: 'CLOSED', profit: +450 },
+    { id: 3, date: '2026-06-05 09:45', ticker: 'NVDA', type: 'BUY', shares: 20, price: 115, mode: 'Core', rr: 3, status: 'OPEN' },
+    { id: 4, date: '2026-06-01 15:50', ticker: 'AMZN', type: 'SELL', shares: 30, price: 215.1, mode: 'Swing Trade', rr: 1.2, status: 'CLOSED', profit: -120 },
   ]});
 });
 
@@ -393,19 +396,19 @@ app.post("/api/journal", async (req, res) => {
   const { ticker, entry, target, stop_loss, risk_reward, shares } = req.body;
   if (!ticker) return res.status(400).json({ error: "Ticker is required" });
 
-  if (shares !== undefined && (isNaN(shares) || shares <= 0)) {
+  if (shares !== undefined && (Number.isNaN(shares) || shares <= 0)) {
     return res.status(400).json({ error: "Shares must be a positive number" });
   }
-  if (entry !== undefined && (isNaN(entry) || entry <= 0)) {
+  if (entry !== undefined && (Number.isNaN(entry) || entry <= 0)) {
     return res.status(400).json({ error: "Entry price must be a positive number" });
   }
-  if (target !== undefined && (isNaN(target) || target <= 0)) {
+  if (target !== undefined && (Number.isNaN(target) || target <= 0)) {
     return res.status(400).json({ error: "Target price must be a positive number" });
   }
-  if (stop_loss !== undefined && (isNaN(stop_loss) || stop_loss <= 0)) {
+  if (stop_loss !== undefined && (Number.isNaN(stop_loss) || stop_loss <= 0)) {
     return res.status(400).json({ error: "Stop loss must be a positive number" });
   }
-  if (risk_reward !== undefined && (isNaN(risk_reward) || risk_reward < 0)) {
+  if (risk_reward !== undefined && (Number.isNaN(risk_reward) || risk_reward < 0)) {
     return res.status(400).json({ error: "Risk/reward must be non-negative" });
   }
 
@@ -437,6 +440,7 @@ if (require.main === module) {
 
 module.exports = {
   app,
+  buildFinnhubQuoteSource,
   buildNasdaqQuoteSource,
   buildStooqQuoteSource,
   buildTwoSourceQuotePacket,
