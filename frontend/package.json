@@ -4,11 +4,38 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "vite",
     "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
+    "build": "cross-env CI=false vite build",
+    "build:prod": "cross-env GENERATE_SOURCEMAP=false CI=false vite build",
+    "test": "vitest",
     "preview": "vite preview",
-    "test": "vitest run --passWithNoTests"
+    "serve": "vite preview",
+    "lint": "eslint . --ext js,jsx",
+    "lint:fix": "npm run lint -- --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "node scripts/typecheck.js",
+    "generate:module": "node scripts/generate-module.js",
+    "verify:architecture": "node scripts/verify-architecture.js",
+    "check:frontend-standard": "npm run lint && npm run verify:architecture && npm run build",
+    "check:uat:env": "bash ./ops/check-uat-env.sh .env.uat",
+    "check:uat:build": "cross-env CI=false vite build --mode uat",
+    "check:uat:endpoint": "bash ./ops/check-uat-endpoint.sh .env.uat",
+    "check:uat": "npm run check:uat:env && npm run check:uat:build && npm run check:uat:endpoint",
+    "check:all": "npm run format:check && npm run lint && npm run verify:architecture && npm run typecheck && npm run test -- --run && npm run build",
+    "prepare": "husky",
+    "lint-staged": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,jsx}": [
+      "prettier --write",
+      "eslint --fix",
+      "vitest related --run"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@clerk/react": "^6.9.1",
@@ -21,6 +48,8 @@
     "react-router-dom": "^7.17.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
     "@eslint/js": "^10.0.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -31,12 +60,16 @@
     "autoprefixer": "^10.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cross-env": "^10.1.0",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "husky": "^9.1.7",
     "jsdom": "^29.1.1",
+    "lint-staged": "^17.0.7",
     "postcss": "^8.5.15",
+    "prettier": "^3.8.4",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^3.4.19",
     "tailwindcss-animate": "^1.0.7",
