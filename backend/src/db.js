@@ -17,3 +17,14 @@ export async function getUserHoldings(userId) {
   if (error) throw error;
   return data;
 }
+
+export async function getUserWatchlists(userId) {
+  if (!userId) throw new Error('User ID is required');
+  const { data, error } = await supabase
+    .from('watchlists')
+    .select('*')
+    .eq('user_id', userId);
+    
+  if (error) throw error;
+  return data;
+}

@@ -6,6 +6,70 @@ const { broadcast } = require('../ws/agentEventBus');
 
 const router = express.Router();
 
+const { requireAuth } = require('@clerk/express');
+const { getUserHoldings, getUserWatchlists } = require('../db');
+const { default: YahooFinance } = require('yahoo-finance2');
+
+// Simple sparkline cache
+const sparklineCache = new Map();
+const SPARKLINE_TTL = 60 * 60 * 1000; // 1 hour
+
+async function getSparkline(ticker) {
+  const now = Date.now();
+  if (sparklineCache.has(ticker)) {
+    const cached = sparklineCache.get(ticker);
+    if (now - cached.timestamp < SPARKLINE_TTL) return cached.data;
+  }
+  try {
+    const period1 = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const res = await YahooFinance.historical(ticker, { period1, interval: '1d' });
+    const data = res.map(r => r.close);
+    sparklineCache.set(ticker, { timestamp: now, data });
+    return data;
+  } catch (e) {
+    return [0, 0];
+  }
+}
+
+async function enrichWithMarketData(items) {
+  return Promise.all(items.map(async (item) => {
+    try {
+      const quote = await YahooFinance.quote(item.ticker);
+      const spark = await getSparkline(item.ticker);
+      return {
+        ...item,
+        price: quote.regularMarketPrice,
+        change: quote.regularMarketChange,
+        changePct: quote.regularMarketChangePercent,
+        spark
+      };
+    } catch (e) {
+      return { ...item, price: 0, change: 0, changePct: 0, spark: [] };
+    }
+  }));
+}
+
+// Routes
+router.get('/holdings', requireAuth(), async (req, res) => {
+  try {
+    const holdings = await getUserHoldings(req.auth.userId);
+    const enriched = await enrichWithMarketData(holdings);
+    res.json(enriched);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/watchlists', requireAuth(), async (req, res) => {
+  try {
+    const watchlists = await getUserWatchlists(req.auth.userId);
+    const enriched = await enrichWithMarketData(watchlists);
+    res.json(enriched);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const DECISION_MODE_AGENT_MAP = {
   'Quick Trade': ['catalyst-hunter', 'quant-technician'],
   'Swing Trade': ['fundamental-auditor', 'quant-technician', 'catalyst-hunter'],
