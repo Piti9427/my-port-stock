@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Play, Target, Check, BarChart3, AlertTriangle, RotateCcw } from 'lucide-react';
 import PixelTradingFloor from '../components/PixelTradingFloor';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '@clerk/react';
 import { fetchWithAuth } from '../lib/api';
 
 /* ─── Sparkline component (pure SVG) ───────────────────────── */
@@ -399,7 +399,7 @@ export default function DashboardPage() {
                     <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
                       <BarChart3 size={32} opacity={0.5} />
                     </div>
-                    <div style={{ fontWeight: 500, color: '#fff' }}>ไม่มีข้อมูลในพอร์ตโฟลิโอ</div>
+                    <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>ไม่มีข้อมูลในพอร์ตโฟลิโอ</div>
                     <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>เริ่มต้นวิเคราะห์และบันทึกการเทรดเพื่อดูข้อมูลตรงนี้</div>
                   </td>
                 </tr>

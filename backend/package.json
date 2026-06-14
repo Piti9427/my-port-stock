@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "PORT=8080 node server.js",
-    "test": "node --check server.js && node --test tests/*.test.js"
+    "test": "CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k CLERK_SECRET_KEY=sk_test_123 node --check server.js && CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k CLERK_SECRET_KEY=sk_test_123 node --test tests/*.test.js"
   },
   "dependencies": {
     "@clerk/express": "^2.1.26",

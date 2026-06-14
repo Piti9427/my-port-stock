@@ -1,0 +1,1773 @@
+diff --git a/.impeccable/critique/2026-06-14T07-08-29Z__frontend-src.md b/.impeccable/critique/2026-06-14T07-08-29Z__frontend-src.md
+new file mode 100644
+index 0000000..c0c65fe
+--- /dev/null
++++ b/.impeccable/critique/2026-06-14T07-08-29Z__frontend-src.md
+@@ -0,0 +1,81 @@
++---
++target: frontend/src
++total_score: 28
++p0_count: 0
++p1_count: 2
++timestamp: 2026-06-14T07-08-29Z
++slug: frontend-src
++---
++#### Design Health Score
++
++| # | Heuristic | Score | Key Issue |
++|---|-----------|-------|-----------|
++| 1 | Visibility of System Status | 3 | Good overall, but loading states and transitions could be clearer. |
++| 2 | Match System / Real World | 4 | Domain terminology (port, trading, analytics) matches trader expectations well. |
++| 3 | User Control and Freedom | 3 | Users can navigate freely, though forms and modals lack explicit 'Esc' cancel paths. |
++| 4 | Consistency and Standards | 3 | Mostly consistent, but font families are mixed (`Plus Jakarta Sans` vs `Inter` remnants). |
++| 5 | Error Prevention | 3 | Forms have basic validation, but destructive actions lack hard guardrails. |
++| 6 | Recognition Rather Than Recall | 3 | Navigation is visible, but some specific analytics filters require remembering past states. |
++| 7 | Flexibility and Efficiency | 2 | Missing keyboard shortcuts (e.g., Cmd+K for command palette or quick navigation). |
++| 8 | Aesthetic and Minimalist Design | 3 | Clean, but the Landing Page hero gradient and "bounce" easing feel slightly noisy. |
++| 9 | Error Recovery | 3 | Standard error messages exist, but could offer more actionable next steps. |
++| 10 | Help and Documentation | 1 | No visible help center, tooltips, or onboarding guidance for new traders. |
++| **Total** | | **28/40** | **[Good]** |
++
++#### Anti-Patterns Verdict
++
++**LLM assessment**: The UI has made a great leap toward a premium SaaS aesthetic, but it still carries a few AI-generation fingerprints. The use of a thick gradient on the hero title (`background-clip: text`) and bouncy animations in the `PixelTradingFloor` feel like default "AI polish" rather than intentional design. 
++
++**Deterministic scan**: The automated detector scanned the codebase and flagged 11 issues:
++- **Gradient text**: The `.hero-title` uses a background gradient, which is a very common AI tell.
++- **Overused fonts**: `Plus Jakarta Sans` and `Inter` are flagged as overused AI defaults. (Note: Since we deliberately chose Plus Jakarta Sans to match a specific reference, this is a calculated choice, but the remnants of `Inter` should be cleaned up).
++- **Layout transitions**: Animating `width` (lines 1327, 1433 in `index.css`) causes layout thrashing.
++- **Bounce easing**: Bouncy animations in `PixelTradingFloor.jsx` feel tacky compared to smooth exponential curves.
++- **Side-tab borders**: Using thick left/right colored borders as accents.
++
++#### Overall Impression
++The shift to the Light SaaS theme with a Lime Green accent is highly effective and matches the target demographic. The foundation is solid, but the interface needs its "AI tells" stripped out and its UX hardened for power users (keyboard shortcuts, unified typography, smoother motion).
++
++#### What's Working
++1. **Color Palette**: The deep green-black (`#0b1a14`) paired with the vibrant lime green (`#84cc16`) creates a highly professional, high-contrast, and trustworthy financial aesthetic.
++2. **Sidebar Structure**: Moving to a side-nav greatly improved the SaaS feel and freed up vertical space for critical dashboard metrics.
++
++#### Priority Issues
++
++- **[P1] Inconsistent Typography (AI Tell)**
++  - **Why it matters**: Mixing `Inter` and `Plus Jakarta Sans` across the app creates subtle visual disharmony and reads as unpolished.
++  - **Fix**: Remove all `Inter` remnants from CSS and standardize solely on the chosen brand font.
++  - **Suggested command**: `/impeccable typeset`
++
++- **[P1] Janky Layout Animations & Bounce Easing**
++  - **Why it matters**: Animating `width` causes the browser to recalculate layout every frame, leading to stuttering. "Bouncy" easing curves feel amateurish in a serious financial tool.
++  - **Fix**: Replace `width` transitions with `transform: scaleX` or `opacity`, and replace bounce/elastic curves with smooth `ease-out-quart` or `ease-out-expo`.
++  - **Suggested command**: `/impeccable animate`
++
++- **[P2] Gradient Text on Hero Title**
++  - **Why it matters**: A gradient text fill on the main H1 is the #1 most common AI-generated landing page trope. It dilutes the premium feel.
++  - **Fix**: Use a solid deep green-black for the heading and rely on size and weight for emphasis.
++  - **Suggested command**: `/impeccable quieter`
++
++- **[P2] Lack of Keyboard Accelerators**
++  - **Why it matters**: Power users (day traders, quants) hate moving their hands off the keyboard. Navigating the dashboard currently requires too many clicks.
++  - **Fix**: Introduce global keyboard shortcuts (e.g., `?` for help, `g d` for Go to Dashboard).
++  - **Suggested command**: `/impeccable harden`
++
++#### Persona Red Flags
++
++**Alex (Power User)**: 
++- No keyboard shortcuts for quickly switching between the Trading Floor, Watchlist, and Analytics.
++- Bouncy animations in the PixelTradingFloor waste time and feel playful rather than precise.
++
++**Jordan (First-Timer)**: 
++- No tooltips explaining complex quantitative metrics on the dashboard.
++- If an API fails to load data, the error messages might be too technical without offering a "Retry" or explanation.
++
++#### Minor Observations
++- The side-nav could use a subtle active-state background tint rather than just text color changes.
++- Ensure the "Sign In" button on the landing page has a clear hover state that doesn't just rely on a shadow change.
++
++#### Questions to Consider
++- Does the `PixelTradingFloor` need to be a literal "pixel" bouncy interface, or would a sleek, data-dense "Terminal" view serve the traders better?
++- We chose a very bright Lime Green. Should we introduce a secondary accent color (like a cool cyan or deep purple) for complex charts so everything isn't monochrome green?
+diff --git a/backend/package.json b/backend/package.json
+index afc5f48..5cd0ad7 100644
+--- a/backend/package.json
++++ b/backend/package.json
+@@ -5,7 +5,7 @@
+   "scripts": {
+     "start": "node server.js",
+     "dev": "PORT=8080 node server.js",
+-    "test": "node --check server.js && node --test tests/*.test.js"
++    "test": "CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k CLERK_SECRET_KEY=sk_test_123 node --check server.js && CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k CLERK_SECRET_KEY=sk_test_123 node --test tests/*.test.js"
+   },
+   "dependencies": {
+     "@clerk/express": "^2.1.26",
+diff --git a/backend/server.js b/backend/server.js
+index 7d1e75a..6981349 100644
+--- a/backend/server.js
++++ b/backend/server.js
+@@ -1,3 +1,4 @@
++require("dotenv").config({ path: require("path").resolve(__dirname, ".env") });
+ const express = require("express");
+ const http = require("http");
+ const path = require("path");
+@@ -88,7 +89,18 @@ const HOST = process.env.HOST || "127.0.0.1";
+ const quoteCache = new Map();
+ 
+ app.use(express.json({ limit: "256kb" }));
+-app.use(clerkMiddleware());
++if (process.env.CLERK_SECRET_KEY) {
++  app.use(clerkMiddleware({
++    publishableKey: process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY,
++    secretKey: process.env.CLERK_SECRET_KEY
++  }));
++} else {
++  console.warn("⚠️ CLERK_SECRET_KEY is missing! Bypassing Clerk auth for development.");
++  app.use((req, res, next) => {
++    req.auth = { userId: "dev_mock_user_123" };
++    next();
++  });
++}
+ app.use(express.static(path.join(__dirname, "../frontend/dist")));
+ 
+ const apiRoutes = require('./src/routes/api');
+diff --git a/backend/src/routes/api.js b/backend/src/routes/api.js
+index 3cb7248..bc06490 100644
+--- a/backend/src/routes/api.js
++++ b/backend/src/routes/api.js
+@@ -6,7 +6,14 @@ const { broadcast } = require('../ws/agentEventBus');
+ 
+ const router = express.Router();
+ 
+-const { requireAuth } = require('@clerk/express');
++const { requireAuth: clerkRequireAuth } = require('@clerk/express');
++const requireAuth = () => {
++  if (process.env.CLERK_SECRET_KEY) return clerkRequireAuth();
++  return (req, res, next) => {
++    if (!req.auth) req.auth = { userId: "dev_mock_user_123" };
++    next();
++  };
++};
+ const { getUserHoldings, getUserWatchlists } = require('../db');
+ const { default: YahooFinance } = require('yahoo-finance2');
+ 
+diff --git a/docs/superpowers/plans/2026-06-14-aifloor-realtime.md b/docs/superpowers/plans/2026-06-14-aifloor-realtime.md
+new file mode 100644
+index 0000000..0e4fbb8
+--- /dev/null
++++ b/docs/superpowers/plans/2026-06-14-aifloor-realtime.md
+@@ -0,0 +1,196 @@
++# AIFloor Real-Time UI Implementation Plan
++
++> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
++
++**Goal:** Convert the static `/ai-floor` mock UI into a live visual interface that animates Pixel sprites and displays a real-time activity log driven by WebSocket events.
++
++**Architecture:** The backend already broadcasts detailed state changes (`TYPING`, `WALKING`, `PRESENTING`) via WebSockets to `frontend/src/hooks/useAgentEvents.jsx`. The frontend `AIFloorPage.jsx` will consume this hook, render an overlay "Activity Log" panel, and apply PixiJS bobbing/glowing animations dynamically based on the current `agentStates`.
++
++**Tech Stack:** React, PixiJS, WebSockets.
++
++---
++
++### Task 1: Setup Activity Log UI & State
++
++**Files:**
++- Create: `frontend/tests/AIFloorPage.test.jsx`
++- Modify: `frontend/src/pages/AIFloorPage.jsx`
++
++- [ ] **Step 1: Write the failing test**
++
++```javascript
++// frontend/tests/AIFloorPage.test.jsx
++import { render, screen } from '@testing-library/react';
++import AIFloorPage from '../src/pages/AIFloorPage';
++import { AgentEventsProvider } from '../src/hooks/useAgentEvents';
++
++test('renders activity log panel', () => {
++  render(
++    <AgentEventsProvider>
++      <AIFloorPage />
++    </AgentEventsProvider>
++  );
++  expect(screen.getByText('Activity Log')).toBeInTheDocument();
++});
++```
++
++- [ ] **Step 2: Run test to verify it fails**
++
++Run: `npm run test -- -t "renders activity log panel"`
++Expected: FAIL.
++
++- [ ] **Step 3: Write minimal implementation**
++
++Modify `frontend/src/pages/AIFloorPage.jsx` to import `useState`, `useEffect` and capture `lastEvent` to maintain a log array, and render the DOM overlay.
++
++```jsx
++// At the top of frontend/src/pages/AIFloorPage.jsx
++import { useEffect, useRef, useState } from 'react';
++import * as PIXI from 'pixi.js';
++import { useAgentEvents } from '../hooks/useAgentEvents';
++
++// ... (keep AGENT_CONFIG)
++
++export default function AIFloorPage() {
++  const containerRef = useRef(null);
++  const appRef = useRef(null);
++  const spritesRef = useRef({});
++  const { agentStates, lastEvent } = useAgentEvents();
++  
++  // New state for Activity Log
++  const [logs, setLogs] = useState([]);
++
++  useEffect(() => {
++    if (lastEvent && lastEvent.message) {
++      setLogs(prev => {
++        const newLogs = [...prev, { time: new Date().toLocaleTimeString(), msg: lastEvent.message }];
++        return newLogs.slice(-20); // Keep last 20 logs
++      });
++    }
++  }, [lastEvent]);
++
++  // ... (keep initPixi useEffect but wrap the return statement to include the panel)
++
++  return (
++    <div className="ai-floor-page" style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
++      <div className="glass-panel" style={{ marginBottom: '16px', zIndex: 10 }}>
++        <h2 style={{ fontSize: '1.25rem', marginBottom: '4px' }}>AI Trading Floor</h2>
++        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
++          Real-time view of agent activity and analysis processes.
++        </p>
++      </div>
++      
++      <div style={{ display: 'flex', gap: '16px', flex: 1, minHeight: 0 }}>
++        {/* Canvas Container */}
++        <div 
++          className="glass-panel" 
++          ref={containerRef} 
++          style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}
++        />
++        
++        {/* Activity Log Overlay */}
++        <div className="glass-panel" style={{ width: '300px', display: 'flex', flexDirection: 'column' }}>
++          <h3 style={{ fontSize: '1rem', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Activity Log</h3>
++          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
++            {logs.map((log, i) => (
++              <div key={i} style={{ fontSize: '0.85rem' }}>
++                <span style={{ color: 'var(--text-secondary)', marginRight: '8px' }}>[{log.time}]</span>
++                <span>{log.msg}</span>
++              </div>
++            ))}
++            {logs.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Waiting for activity...</div>}
++          </div>
++        </div>
++      </div>
++    </div>
++  );
++}
++```
++
++- [ ] **Step 4: Run test to verify it passes**
++
++Run: `npm run test -- -t "renders activity log panel"`
++Expected: PASS
++
++- [ ] **Step 5: Commit**
++
++```bash
++git add frontend/tests/AIFloorPage.test.jsx frontend/src/pages/AIFloorPage.jsx
++git commit -m "feat: add real-time activity log panel to AI floor"
++```
++
++---
++
++### Task 2: Implement Sprite Animations in PixiJS
++
++**Files:**
++- Modify: `frontend/src/pages/AIFloorPage.jsx`
++
++- [ ] **Step 1: Write the failing test**
++
++*(We cannot easily unit test PixiJS canvas loop interactions in JSDOM, so we will skip the test for this specific visual canvas hook and rely on manual verification).*
++
++- [ ] **Step 2: Write minimal implementation**
++
++Modify `AIFloorPage.jsx` to dynamically read from `agentStates` inside the PixiJS `ticker` loop to animate the Sprites. Note: React state values inside a `useEffect` closure can be stale, so we use a `ref` to keep the latest `agentStates` accessible inside the PixiJS loop.
++
++```jsx
++// Inside AIFloorPage component:
++  const { agentStates, lastEvent } = useAgentEvents();
++  const agentStatesRef = useRef(agentStates);
++
++  // Keep ref updated
++  useEffect(() => {
++    agentStatesRef.current = agentStates;
++  }, [agentStates]);
++
++  useEffect(() => {
++    // ... setup Pixi
++    const app = new PIXI.Application();
++    appRef.current = app;
++
++    const initPixi = async () => {
++      // ... app.init ...
++      // ... load background and sprites ...
++      
++      // Animation loop
++      let tick = 0;
++      app.ticker.add(() => {
++        tick += 0.1;
++        const currentStates = agentStatesRef.current;
++        
++        for (const [id, sprite] of Object.entries(spritesRef.current)) {
++          const state = currentStates[id]?.state || 'IDLE';
++          
++          if (state === 'TYPING' || state === 'PRESENTING') {
++            // Bobbing animation for busy agents
++            sprite.y = AGENT_CONFIG[id].y + Math.sin(tick) * 3;
++            sprite.alpha = 1;
++          } else if (state === 'WALKING') {
++            sprite.y = AGENT_CONFIG[id].y + Math.sin(tick * 2) * 5;
++            sprite.alpha = 1;
++          } else {
++            // Reset to default
++            sprite.y = AGENT_CONFIG[id].y;
++            sprite.alpha = 0.8;
++          }
++        }
++      });
++    };
++
++    initPixi();
++
++    return () => {
++      if (appRef.current) {
++        appRef.current.destroy(true, { children: true, texture: false, baseTexture: false });
++      }
++    };
++  }, []); // Run once
++```
++
++- [ ] **Step 3: Commit**
++
++```bash
++git add frontend/src/pages/AIFloorPage.jsx
++git commit -m "feat: animate agent sprites on the AI floor based on websocket state"
++```
+diff --git a/docs/superpowers/plans/2026-06-14-dashboard-realtime.md b/docs/superpowers/plans/2026-06-14-dashboard-realtime.md
+new file mode 100644
+index 0000000..210c91e
+--- /dev/null
++++ b/docs/superpowers/plans/2026-06-14-dashboard-realtime.md
+@@ -0,0 +1,273 @@
++# Dashboard & Watchlist Data Integration Plan
++
++> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
++
++**Goal:** Replace mock data in Dashboard and Watchlist pages with real data fetched from the Express Backend, which securely aggregates Supabase database rows and live Yahoo Finance market data using Clerk Authentication.
++
++**Architecture:** 
++1. **Auth:** `@clerk/clerk-react` installed on Frontend, `@clerk/express` installed on Backend. Frontend passes JWT to backend.
++2. **Backend (Gateway):** `api.js` exposes `/holdings` and `/watchlists`. It verifies the user, queries the Supabase `db.js` layer, then fetches live quotes and cached sparklines from `yahoo-finance2` before sending a merged payload to the frontend.
++3. **Frontend (React):** `DashboardPage.jsx` and `WatchlistPage.jsx` use `useEffect` and the Clerk `getToken()` to securely fetch data and show loading states.
++
++**Tech Stack:** React, Express, Supabase (Service Role), Clerk, Yahoo Finance 2.
++
++---
++
++### Task 1: Backend Authentication Setup
++
++**Files:**
++- Modify: `backend/package.json`
++- Modify: `backend/server.js`
++
++- [ ] **Step 1: Install `@clerk/express`**
++
++```bash
++cd backend && npm install @clerk/express
++```
++
++- [ ] **Step 2: Add Clerk Middleware to Express**
++
++Modify `backend/server.js` to import and apply `clerkMiddleware`. Add this right after `app.use(express.json())`.
++
++```javascript
++// At the top with other requires
++const { clerkMiddleware } = require('@clerk/express');
++
++// ... below app.use(express.json(...))
++app.use(clerkMiddleware());
++```
++
++- [ ] **Step 3: Commit**
++
++```bash
++git add backend/package.json backend/package-lock.json backend/server.js
++git commit -m "feat: setup clerk middleware in backend"
++```
++
++---
++
++### Task 2: Build Backend Data Endpoints
++
++**Files:**
++- Modify: `backend/src/routes/api.js`
++- Modify: `backend/src/db.js`
++
++- [ ] **Step 1: Update `db.js` to support Watchlists**
++
++Modify `backend/src/db.js` to export a new function `getUserWatchlists`.
++
++```javascript
++// Add to backend/src/db.js
++export async function getUserWatchlists(userId) {
++  if (!userId) throw new Error('User ID is required');
++  const { data, error } = await supabase
++    .from('watchlists')
++    .select('*')
++    .eq('user_id', userId);
++    
++  if (error) throw error;
++  return data;
++}
++```
++
++- [ ] **Step 2: Create Sparkline Cache in `api.js`**
++
++Modify `backend/src/routes/api.js` to include a simple in-memory cache for sparklines and the new endpoints.
++
++```javascript
++// Add to backend/src/routes/api.js
++const { requireAuth } = require('@clerk/express');
++const { getUserHoldings, getUserWatchlists } = require('../db');
++const { default: YahooFinance } = require('yahoo-finance2');
++
++// Simple sparkline cache
++const sparklineCache = new Map();
++const SPARKLINE_TTL = 60 * 60 * 1000; // 1 hour
++
++async function getSparkline(ticker) {
++  const now = Date.now();
++  if (sparklineCache.has(ticker)) {
++    const cached = sparklineCache.get(ticker);
++    if (now - cached.timestamp < SPARKLINE_TTL) return cached.data;
++  }
++  try {
++    const period1 = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
++    const res = await YahooFinance.historical(ticker, { period1, interval: '1d' });
++    const data = res.map(r => r.close);
++    sparklineCache.set(ticker, { timestamp: now, data });
++    return data;
++  } catch (e) {
++    return [0, 0];
++  }
++}
++
++async function enrichWithMarketData(items) {
++  return Promise.all(items.map(async (item) => {
++    try {
++      const quote = await YahooFinance.quote(item.ticker);
++      const spark = await getSparkline(item.ticker);
++      return {
++        ...item,
++        price: quote.regularMarketPrice,
++        change: quote.regularMarketChange,
++        changePct: quote.regularMarketChangePercent,
++        spark
++      };
++    } catch (e) {
++      return { ...item, price: 0, change: 0, changePct: 0, spark: [] };
++    }
++  }));
++}
++
++// Routes
++router.get('/holdings', requireAuth(), async (req, res) => {
++  try {
++    const holdings = await getUserHoldings(req.auth.userId);
++    const enriched = await enrichWithMarketData(holdings);
++    res.json(enriched);
++  } catch (err) {
++    res.status(500).json({ error: err.message });
++  }
++});
++
++router.get('/watchlists', requireAuth(), async (req, res) => {
++  try {
++    const watchlists = await getUserWatchlists(req.auth.userId);
++    const enriched = await enrichWithMarketData(watchlists);
++    res.json(enriched);
++  } catch (err) {
++    res.status(500).json({ error: err.message });
++  }
++});
++```
++
++- [ ] **Step 3: Commit**
++
++```bash
++git add backend/src/routes/api.js backend/src/db.js
++git commit -m "feat: build real-time holdings and watchlists endpoints with yahoo finance caching"
++```
++
++---
++
++### Task 3: Frontend Clerk Setup
++
++**Files:**
++- Modify: `frontend/package.json`
++- Modify: `frontend/src/main.jsx`
++- Create: `frontend/src/lib/api.js`
++
++- [ ] **Step 1: Install Clerk React**
++
++```bash
++cd frontend && npm install @clerk/clerk-react
++```
++
++- [ ] **Step 2: Wrap Application in ClerkProvider**
++
++Modify `frontend/src/main.jsx` to include `<ClerkProvider>`. Use a dummy publishable key fallback for local dev if missing.
++
++```javascript
++// frontend/src/main.jsx
++import React from 'react';
++import ReactDOM from 'react-dom/client';
++import App from './App.jsx';
++import { ClerkProvider } from '@clerk/clerk-react';
++
++const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_placeholder";
++
++ReactDOM.createRoot(document.getElementById('root')).render(
++  <React.StrictMode>
++    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
++      <App />
++    </ClerkProvider>
++  </React.StrictMode>,
++);
++```
++
++- [ ] **Step 3: Create API Client Helper**
++
++Create `frontend/src/lib/api.js` to standardize fetching.
++
++```javascript
++// frontend/src/lib/api.js
++export async function fetchWithAuth(url, getToken) {
++  const token = await getToken();
++  const res = await fetch(url, {
++    headers: { Authorization: `Bearer ${token}` }
++  });
++  if (!res.ok) throw new Error('API Error');
++  return res.json();
++}
++```
++
++- [ ] **Step 4: Commit**
++
++```bash
++git add frontend/package.json frontend/package-lock.json frontend/src/main.jsx frontend/src/lib/api.js
++git commit -m "feat: setup clerk provider and secure api client on frontend"
++```
++
++---
++
++### Task 4: Replace Mocks in Dashboard & Watchlist UI
++
++**Files:**
++- Modify: `frontend/src/pages/DashboardPage.jsx`
++- Modify: `frontend/src/pages/WatchlistPage.jsx`
++
++- [ ] **Step 1: Update DashboardPage**
++
++Remove the `const WATCHLIST` array. Import `useEffect`, `useState`, `useAuth` from `@clerk/clerk-react`, and `fetchWithAuth`.
++
++```javascript
++// In frontend/src/pages/DashboardPage.jsx
++import { useAuth } from '@clerk/clerk-react';
++import { fetchWithAuth } from '../lib/api';
++
++// Inside DashboardPage component:
++const { getToken } = useAuth();
++const [watchlist, setWatchlist] = useState([]);
++const [loading, setLoading] = useState(true);
++
++useEffect(() => {
++  fetchWithAuth('/api/holdings', getToken)
++    .then(data => setWatchlist(data))
++    .catch(err => console.error(err))
++    .finally(() => setLoading(false));
++}, [getToken]);
++
++// Modify the table mapping to use `watchlist` state instead of constant.
++// Handle loading state gracefully.
++```
++
++- [ ] **Step 2: Update WatchlistPage**
++
++Remove `INITIAL_WATCHLIST` array. Use the same fetching pattern.
++
++```javascript
++// In frontend/src/pages/WatchlistPage.jsx
++import { useAuth } from '@clerk/clerk-react';
++import { fetchWithAuth } from '../lib/api';
++
++// Inside WatchlistPage component:
++const { getToken } = useAuth();
++const [watchlist, setWatchlist] = useState([]);
++const [loading, setLoading] = useState(true);
++
++useEffect(() => {
++  fetchWithAuth('/api/watchlists', getToken)
++    .then(data => setWatchlist(data))
++    .catch(err => console.error(err))
++    .finally(() => setLoading(false));
++}, [getToken]);
++
++// Map over watchlist state. Remove dependencies on INITIAL_WATCHLIST.
++```
++
++- [ ] **Step 3: Commit**
++
++```bash
++git add frontend/src/pages/DashboardPage.jsx frontend/src/pages/WatchlistPage.jsx
++git commit -m "feat: wire up dashboard and watchlist to real backend API"
++```
+diff --git a/frontend/package.json b/frontend/package.json
+index 78c0b83..7d139c7 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -11,7 +11,7 @@
+     "test": "vitest run --passWithNoTests"
+   },
+   "dependencies": {
+-    "@clerk/clerk-react": "^5.61.8",
++    "@clerk/react": "^6.9.1",
+     "@radix-ui/react-slot": "^1.2.5",
+     "@supabase/supabase-js": "^2.108.1",
+     "lucide-react": "^1.17.0",
+diff --git a/frontend/src/App.jsx b/frontend/src/App.jsx
+index 3619dd6..9fd70cd 100644
+--- a/frontend/src/App.jsx
++++ b/frontend/src/App.jsx
+@@ -1,5 +1,6 @@
+ import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
+ import { LayoutDashboard, Bot, BookOpen, ShieldAlert, BarChart2, Crosshair, Settings2 } from 'lucide-react';
++import { Show, SignInButton, UserButton } from '@clerk/react';
+ import DashboardPage from './pages/DashboardPage';
+ import AIFloorPage from './pages/AIFloorPage';
+ import JournalPage from './pages/JournalPage';
+@@ -7,6 +8,8 @@ import PortfolioRiskPage from './pages/PortfolioRiskPage';
+ import AnalyticsPage from './pages/AnalyticsPage';
+ import MarketExplorerPage from './pages/MarketExplorerPage';
+ import ConfigPage from './pages/ConfigPage';
++import LandingPage from './pages/LandingPage';
++import KeyboardShortcuts from './components/KeyboardShortcuts';
+ import './index.css';
+ 
+ const NAV_LINKS = [
+@@ -22,46 +25,58 @@ const NAV_LINKS = [
+ function App() {
+   return (
+     <BrowserRouter>
++      <KeyboardShortcuts />
+       <div className="app-root">
+-        {/* Tab Navigation */}
+-        <nav className="tab-nav" aria-label="Main navigation">
+-          <div className="tab-nav-brand">
+-            <span className="brand-dot" aria-hidden="true" />
+-            <span className="brand-name">MyPortStock Terminal</span>
+-          </div>
+-          <div className="tab-nav-links" role="tablist">
+-            {NAV_LINKS.map(({ to, label, end, icon: Icon }) => (
+-              <NavLink
+-                key={to}
+-                to={to}
+-                end={end}
+-                className={({ isActive }) => isActive ? 'tab-link active' : 'tab-link'}
+-                role="tab"
+-                aria-label={label}
+-              >
+-                <Icon size={14} aria-hidden="true" />
+-                {label}
+-              </NavLink>
+-            ))}
+-          </div>
+-          <div className="tab-nav-status">
+-            <span className="status-dot" aria-hidden="true" />
+-            <span className="status-text">Live</span>
+-          </div>
+-        </nav>
++        <Show when="signed-out">
++          <LandingPage />
++        </Show>
+ 
+-        {/* Page Content */}
+-        <main className="app-content" id="main-content">
+-          <Routes>
+-            <Route path="/" element={<DashboardPage />} />
+-            <Route path="/risk" element={<PortfolioRiskPage />} />
+-            <Route path="/market" element={<MarketExplorerPage />} />
+-            <Route path="/ai-floor" element={<AIFloorPage />} />
+-            <Route path="/journal" element={<JournalPage />} />
+-            <Route path="/analytics" element={<AnalyticsPage />} />
+-            <Route path="/config" element={<ConfigPage />} />
+-          </Routes>
+-        </main>
++        <Show when="signed-in">
++          {/* Sidebar Navigation */}
++          <nav className="side-nav" aria-label="Main navigation">
++            <div className="side-nav-brand">
++              <span className="brand-dot" aria-hidden="true" />
++              <span className="brand-name">MyPortStock</span>
++            </div>
++            <div className="side-nav-links" role="tablist">
++              {NAV_LINKS.map(({ to, label, end, icon: Icon }) => (
++                <NavLink
++                  key={to}
++                  to={to}
++                  end={end}
++                  className={({ isActive }) => isActive ? 'side-link active' : 'side-link'}
++                  role="tab"
++                  aria-label={label}
++                >
++                  <Icon size={18} aria-hidden="true" />
++                  {label}
++                </NavLink>
++              ))}
++            </div>
++            <div className="side-nav-status">
++              <div className="status-indicator">
++                <span className="status-dot" aria-hidden="true" />
++                <span className="status-text">Live Systems</span>
++              </div>
++              
++              {/* Clerk Auth UI */}
++              <UserButton />
++            </div>
++          </nav>
++
++          {/* Page Content */}
++          <main className="app-content" id="main-content">
++            <Routes>
++              <Route path="/" element={<DashboardPage />} />
++              <Route path="/risk" element={<PortfolioRiskPage />} />
++              <Route path="/market" element={<MarketExplorerPage />} />
++              <Route path="/ai-floor" element={<AIFloorPage />} />
++              <Route path="/journal" element={<JournalPage />} />
++              <Route path="/analytics" element={<AnalyticsPage />} />
++              <Route path="/config" element={<ConfigPage />} />
++            </Routes>
++          </main>
++        </Show>
+       </div>
+     </BrowserRouter>
+   );
+diff --git a/frontend/src/components/KeyboardShortcuts.jsx b/frontend/src/components/KeyboardShortcuts.jsx
+new file mode 100644
+index 0000000..54332f0
+--- /dev/null
++++ b/frontend/src/components/KeyboardShortcuts.jsx
+@@ -0,0 +1,58 @@
++import { useEffect, useState } from 'react';
++import { useNavigate } from 'react-router-dom';
++
++export default function KeyboardShortcuts() {
++  const navigate = useNavigate();
++  const [keySequence, setKeySequence] = useState('');
++
++  useEffect(() => {
++    const handleKeyDown = (e) => {
++      // Ignore if typing in an input or textarea
++      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || e.target.isContentEditable) {
++        return;
++      }
++
++      const key = e.key.toLowerCase();
++      
++      // Global quick shortcuts
++      if (e.key === '?') {
++        alert('Keyboard Shortcuts:\\n\\ng d : Go to Dashboard\\ng r : Go to Risk\\ng m : Go to Market\\ng a : Go to AI Floor\\ng j : Go to Journal\\ng c : Go to Config');
++        return;
++      }
++
++      setKeySequence(prev => {
++        const nextSequence = prev + key;
++        
++        // Handle sequences
++        switch (nextSequence) {
++          case 'gd': navigate('/'); break;
++          case 'gr': navigate('/risk'); break;
++          case 'gm': navigate('/market'); break;
++          case 'ga': navigate('/ai-floor'); break;
++          case 'gj': navigate('/journal'); break;
++          case 'gv': navigate('/analytics'); break;
++          case 'gc': navigate('/config'); break;
++          default:
++            // If it's the start of a sequence ('g'), keep it. Otherwise, clear.
++            return key === 'g' ? 'g' : '';
++        }
++        
++        // Clear sequence if matched
++        return '';
++      });
++    };
++
++    window.addEventListener('keydown', handleKeyDown);
++    return () => window.removeEventListener('keydown', handleKeyDown);
++  }, [navigate]);
++
++  // Clear sequence automatically after 1.5 seconds to prevent stuck states
++  useEffect(() => {
++    if (keySequence) {
++      const timer = setTimeout(() => setKeySequence(''), 1500);
++      return () => clearTimeout(timer);
++    }
++  }, [keySequence]);
++
++  return null; // This is a logic-only component
++}
+diff --git a/frontend/src/components/PixelTradingFloor.jsx b/frontend/src/components/PixelTradingFloor.jsx
+index c00a537..dfd318e 100644
+--- a/frontend/src/components/PixelTradingFloor.jsx
++++ b/frontend/src/components/PixelTradingFloor.jsx
+@@ -146,7 +146,7 @@ function AgentSprite({ agent }) {
+         top: `${agent.top}%`,
+         left: `${agent.left}%`,
+         transform: 'translate(-50%, -50%)',
+-        transition: 'top 1.2s cubic-bezier(0.4, 0, 0.2, 1), left 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
++        transition: 'top 1.2s cubic-bezier(0.25, 1, 0.5, 1), left 1.2s cubic-bezier(0.25, 1, 0.5, 1)',
+         display: 'flex',
+         flexDirection: 'column',
+         alignItems: 'center',
+@@ -158,79 +158,106 @@ function AgentSprite({ agent }) {
+         <div style={{
+           position: 'absolute',
+           bottom: '100%',
+-          marginBottom: '12px',
+-          backgroundColor: 'rgba(15, 23, 42, 0.9)',
+-          border: `1px solid ${color}`,
+-          color: '#e2e8f0',
+-          padding: '6px 10px',
+-          borderRadius: '6px',
++          marginBottom: '16px',
++          backgroundColor: 'var(--surface)',
++          border: `1px solid var(--border-medium)`,
++          color: 'var(--text-primary)',
++          padding: '8px 12px',
++          borderRadius: '8px',
+           fontSize: '0.75rem',
+-          fontWeight: '500',
++          fontWeight: '600',
+           whiteSpace: 'nowrap',
+-          boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+-          animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
++          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
++          animation: 'popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+           zIndex: 100
+         }}>
+           {agent.message}
+           <div style={{
+             position: 'absolute',
+-            bottom: '-5px',
++            bottom: '-6px',
+             left: '50%',
+             transform: 'translateX(-50%)',
+-            borderLeft: '5px solid transparent',
+-            borderRight: '5px solid transparent',
+-            borderTop: `5px solid ${color}`
++            width: '12px',
++            height: '12px',
++            backgroundColor: 'var(--surface)',
++            borderRight: '1px solid var(--border-medium)',
++            borderBottom: '1px solid var(--border-medium)',
++            clipPath: 'polygon(100% 0, 0 100%, 100% 100%)',
++            rotate: '45deg'
+           }} />
+         </div>
+       )}
+ 
+-      {/* The Character Body */}
++      {/* The Pixel Agent Character */}
+       <div 
+         style={{
+-          width: '32px',
+-          height: '32px',
+-          backgroundColor: 'rgba(15, 23, 42, 0.8)',
+-          borderRadius: '50%',
+-          border: `2px solid ${isDone ? '#10b981' : color}`,
+           display: 'flex',
++          flexDirection: 'column',
+           alignItems: 'center',
+-          justifyContent: 'center',
+-          boxShadow: isDone ? `0 0 15px #10b981` : isTyping ? `0 0 10px ${color}` : '0 4px 6px rgba(0,0,0,0.3)',
+-          animation: isWalking ? 'bounce 0.4s infinite alternate' : isTyping ? 'pulse 1s infinite alternate' : 'none'
++          animation: isWalking ? 'walkBob 0.5s ease-in-out infinite alternate' : 'none'
+         }}
+       >
+-        <Icon size={18} color={isDone ? '#10b981' : color} />
++        {/* Head */}
++        <div style={{
++          width: '20px',
++          height: '20px',
++          backgroundColor: isDone ? 'var(--status-success)' : color,
++          borderRadius: '6px',
++          display: 'flex',
++          alignItems: 'center',
++          justifyContent: 'center',
++          marginBottom: '2px',
++          boxShadow: isTyping ? `0 0 12px ${color}` : '0 2px 4px rgba(0,0,0,0.1)',
++          animation: isTyping ? 'pulseGlow 1.5s ease-in-out infinite alternate' : 'none',
++          position: 'relative',
++          zIndex: 2
++        }}>
++          <Icon size={12} color="#ffffff" />
++        </div>
++        {/* Body */}
++        <div style={{
++          width: '24px',
++          height: '14px',
++          backgroundColor: 'var(--foreground)',
++          borderRadius: '4px',
++          position: 'relative',
++          zIndex: 1,
++          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
++        }} />
+       </div>
+       
+       {/* Name tag */}
+       <div style={{
+-        marginTop: '4px',
+-        backgroundColor: 'rgba(0,0,0,0.7)',
+-        padding: '2px 6px',
+-        borderRadius: '4px',
++        marginTop: '6px',
++        backgroundColor: 'var(--surface)',
++        border: '1px solid var(--border-subtle)',
++        padding: '2px 8px',
++        borderRadius: '12px',
+         fontSize: '0.65rem',
+-        color: '#94a3b8',
+-        fontWeight: 'bold',
++        color: 'var(--text-secondary)',
++        fontWeight: '700',
+         textTransform: 'uppercase',
+-        letterSpacing: '0.5px'
++        letterSpacing: '0.05em',
++        boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+       }}>
+         {agent.id.replace(/-/g, ' ')}
+       </div>
+ 
+       <style>{`
+         @keyframes popIn {
+-          0% { opacity: 0; transform: scale(0.8) translateY(10px); }
++          0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+           100% { opacity: 1; transform: scale(1) translateY(0); }
+         }
+-        @keyframes bounce {
+-          0% { transform: translateY(0); }
+-          100% { transform: translateY(-6px); }
++        @keyframes walkBob {
++          0% { transform: translateY(0) rotate(-3deg); }
++          100% { transform: translateY(-4px) rotate(3deg); }
+         }
+-        @keyframes pulse {
+-          0% { transform: scale(1); box-shadow: 0 0 5px ${color}; }
+-          100% { transform: scale(1.1); box-shadow: 0 0 15px ${color}; }
++        @keyframes pulseGlow {
++          0% { box-shadow: 0 0 4px ${color}; }
++          100% { box-shadow: 0 0 16px ${color}; }
+         }
+       `}</style>
+     </div>
+   );
+ }
++
+diff --git a/frontend/src/index.css b/frontend/src/index.css
+index 6566104..6c385ab 100644
+--- a/frontend/src/index.css
++++ b/frontend/src/index.css
+@@ -1,4 +1,4 @@
+-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500&display=swap');
++@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=JetBrains+Mono:wght@400;500&display=swap');
+ 
+ @tailwind base;
+ @tailwind components;
+@@ -6,59 +6,59 @@
+ 
+ @layer base {
+   :root {
+-    --background: #0a0a0a;
+-    --foreground: #ededed;
+-    --surface: #121212;
+-    --surface-hover: #1c1c1c;
+-    --border: #262626;
+-    --border-hover: #404040;
+-
+-    --status-success: #34d399;
+-    --status-success-bg: rgba(52, 211, 153, 0.1);
+-    --status-danger: #f87171;
+-    --status-danger-bg: rgba(248, 113, 113, 0.1);
+-    --status-warning: #facc15;
+-    --status-warning-bg: rgba(250, 204, 21, 0.1);
+-
+-    --muted: #a3a3a3;
++    --background: #f1f4f2;
++    --foreground: #0b1a14;
++    --surface: #ffffff;
++    --surface-hover: #f8faf9;
++    --border: #e2e8e5;
++    --border-hover: #cbd5d1;
++
++    --status-success: #22c55e;
++    --status-success-bg: rgba(34, 197, 94, 0.1);
++    --status-danger: #ef4444;
++    --status-danger-bg: rgba(239, 68, 68, 0.1);
++    --status-warning: #eab308;
++    --status-warning-bg: rgba(234, 179, 8, 0.1);
++
++    --muted: #64748b;
+ 
+     /* Mapped legacy variables for non-Tailwind pages */
+-    --bg-void:          #0a0a0a;
+-    --bg-panel:         #121212;
+-    --bg-panel-hover:   #1c1c1c;
+-    --bg-panel-solid:   #121212;
+-    --border-subtle:    #262626;
+-    --border-medium:    #404040;
+-
+-    --text-primary:     #ededed;
+-    --text-secondary:   #a3a3a3;
+-    --text-muted:       #525252;
+-
+-    --brand-primary:    #3b82f6;
+-    --brand-dark:       #2563eb;
+-    --brand-glow:       transparent;
+-
+-    --fin-profit:       #34d399;
+-    --fin-profit-dim:   rgba(52, 211, 153, 0.1);
+-    --fin-loss:         #f87171;
+-    --fin-loss-dim:     rgba(248, 113, 113, 0.1);
+-    --fin-warning:      #facc15;
+-    --fin-warning-dim:  rgba(250, 204, 21, 0.1);
++    --bg-void:          #f1f4f2;
++    --bg-panel:         #ffffff;
++    --bg-panel-hover:   #f8faf9;
++    --bg-panel-solid:   #ffffff;
++    --border-subtle:    #e2e8e5;
++    --border-medium:    #cbd5d1;
++
++    --text-primary:     #0b1a14;
++    --text-secondary:   #4a5d55;
++    --text-muted:       #6b7a73;
++
++    --brand-primary:    #84cc16; /* Lime green */
++    --brand-dark:       #65a30d;
++    --brand-glow:       rgba(132, 204, 22, 0.3);
++
++    --fin-profit:       #22c55e;
++    --fin-profit-dim:   rgba(34, 197, 94, 0.1);
++    --fin-loss:         #ef4444;
++    --fin-loss-dim:     rgba(239, 68, 68, 0.1);
++    --fin-warning:      #eab308;
++    --fin-warning-dim:  rgba(234, 179, 8, 0.1);
+ 
+     --radius-lg:  16px;
+     --radius-md:  12px;
+     --radius-sm:  8px;
+     --radius-xs:  6px;
+ 
+-    --shadow-glass: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+-    --shadow-sm:    0 4px 12px rgba(0, 0, 0, 0.2);
++    --shadow-glass: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
++    --shadow-sm:    0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+ 
+-    --blur-glass: none;
++    --blur-glass: blur(10px);
+     
+     --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+     --transition: all 0.2s var(--ease-out-quart);
+ 
+-    --nav-height: 60px;
++    --nav-width: 260px;
+   }
+ 
+   /* Reset overrides for Tailwind compatibility */
+@@ -68,97 +68,105 @@
+ 
+   body {
+     @apply bg-background text-foreground;
+-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
++    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+     min-height: 100vh;
+     background-image:
+-      radial-gradient(ellipse at 20% 10%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+-      radial-gradient(ellipse at 80% 80%, rgba(52, 211, 153, 0.03) 0%, transparent 50%);
++      radial-gradient(ellipse at 20% 10%, rgba(132, 204, 22, 0.05) 0%, transparent 50%),
++      radial-gradient(ellipse at 80% 80%, rgba(34, 197, 94, 0.03) 0%, transparent 50%);
+     background-attachment: fixed;
+   }
+ }
+ 
+ 
+ /* ─── App Shell ────────────────────────────────────────────── */
+-.app-root { display: flex; flex-direction: column; min-height: 100vh; }
+-.app-content { flex: 1; overflow: hidden; }
++.app-root { display: flex; flex-direction: row; min-height: 100vh; }
++.app-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+ 
+-
+-/* ─── Tab Navigation ───────────────────────────────────────── */
+-.tab-nav {
++/* ─── Sidebar Navigation ───────────────────────────────────────── */
++.side-nav {
+   position: sticky;
+   top: 0;
+   z-index: 30;
+-  height: var(--nav-height);
++  width: var(--nav-width);
++  height: 100vh;
+   display: flex;
+-  align-items: center;
+-  justify-content: space-between;
+-  padding: 0 24px;
+-  background: rgba(15, 23, 42, 0.85);
+-  backdrop-filter: var(--blur-glass);
+-  -webkit-backdrop-filter: var(--blur-glass);
+-  border-bottom: 1px solid var(--border-subtle);
++  flex-direction: column;
++  padding: 24px 20px;
++  background: var(--surface);
++  border-right: 1px solid var(--border-subtle);
+ }
+ 
+-.tab-nav-brand {
++.side-nav-brand {
+   display: flex;
+   align-items: center;
+-  gap: 10px;
++  gap: 12px;
++  margin-bottom: 40px;
++  padding: 0 12px;
+ }
+ 
+ .brand-dot {
+-  width: 10px; height: 10px;
+-  border-radius: 50%;
++  width: 24px; height: 24px;
++  border-radius: 6px;
+   background: var(--brand-primary);
+-  box-shadow: 0 0 8px var(--brand-glow);
+-  animation: pulse-dot 2s infinite;
++  display: flex;
++  align-items: center;
++  justify-content: center;
+ }
+ 
+-@keyframes pulse-dot {
+-  0%, 100% { opacity: 1; }
+-  50% { opacity: 0.5; }
++.brand-dot::after {
++  content: '';
++  width: 12px; height: 12px;
++  background: white;
++  border-radius: 2px;
+ }
+ 
+ .brand-name {
+-  font-size: 0.95rem;
+-  font-weight: 600;
++  font-size: 1.1rem;
++  font-weight: 700;
+   letter-spacing: -0.3px;
+   color: var(--text-primary);
+ }
+ 
+-.tab-nav-links {
++.side-nav-links {
+   display: flex;
++  flex-direction: column;
+   gap: 4px;
+-  background: var(--bg-panel);
+-  border: 1px solid var(--border-subtle);
+-  border-radius: var(--radius-md);
++  flex: 1;
+ }
+ 
+-.tab-link {
++.side-link {
+   text-decoration: none;
+-  padding: 6px 14px;
+-  border-radius: 8px;
+-  font-size: 0.82rem;
++  padding: 10px 14px;
++  border-radius: var(--radius-sm);
++  font-size: 0.9rem;
+   font-weight: 500;
+   color: var(--text-secondary);
+   transition: var(--transition);
+   display: flex;
+   align-items: center;
+-  gap: 6px;
+-  white-space: nowrap;
++  gap: 12px;
+ }
+ 
+-.tab-link:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
++.side-link:hover { color: var(--text-primary); background: var(--bg-panel-hover); }
+ 
+-.tab-link.active {
+-  background: rgba(59,130,246,0.18);
+-  color: var(--brand-primary);
+-  box-shadow: none;
++.side-link.active {
++  background: rgba(132, 204, 22, 0.1);
++  color: var(--brand-dark);
+ }
+ 
+-.tab-nav-status {
++.side-nav-status {
++  margin-top: auto;
+   display: flex;
+   align-items: center;
+-  gap: 6px;
++  justify-content: space-between;
++  padding: 16px 12px;
++  border-top: 1px solid var(--border-subtle);
++}
++
++.status-indicator {
++  display: flex;
++  align-items: center;
++  gap: 8px;
+ }
+ 
+ .status-dot {
+@@ -167,7 +175,7 @@
+   background: var(--fin-profit);
+ }
+ 
+-.status-text { font-size: 0.8rem; color: var(--fin-profit); font-weight: 500; }
++.status-text { font-size: 0.8rem; color: var(--text-secondary); font-weight: 500; }
+ 
+ /* ─── Glass Panel ──────────────────────────────────────────── */
+ .glass-panel {
+@@ -178,20 +186,20 @@
+ }
+ 
+ .glass-card {
+-  background: rgba(15, 23, 42, 0.4);
++  background: var(--surface);
+   border: 1px solid var(--border-subtle);
+   border-radius: var(--radius-md);
+ }
+ 
+ /* ─── Dashboard Page ───────────────────────────────────────── */
+ .dashboard-page {
+-  height: calc(100vh - var(--nav-height));
++  height: 100vh;
+   overflow-y: auto;
+-  padding: 24px;
++  padding: 32px;
+   display: grid;
+   grid-template-rows: auto 1fr;
+   grid-template-columns: 1fr 380px;
+-  gap: 20px;
++  gap: 24px;
+   grid-template-areas:
+     "header header"
+     "watchlist ai-panel";
+@@ -409,12 +417,12 @@
+ .btn-analyze {
+   width: 100%;
+   background: var(--brand-primary);
+-  color: white;
++  color: var(--text-primary);
+   border: none;
+   padding: 14px 20px;
+   border-radius: var(--radius-sm);
+   font-size: 0.95rem;
+-  font-weight: 600;
++  font-weight: 700;
+   font-family: 'Inter', sans-serif;
+   cursor: pointer;
+   transition: var(--transition);
+@@ -651,7 +659,6 @@
+ .trading-floor-canvas-wrap {
+   flex: 1;
+   position: relative;
+-  overflow: hidden;
+ }
+ 
+ .trading-floor-bg {
+@@ -799,6 +806,154 @@
+   animation: fadeInDown 0.4s var(--ease-out-quart);
+ }
+ 
++.nav-tabs-wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; }
++
++/* ─── Landing Page ─────────────────────────────────────────── */
++.landing-container {
++  min-height: 100vh;
++  display: flex;
++  flex-direction: column;
++  position: relative;
++  overflow: hidden;
++  background-color: var(--background);
++}
++
++.landing-header {
++  height: 70px;
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  padding: 0 40px;
++  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
++  position: relative;
++  z-index: 10;
++}
++
++.landing-header .brand {
++  display: flex;
++  align-items: center;
++  gap: 10px;
++}
++
++.landing-header .brand-text {
++  font-size: 1.1rem;
++  font-weight: 600;
++  letter-spacing: -0.3px;
++  color: var(--text-primary);
++}
++
++.landing-main {
++  flex: 1;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  position: relative;
++  z-index: 10;
++  padding: 0 24px;
++}
++
++.hero-content {
++  max-width: 800px;
++  text-align: center;
++  display: flex;
++  flex-direction: column;
++  align-items: center;
++  animation: fadeInUp 0.8s var(--ease-out-quart);
++}
++
++.hero-badge {
++  font-size: 0.75rem;
++  font-weight: 700;
++  letter-spacing: 0.1em;
++  text-transform: uppercase;
++  color: var(--brand-dark);
++  background: rgba(132, 204, 22, 0.15);
++  border: 1px solid rgba(132, 204, 22, 0.3);
++  padding: 6px 16px;
++  border-radius: 20px;
++  margin-bottom: 32px;
++}
++
++.hero-title {
++  font-size: 4.5rem;
++  font-weight: 800;
++  line-height: 1.1;
++  letter-spacing: -0.04em;
++  color: var(--text-primary);
++  margin-bottom: 24px;
++}
++
++.hero-subtitle {
++  font-size: 1.15rem;
++  line-height: 1.6;
++  color: var(--text-secondary);
++  max-width: 600px;
++  margin-bottom: 48px;
++}
++
++.hero-cta {
++  margin-bottom: 64px;
++}
++
++.hero-btn {
++  padding: 16px 36px;
++  font-size: 1.1rem;
++  border-radius: 8px;
++  background: var(--brand-primary);
++  color: #fff;
++  box-shadow: 0 4px 14px rgba(132, 204, 22, 0.4);
++  font-weight: 600;
++}
++.hero-btn:hover {
++  background: var(--brand-dark);
++  box-shadow: 0 6px 20px rgba(132, 204, 22, 0.5);
++}
++
++.hero-features {
++  display: flex;
++  gap: 32px;
++  justify-content: center;
++  flex-wrap: wrap;
++}
++
++.feature {
++  display: flex;
++  align-items: center;
++  gap: 10px;
++  color: var(--text-muted);
++  font-size: 0.9rem;
++  font-weight: 500;
++}
++
++.feature-icon {
++  color: var(--text-secondary);
++}
++
++.landing-glow-1 {
++  position: absolute;
++  top: -20%;
++  left: -10%;
++  width: 50vw;
++  height: 50vw;
++  background: radial-gradient(circle, rgba(132, 204, 22, 0.08) 0%, transparent 70%);
++  border-radius: 50%;
++  z-index: 1;
++  pointer-events: none;
++}
++
++.landing-glow-2 {
++  position: absolute;
++  bottom: -20%;
++  right: -10%;
++  width: 40vw;
++  height: 40vw;
++  background: radial-gradient(circle, rgba(34, 197, 94, 0.05) 0%, transparent 70%);
++  border-radius: 50%;
++  z-index: 1;
++  pointer-events: none;
++}
++
++
+ /* Journal Page */
+ .journal-page {
+   height: calc(100vh - var(--nav-height));
+@@ -889,6 +1044,13 @@
+ }
+ 
+ /* ─── Shared Component Utilities ───────────────────────────── */
++  .chart-tooltip-value {
++    font-size: 1rem;
++    font-weight: 600;
++    color: var(--text-primary);
++    margin-bottom: 4px;
++    font-family: 'JetBrains Mono', monospace;
++  }
+ .panel-heading {
+   font-size: 0.95rem;
+   font-weight: 600;
+@@ -935,9 +1097,8 @@
+   padding: 5px 12px;
+   border-radius: 20px;
+   font-size: 0.72rem;
+-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+   letter-spacing: 0.05em;
+-  transition: var(--transition);
++  transition: all 0.2s ease;
+   white-space: nowrap;
+ }
+ 
+@@ -1059,7 +1220,7 @@
+   justify-content: flex-end;
+   padding: 6px 8px;
+   background: rgba(255,255,255,0.02);
+-  transition: var(--transition);
++  transition: all 0.2s ease;
+   text-align: left;
+ }
+ 
+@@ -1139,7 +1300,7 @@
+   cursor: pointer;
+   background: transparent;
+   border: 1px solid transparent;
+-  transition: var(--transition);
++  transition: all 0.2s ease;
+   text-align: left;
+   width: 100%;
+ }
+@@ -1342,10 +1503,10 @@
+   overflow: hidden;
+ }
+ 
+-.score-bar-fill {
++.progress-fill {
+   height: 100%;
+   border-radius: 4px;
+-  transition: transform 0.3s var(--ease-out-quart);
++  transition: transform 0.6s var(--ease-out-quart);
+   transform-origin: left center;
+ }
+ 
+@@ -1396,7 +1557,7 @@
+   border-radius: var(--radius-xs);
+   border: 1px solid var(--border-subtle);
+   background: rgba(255,255,255,0.02);
+-  transition: var(--transition);
++  transition: all 0.2s ease;
+   animation: fadeInUp 0.3s ease;
+ }
+ 
+@@ -1475,7 +1636,7 @@
+   font-family: 'JetBrains Mono', monospace;
+   padding: 10px 14px;
+   font-size: 0.95rem;
+-  transition: var(--transition);
++  transition: all 0.2s ease;
+   outline: none;
+ }
+ .form-input:focus { border-color: var(--brand-primary); }
+@@ -1509,10 +1670,18 @@
+   grid-template-columns: 280px 1fr;
+ }
+ 
++.panel {
++  background-color: var(--bg-panel);
++  border-radius: 12px;
++  border: 1px solid var(--border-subtle);
++  padding: 24px;
++  display: flex;
++  flex-direction: column;
++}
++
+ .config-sidenav {
+   flex-shrink: 0;
+   background: var(--bg-panel);
+-  border-right: 1px solid var(--border-subtle);
+   padding: 32px 24px;
+   display: flex;
+   flex-direction: column;
+@@ -1551,7 +1720,7 @@
+   font-weight: 500;
+   border-radius: var(--radius-xs);
+   cursor: pointer;
+-  transition: var(--transition);
++  transition: all 0.2s ease;
+ }
+ 
+ .config-section-btn:hover {
+@@ -1620,11 +1789,14 @@
+   color: var(--text-primary);
+ }
+ 
+-.config-field-value {
+-  font-family: 'JetBrains Mono', monospace;
+-  font-size: 1.1rem;
+-  font-weight: 600;
+-}
++.config-field .stat-value {
++    font-size: 1.5rem;
++    font-weight: 700;
++    color: var(--text-primary);
++    line-height: 1.2;
++    margin-bottom: 4px;
++    font-family: 'JetBrains Mono', monospace;
++  }
+ 
+ .config-field-desc {
+   font-size: 0.85rem;
+diff --git a/frontend/src/main.jsx b/frontend/src/main.jsx
+index 138e0cf..b3edfb1 100644
+--- a/frontend/src/main.jsx
++++ b/frontend/src/main.jsx
+@@ -2,17 +2,26 @@ import { StrictMode } from 'react';
+ import { createRoot } from 'react-dom/client';
+ import App from './App.jsx';
+ import { AgentEventsProvider } from './hooks/useAgentEvents.jsx';
+-import { ClerkProvider } from '@clerk/clerk-react';
++import { ClerkProvider } from '@clerk/react';
+ import './index.css';
+ 
+-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_placeholder";
++const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+ 
+-createRoot(document.getElementById('root')).render(
+-  <StrictMode>
+-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+-      <AgentEventsProvider>
+-        <App />
+-      </AgentEventsProvider>
+-    </ClerkProvider>
+-  </StrictMode>,
+-);
++if (!PUBLISHABLE_KEY) {
++  createRoot(document.getElementById('root')).render(
++    <div style={{ padding: '2rem', color: 'white', background: 'black', height: '100vh', fontFamily: 'sans-serif' }}>
++      <h2>Missing Clerk Publishable Key</h2>
++      <p>Please add <code>VITE_CLERK_PUBLISHABLE_KEY</code> to your <code>frontend/.env</code> file.</p>
++    </div>
++  );
++} else {
++  createRoot(document.getElementById('root')).render(
++    <StrictMode>
++      <ClerkProvider>
++        <AgentEventsProvider>
++          <App />
++        </AgentEventsProvider>
++      </ClerkProvider>
++    </StrictMode>,
++  );
++}
+diff --git a/frontend/src/pages/DashboardPage.jsx b/frontend/src/pages/DashboardPage.jsx
+index 3d10f87..8229a1c 100644
+--- a/frontend/src/pages/DashboardPage.jsx
++++ b/frontend/src/pages/DashboardPage.jsx
+@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
+ import { useLocation } from 'react-router-dom';
+ import { Play, Target, Check, BarChart3, AlertTriangle, RotateCcw } from 'lucide-react';
+ import PixelTradingFloor from '../components/PixelTradingFloor';
+-import { useAuth } from '@clerk/clerk-react';
++import { useAuth } from '@clerk/react';
+ import { fetchWithAuth } from '../lib/api';
+ 
+ /* ─── Sparkline component (pure SVG) ───────────────────────── */
+@@ -399,7 +399,7 @@ export default function DashboardPage() {
+                     <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
+                       <BarChart3 size={32} opacity={0.5} />
+                     </div>
+-                    <div style={{ fontWeight: 500, color: '#fff' }}>ไม่มีข้อมูลในพอร์ตโฟลิโอ</div>
++                    <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>ไม่มีข้อมูลในพอร์ตโฟลิโอ</div>
+                     <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>เริ่มต้นวิเคราะห์และบันทึกการเทรดเพื่อดูข้อมูลตรงนี้</div>
+                   </td>
+                 </tr>
+diff --git a/frontend/src/pages/JournalPage.jsx b/frontend/src/pages/JournalPage.jsx
+index c28462b..7b766a1 100644
+--- a/frontend/src/pages/JournalPage.jsx
++++ b/frontend/src/pages/JournalPage.jsx
+@@ -70,7 +70,7 @@ export default function JournalPage() {
+                     <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+                       <BarChart3 size={40} opacity={0.4} />
+                     </div>
+-                    <div style={{ fontWeight: 500, color: '#fff' }}>ไม่มีบันทึกการเทรด{filter !== 'ALL' && 'ในสถานะนี้'}</div>
++                    <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>ไม่มีบันทึกการเทรด{filter !== 'ALL' && 'ในสถานะนี้'}</div>
+                     <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>สร้างแผนการเทรดและบันทึกเพื่อติดตามผลได้ที่นี่</div>
+                   </td>
+                 </tr>
+@@ -93,7 +93,7 @@ export default function JournalPage() {
+                     <td>
+                       <span className="panel-badge" style={{ 
+                         background: t.status === 'OPEN' ? 'var(--brand-glow)' : 'rgba(255,255,255,0.1)', 
+-                        color: t.status === 'OPEN' ? '#60a5fa' : 'var(--text-secondary)' 
++                        color: t.status === 'OPEN' ? 'var(--brand-primary)' : 'var(--text-secondary)' 
+                       }}>
+                         {t.status || 'OPEN'}
+                       </span>
+diff --git a/frontend/src/pages/LandingPage.jsx b/frontend/src/pages/LandingPage.jsx
+new file mode 100644
+index 0000000..c3a783f
+--- /dev/null
++++ b/frontend/src/pages/LandingPage.jsx
+@@ -0,0 +1,57 @@
++import React from 'react';
++import { SignInButton } from '@clerk/react';
++import { Bot, Crosshair, ShieldAlert } from 'lucide-react';
++
++export default function LandingPage() {
++  return (
++    <div className="landing-container">
++      {/* Minimal Top Bar */}
++      <header className="landing-header">
++        <div className="brand">
++          <span className="brand-dot"></span>
++          <span className="brand-text">MyPortStock Terminal</span>
++        </div>
++        <SignInButton mode="modal">
++          <button className="btn-secondary" style={{ width: 'auto', padding: '6px 16px', marginTop: 0 }}>Sign In</button>
++        </SignInButton>
++      </header>
++
++      {/* Hero Section */}
++      <main className="landing-main">
++        <div className="hero-content">
++          <div className="hero-badge">AI-Powered Quantitative Trading</div>
++          <h1 className="hero-title">Quantitative Precision <br/> for Your Portfolio.</h1>
++          <p className="hero-subtitle">
++            A personal AI trading assistant providing real-time quantitative screening, 
++            risk management, and decision snapshots based on strict algorithmic rules.
++          </p>
++          
++          <div className="hero-cta">
++            <SignInButton mode="modal">
++              <button className="btn-primary hero-btn" style={{ width: 'auto' }}>Enter Terminal</button>
++            </SignInButton>
++          </div>
++
++          <div className="hero-features">
++            <div className="feature">
++              <Bot size={18} className="feature-icon" />
++              <span>Multi-Agent Analysis</span>
++            </div>
++            <div className="feature">
++              <ShieldAlert size={18} className="feature-icon" />
++              <span>Strict Risk Control</span>
++            </div>
++            <div className="feature">
++              <Crosshair size={18} className="feature-icon" />
++              <span>Market Signals</span>
++            </div>
++          </div>
++        </div>
++      </main>
++      
++      {/* Background decoration to match Linear/Vercel vibe */}
++      <div className="landing-glow-1"></div>
++      <div className="landing-glow-2"></div>
++    </div>
++  );
++}
+diff --git a/frontend/src/pages/WatchlistPage.jsx b/frontend/src/pages/WatchlistPage.jsx
+index e429cb4..7fab52e 100644
+--- a/frontend/src/pages/WatchlistPage.jsx
++++ b/frontend/src/pages/WatchlistPage.jsx
+@@ -1,6 +1,6 @@
+ import { useState, useEffect, useRef } from 'react';
+ import { Bell, BellOff, Trash2, Plus, TrendingUp, TrendingDown, Minus, RotateCcw, Clock } from 'lucide-react';
+-import { useAuth } from '@clerk/clerk-react';
++import { useAuth } from '@clerk/react';
+ import { fetchWithAuth } from '../lib/api';
+ 
+ const SIGNAL_META = {
+diff --git a/package-lock.json b/package-lock.json
+index b7f308f..8c8c7af 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -34,6 +34,7 @@
+     "frontend": {
+       "version": "0.0.0",
+       "dependencies": {
++        "@clerk/react": "^6.9.1",
+         "@radix-ui/react-slot": "^1.2.5",
+         "@supabase/supabase-js": "^2.108.1",
+         "lucide-react": "^1.17.0",
+@@ -469,6 +470,23 @@
+         "express": "^4.17.0 || ^5.0.0"
+       }
+     },
++    "node_modules/@clerk/react": {
++      "version": "6.9.1",
++      "resolved": "https://registry.npmjs.org/@clerk/react/-/react-6.9.1.tgz",
++      "integrity": "sha512-ZVkUuSB+AEiYkptrDVZMJai7a5XXlTrrDyG1QL4HoZg95xogosNTsw+qCS/oyW7HQ8lXRGz8HLl6e2U/3FaSPQ==",
++      "license": "MIT",
++      "dependencies": {
++        "@clerk/shared": "^4.17.1",
++        "tslib": "2.8.1"
++      },
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "peerDependencies": {
++        "react": "^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0",
++        "react-dom": "^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0"
++      }
++    },
+     "node_modules/@clerk/shared": {
+       "version": "4.17.1",
+       "resolved": "https://registry.npmjs.org/@clerk/shared/-/shared-4.17.1.tgz",

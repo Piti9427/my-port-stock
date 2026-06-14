@@ -1,3 +1,4 @@
+require("dotenv").config({ path: require("path").resolve(__dirname, ".env") });
 const express = require("express");
 const http = require("http");
 const path = require("path");
@@ -88,7 +89,21 @@ const HOST = process.env.HOST || "127.0.0.1";
 const quoteCache = new Map();
 
 app.use(express.json({ limit: "256kb" }));
-app.use(clerkMiddleware());
+if (process.env.CLERK_SECRET_KEY) {
+  app.use(clerkMiddleware({
+    publishableKey: process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY,
+    secretKey: process.env.CLERK_SECRET_KEY
+  }));
+} else if (process.env.NODE_ENV !== 'production') {
+  console.warn("⚠️ CLERK_SECRET_KEY is missing! Bypassing Clerk auth for development.");
+  app.use((req, res, next) => {
+    req.auth = { userId: "dev_mock_user_123" };
+    next();
+  });
+} else {
+  // In production, force clerkMiddleware to throw or handle missing key securely
+  app.use(clerkMiddleware());
+}
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 const apiRoutes = require('./src/routes/api');
@@ -188,7 +203,32 @@ app.get("/api/quote/:ticker", async (req, res) => {
   }
 
   const packet = await getQuotePacket(ticker);
-  return res.status(200).json(packet);
+  const responsePacket = { ...packet };
+
+  try {
+    const { default: YahooFinance } = require('yahoo-finance2');
+    const yf = new YahooFinance();
+    const quote = await yf.quote(ticker);
+    
+    responsePacket.high = quote.regularMarketDayHigh || null;
+    responsePacket.low = quote.regularMarketDayLow || null;
+    responsePacket.volume = quote.regularMarketVolume || null;
+    responsePacket.marketCap = quote.marketCap || null;
+    responsePacket.currency = quote.currency || 'USD';
+    
+    // Ensure last_price exists if quote packet somehow missed it
+    if (!responsePacket.last_price && quote.regularMarketPrice) {
+      responsePacket.last_price = quote.regularMarketPrice;
+    }
+  } catch (error) {
+    console.error(`[Server] Error fetching Yahoo Finance fundamentals for ${ticker}:`, error.message);
+    responsePacket.high = null;
+    responsePacket.low = null;
+    responsePacket.volume = null;
+    responsePacket.marketCap = null;
+  }
+
+  return res.status(200).json(responsePacket);
 });
 
 app.get("/api/packet/:ticker", async (req, res) => {

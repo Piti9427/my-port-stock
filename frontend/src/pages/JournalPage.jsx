@@ -70,7 +70,7 @@ export default function JournalPage() {
                     <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
                       <BarChart3 size={40} opacity={0.4} />
                     </div>
-                    <div style={{ fontWeight: 500, color: '#fff' }}>ไม่มีบันทึกการเทรด{filter !== 'ALL' && 'ในสถานะนี้'}</div>
+                    <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>ไม่มีบันทึกการเทรด{filter !== 'ALL' && 'ในสถานะนี้'}</div>
                     <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>สร้างแผนการเทรดและบันทึกเพื่อติดตามผลได้ที่นี่</div>
                   </td>
                 </tr>
@@ -93,7 +93,7 @@ export default function JournalPage() {
                     <td>
                       <span className="panel-badge" style={{ 
                         background: t.status === 'OPEN' ? 'var(--brand-glow)' : 'rgba(255,255,255,0.1)', 
-                        color: t.status === 'OPEN' ? '#60a5fa' : 'var(--text-secondary)' 
+                        color: t.status === 'OPEN' ? 'var(--brand-primary)' : 'var(--text-secondary)' 
                       }}>
                         {t.status || 'OPEN'}
                       </span>

@@ -146,7 +146,7 @@ function AgentSprite({ agent }) {
         top: `${agent.top}%`,
         left: `${agent.left}%`,
         transform: 'translate(-50%, -50%)',
-        transition: 'top 1.2s cubic-bezier(0.4, 0, 0.2, 1), left 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'top 1.2s cubic-bezier(0.25, 1, 0.5, 1), left 1.2s cubic-bezier(0.25, 1, 0.5, 1)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -158,79 +158,106 @@ function AgentSprite({ agent }) {
         <div style={{
           position: 'absolute',
           bottom: '100%',
-          marginBottom: '12px',
-          backgroundColor: 'rgba(15, 23, 42, 0.9)',
-          border: `1px solid ${color}`,
-          color: '#e2e8f0',
-          padding: '6px 10px',
-          borderRadius: '6px',
+          marginBottom: '16px',
+          backgroundColor: 'var(--surface)',
+          border: `1px solid var(--border-medium)`,
+          color: 'var(--text-primary)',
+          padding: '8px 12px',
+          borderRadius: '8px',
           fontSize: '0.75rem',
-          fontWeight: '500',
+          fontWeight: '600',
           whiteSpace: 'nowrap',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-          animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          animation: 'popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
           zIndex: 100
         }}>
           {agent.message}
           <div style={{
             position: 'absolute',
-            bottom: '-5px',
+            bottom: '-6px',
             left: '50%',
             transform: 'translateX(-50%)',
-            borderLeft: '5px solid transparent',
-            borderRight: '5px solid transparent',
-            borderTop: `5px solid ${color}`
+            width: '12px',
+            height: '12px',
+            backgroundColor: 'var(--surface)',
+            borderRight: '1px solid var(--border-medium)',
+            borderBottom: '1px solid var(--border-medium)',
+            clipPath: 'polygon(100% 0, 0 100%, 100% 100%)',
+            rotate: '45deg'
           }} />
         </div>
       )}
 
-      {/* The Character Body */}
+      {/* The Pixel Agent Character */}
       <div 
         style={{
-          width: '32px',
-          height: '32px',
-          backgroundColor: 'rgba(15, 23, 42, 0.8)',
-          borderRadius: '50%',
-          border: `2px solid ${isDone ? '#10b981' : color}`,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          animation: isWalking ? 'walkBob 0.5s ease-in-out infinite alternate' : 'none'
+        }}
+      >
+        {/* Head */}
+        <div style={{
+          width: '20px',
+          height: '20px',
+          backgroundColor: isDone ? 'var(--status-success)' : color,
+          borderRadius: '6px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: isDone ? `0 0 15px #10b981` : isTyping ? `0 0 10px ${color}` : '0 4px 6px rgba(0,0,0,0.3)',
-          animation: isWalking ? 'bounce 0.4s infinite alternate' : isTyping ? 'pulse 1s infinite alternate' : 'none'
-        }}
-      >
-        <Icon size={18} color={isDone ? '#10b981' : color} />
+          marginBottom: '2px',
+          boxShadow: isTyping ? `0 0 12px ${color}` : '0 2px 4px rgba(0,0,0,0.1)',
+          animation: isTyping ? 'pulseGlow 1.5s ease-in-out infinite alternate' : 'none',
+          position: 'relative',
+          zIndex: 2
+        }}>
+          <Icon size={12} color="#ffffff" />
+        </div>
+        {/* Body */}
+        <div style={{
+          width: '24px',
+          height: '14px',
+          backgroundColor: 'var(--foreground)',
+          borderRadius: '4px',
+          position: 'relative',
+          zIndex: 1,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }} />
       </div>
       
       {/* Name tag */}
       <div style={{
-        marginTop: '4px',
-        backgroundColor: 'rgba(0,0,0,0.7)',
-        padding: '2px 6px',
-        borderRadius: '4px',
+        marginTop: '6px',
+        backgroundColor: 'var(--surface)',
+        border: '1px solid var(--border-subtle)',
+        padding: '2px 8px',
+        borderRadius: '12px',
         fontSize: '0.65rem',
-        color: '#94a3b8',
-        fontWeight: 'bold',
+        color: 'var(--text-secondary)',
+        fontWeight: '700',
         textTransform: 'uppercase',
-        letterSpacing: '0.5px'
+        letterSpacing: '0.05em',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
       }}>
         {agent.id.replace(/-/g, ' ')}
       </div>
 
       <style>{`
         @keyframes popIn {
-          0% { opacity: 0; transform: scale(0.8) translateY(10px); }
+          0% { opacity: 0; transform: scale(0.9) translateY(10px); }
           100% { opacity: 1; transform: scale(1) translateY(0); }
         }
-        @keyframes bounce {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(-6px); }
+        @keyframes walkBob {
+          0% { transform: translateY(0) rotate(-3deg); }
+          100% { transform: translateY(-4px) rotate(3deg); }
         }
-        @keyframes pulse {
-          0% { transform: scale(1); box-shadow: 0 0 5px ${color}; }
-          100% { transform: scale(1.1); box-shadow: 0 0 15px ${color}; }
+        @keyframes pulseGlow {
+          0% { box-shadow: 0 0 4px ${color}; }
+          100% { box-shadow: 0 0 16px ${color}; }
         }
       `}</style>
     </div>
   );
 }
+
