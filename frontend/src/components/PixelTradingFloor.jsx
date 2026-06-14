@@ -118,7 +118,7 @@ export default function PixelTradingFloor() {
         borderRadius: '8px',
         overflow: 'hidden',
         border: '1px solid var(--border-color)',
-        boxShadow: 'inset 0 0 40px rgba(var(--black-rgb),0.8)',
+        boxShadow: 'inset 0 0 24px rgba(var(--black-rgb),0.55)',
       }}
     >
       {/* Dimming overlay when active analysis is happening to focus on agents */}
@@ -175,7 +175,7 @@ function AgentSprite({ agent }) {
             fontSize: '0.75rem',
             fontWeight: '600',
             whiteSpace: 'nowrap',
-            boxShadow: '0 4px 12px rgba(var(--black-rgb),0.05)',
+            boxShadow: 'none',
             animation: 'popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
             zIndex: 100,
           }}
@@ -219,7 +219,7 @@ function AgentSprite({ agent }) {
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: '2px',
-            boxShadow: isTyping ? `0 0 12px ${color}` : '0 2px 4px rgba(var(--black-rgb),0.1)',
+            boxShadow: 'none',
             animation: isTyping ? 'pulseGlow 1.5s ease-in-out infinite alternate' : 'none',
             position: 'relative',
             zIndex: 2,
@@ -236,7 +236,7 @@ function AgentSprite({ agent }) {
             borderRadius: '4px',
             position: 'relative',
             zIndex: 1,
-            boxShadow: '0 2px 4px rgba(var(--black-rgb),0.1)',
+            boxShadow: 'none',
           }}
         />
       </div>
@@ -254,7 +254,7 @@ function AgentSprite({ agent }) {
           fontWeight: '700',
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
-          boxShadow: '0 2px 4px rgba(var(--black-rgb),0.02)',
+          boxShadow: 'none',
         }}
       >
         {agent.id.replace(/-/g, ' ')}
@@ -270,8 +270,8 @@ function AgentSprite({ agent }) {
           100% { transform: translateY(-4px) rotate(3deg); }
         }
         @keyframes pulseGlow {
-          0% { box-shadow: 0 0 4px ${color}; }
-          100% { box-shadow: 0 0 16px ${color}; }
+          0% { opacity: 0.72; }
+          100% { opacity: 1; }
         }
       `}</style>
     </div>

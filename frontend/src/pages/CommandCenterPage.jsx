@@ -48,6 +48,19 @@ const AGENT_CONFIG = {
   },
 };
 
+function destroyPixiApp(app) {
+  if (!app) return;
+  try {
+    app.destroy(true, {
+      children: true,
+      texture: false,
+      baseTexture: false,
+    });
+  } catch (error) {
+    console.warn('Pixi cleanup skipped after destroy error', error);
+  }
+}
+
 function AIFloorCanvas({ agentStates }) {
   const containerRef = useRef(null);
   const appRef = useRef(null);
@@ -130,13 +143,8 @@ function AIFloorCanvas({ agentStates }) {
 
     return () => {
       isMounted = false;
-      if (appRef.current) {
-        appRef.current.destroy(true, {
-          children: true,
-          texture: false,
-          baseTexture: false,
-        });
-      }
+      destroyPixiApp(appRef.current);
+      appRef.current = null;
     };
   }, []);
 
