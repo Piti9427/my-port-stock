@@ -140,9 +140,11 @@ function AIFloorCanvas() {
       }
     };
 
-    appRef.current.ticker.add(animateSprites);
+    if (appRef.current.ticker) {
+      appRef.current.ticker.add(animateSprites);
+    }
     return () => {
-      if (appRef.current) appRef.current.ticker.remove(animateSprites);
+      if (appRef.current && appRef.current.ticker) appRef.current.ticker.remove(animateSprites);
     };
   }, [agentStates]);
 
@@ -150,87 +152,124 @@ function AIFloorCanvas() {
 }
 
 export default function AIFloorPage() {
-  const { agentStates, analysisResult, connected } = useAgentEvents();
+  const { agentStates, analysisResult, connected, lastEvent } = useAgentEvents();
+
+  // New state for Activity Log
+  const [logs, setLogs] = useState([]);
+
+  useEffect(() => {
+    if (lastEvent && lastEvent.message) {
+      setLogs(prev => {
+        const newLogs = [...prev, { time: new Date().toLocaleTimeString(), msg: lastEvent.message }];
+        return newLogs.slice(-20); // Keep last 20 logs
+      });
+    }
+  }, [lastEvent]);
 
   // Helper to count active agents
   const activeCount = Object.values(agentStates).filter(a => ['SPAWNED', 'WALKING', 'SITTING', 'TYPING', 'READING', 'PRESENTING'].includes(a.state)).length;
   const targetTicker = agentStates['cio']?.ticker || '...';
 
   return (
-    <div className="ai-floor-page">
-      {/* Canvas Layer */}
-      <div className="trading-floor-canvas-wrap">
-        <AIFloorCanvas />
-        
-        {/* DOM Overlay for Speech Bubbles */}
-        <div className="agent-overlay">
-          {Object.entries(agentStates).map(([id, info]) => {
-            if (!info.message || info.state === 'IDLE' || info.state === 'EXITED') return null;
-            
-            // Map 640x480 coordinate space to percentage for overlay positioning
-            const cfg = AGENT_CONFIG[id];
-            const leftPct = (cfg.x / 640) * 100;
-            const topPct = (cfg.y / 480) * 100;
-            
-            return (
-              <div 
-                key={id} 
-                className="speech-bubble"
-                style={{ left: `${leftPct}%`, top: `calc(${topPct}% - 60px)` }}
-              >
-                {info.message}
-              </div>
-            );
-          })}
-        </div>
-        
-        {/* Verdict Overlay */}
-        {analysisResult && (
-          <div className="verdict-overlay">
-            <div className={`glass-card verdict-card ${analysisResult.verdict?.toLowerCase().includes('buy') ? 'buy' : 'warn'}`}>
-              <div className="verdict-ticker">{analysisResult.ticker || targetTicker}</div>
-              <div className="verdict-verdict-label">ผลการวิเคราะห์สรุป</div>
-              <div className="verdict-verdict-value">{analysisResult.verdict || 'วิเคราะห์เสร็จสิ้น'}</div>
-            </div>
-          </div>
-        )}
+    <div className="ai-floor-page" style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+      <div className="glass-panel" style={{ marginBottom: '16px', zIndex: 10 }}>
+        <h2 style={{ fontSize: '1.25rem', marginBottom: '4px' }}>AI Trading Floor</h2>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          Real-time view of agent activity and analysis processes.
+        </p>
       </div>
 
-      {/* Agent Status Bar */}
-      <div className="agent-status-bar">
-        <div className="status-bar-label">สถานะการทำงานของ Agent</div>
-        
-        {!connected && (
-          <div style={{ color: 'var(--fin-warning)', fontSize: '0.8rem' }}>⚠️ ขาดการเชื่อมต่อกับ Event Bus</div>
-        )}
-        
-        {connected && (
-          <>
-            <div className="status-agents">
-              {Object.entries(AGENT_CONFIG).map(([id, cfg]) => {
-                const state = agentStates[id]?.state || 'IDLE';
-                let indicatorClass = 'idle';
-                if (state === 'PRESENTING' || state === 'DONE') indicatorClass = 'presenting';
-                else if (state !== 'IDLE' && state !== 'EXITED') indicatorClass = 'active';
+      <div style={{ display: 'flex', gap: '16px', flex: 1, minHeight: 0 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* Canvas Layer */}
+          <div className="trading-floor-canvas-wrap glass-panel" style={{ flex: 1, padding: 0, position: 'relative', overflow: 'hidden' }}>
+            <AIFloorCanvas />
+            
+            {/* DOM Overlay for Speech Bubbles */}
+            <div className="agent-overlay">
+              {Object.entries(agentStates).map(([id, info]) => {
+                if (!info.message || info.state === 'IDLE' || info.state === 'EXITED') return null;
+                
+                // Map 640x480 coordinate space to percentage for overlay positioning
+                const cfg = AGENT_CONFIG[id];
+                const leftPct = (cfg.x / 640) * 100;
+                const topPct = (cfg.y / 480) * 100;
                 
                 return (
-                  <div key={id} className="status-agent-item">
-                    <div className={`status-indicator ${indicatorClass}`} />
-                    <span className={`status-agent-name ${indicatorClass !== 'idle' ? 'active' : ''}`}>
-                      {cfg.name}
-                    </span>
+                  <div 
+                    key={id} 
+                    className="speech-bubble"
+                    style={{ left: `${leftPct}%`, top: `calc(${topPct}% - 60px)` }}
+                  >
+                    {info.message}
                   </div>
                 );
               })}
             </div>
             
-            {activeCount > 0 && (
-              <div className="status-progress">
-                กำลังวิเคราะห์ {targetTicker}... ทำงานอยู่ {activeCount}/6
+            {/* Verdict Overlay */}
+            {analysisResult && (
+              <div className="verdict-overlay">
+                <div className={`glass-card verdict-card ${analysisResult.verdict?.toLowerCase().includes('buy') ? 'buy' : 'warn'}`}>
+                  <div className="verdict-ticker">{analysisResult.ticker || targetTicker}</div>
+                  <div className="verdict-verdict-label">ผลการวิเคราะห์สรุป</div>
+                  <div className="verdict-verdict-value">{analysisResult.verdict || 'วิเคราะห์เสร็จสิ้น'}</div>
+                </div>
               </div>
             )}
-          </>
-        )}
+          </div>
+
+          {/* Agent Status Bar */}
+          <div className="agent-status-bar" style={{ marginTop: '16px' }}>
+            <div className="status-bar-label">สถานะการทำงานของ Agent</div>
+            
+            {!connected && (
+              <div style={{ color: 'var(--fin-warning)', fontSize: '0.8rem' }}>⚠️ ขาดการเชื่อมต่อกับ Event Bus</div>
+            )}
+            
+            {connected && (
+              <>
+                <div className="status-agents">
+                  {Object.entries(AGENT_CONFIG).map(([id, cfg]) => {
+                    const state = agentStates[id]?.state || 'IDLE';
+                    let indicatorClass = 'idle';
+                    if (state === 'PRESENTING' || state === 'DONE') indicatorClass = 'presenting';
+                    else if (state !== 'IDLE' && state !== 'EXITED') indicatorClass = 'active';
+                    
+                    return (
+                      <div key={id} className="status-agent-item">
+                        <div className={`status-indicator ${indicatorClass}`} />
+                        <span className={`status-agent-name ${indicatorClass !== 'idle' ? 'active' : ''}`}>
+                          {cfg.name}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {activeCount > 0 && (
+                  <div className="status-progress">
+                    กำลังวิเคราะห์ {targetTicker}... ทำงานอยู่ {activeCount}/6
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Activity Log Overlay */}
+        <div className="glass-panel" style={{ width: '300px', display: 'flex', flexDirection: 'column' }}>
+          <h3 style={{ fontSize: '1rem', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Activity Log</h3>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {logs.map((log, i) => (
+              <div key={i} style={{ fontSize: '0.85rem' }}>
+                <span style={{ color: 'var(--text-secondary)', marginRight: '8px' }}>[{log.time}]</span>
+                <span>{log.msg}</span>
+              </div>
+            ))}
+            {logs.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Waiting for activity...</div>}
+          </div>
+        </div>
       </div>
     </div>
   );
