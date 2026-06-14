@@ -9,7 +9,16 @@
   "scripts": {
     "start": "npm run start --workspace=backend",
     "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
-    "test": "npm run test --workspace=backend"
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "lint:fix": "npm run lint:fix --workspaces --if-present",
+    "format": "npm run format --workspaces --if-present",
+    "format:check": "npm run format:check --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "check:frontend-standard": "npm run check:frontend-standard --workspaces --if-present",
+    "check:all": "npm run check:all --workspaces --if-present",
+    "prepare": "npm run prepare --workspaces --if-present"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"

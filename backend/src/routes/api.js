@@ -6,6 +6,106 @@ const { broadcast } = require('../ws/agentEventBus');
 
 const router = express.Router();
 
+const { getAuth } = require('@clerk/express');
+
+const requireAuth = () => {
+  return (req, res, next) => {
+    if (req.auth?.userId) {
+      return next();
+    }
+    try {
+      const auth = getAuth(req);
+      if (!auth?.userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      return next();
+    } catch (err) {
+      console.error('Auth error:', err.message);
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+  };
+};
+
+function getUserId(req) {
+  if (req.auth?.userId) {
+    return req.auth.userId;
+  }
+  try {
+    return getAuth(req).userId;
+  } catch (err) {
+    console.error('Error getting userId:', err.message);
+    return null;
+  }
+}
+
+const { getUserHoldings, getUserWatchlists } = require('../db');
+const { default: YahooFinance } = require('yahoo-finance2');
+const yahooFinance = new YahooFinance();
+
+// Simple sparkline cache
+const sparklineCache = new Map();
+const SPARKLINE_TTL = 60 * 60 * 1000; // 1 hour
+
+async function getSparkline(ticker) {
+  const now = Date.now();
+  if (sparklineCache.has(ticker)) {
+    const cached = sparklineCache.get(ticker);
+    if (now - cached.timestamp < SPARKLINE_TTL) return cached.data;
+  }
+  try {
+    const period1 = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const res = await yahooFinance.historical(ticker, { period1, interval: '1d' });
+    const data = res.map(r => r.close);
+    sparklineCache.set(ticker, { timestamp: now, data });
+    return data;
+  } catch (e) {
+    console.error(`Error fetching sparkline for ${ticker}:`, e.message);
+    return [0, 0];
+  }
+}
+
+async function enrichWithMarketData(items) {
+  return Promise.all(items.map(async (item) => {
+    try {
+      const quote = await yahooFinance.quote(item.ticker);
+      const spark = await getSparkline(item.ticker);
+      return {
+        ...item,
+        price: quote.regularMarketPrice,
+        change: quote.regularMarketChange,
+        changePct: quote.regularMarketChangePercent,
+        spark
+      };
+    } catch (e) {
+      console.error(`Error enriching market data for ${item.ticker}:`, e.message);
+      return { ...item, price: 0, change: 0, changePct: 0, spark: [] };
+    }
+  }));
+}
+
+// Routes
+router.get('/holdings', requireAuth(), async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const holdings = await getUserHoldings(userId);
+    const enriched = await enrichWithMarketData(holdings);
+    res.json(enriched);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/watchlists', requireAuth(), async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const watchlists = await getUserWatchlists(userId);
+    const enriched = await enrichWithMarketData(watchlists);
+    res.json(enriched);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const DECISION_MODE_AGENT_MAP = {
   'Quick Trade': ['catalyst-hunter', 'quant-technician'],
   'Swing Trade': ['fundamental-auditor', 'quant-technician', 'catalyst-hunter'],
@@ -22,10 +122,8 @@ function getAgentsForMode(decisionMode) {
 router.get('/price/:ticker', async (req, res) => {
   const { ticker } = req.params;
   try {
-    const { getLivePrice, getUsdThbRate } = require('../services/marketData');
-    const { default: YahooFinance } = require('yahoo-finance2');
-    const yf = new YahooFinance();
-    const quote = await yf.quote(ticker);
+    const { getUsdThbRate } = require('../services/marketData');
+    const quote = await yahooFinance.quote(ticker);
     
     const thbRate = await getUsdThbRate();
     const isUsd = quote.currency === 'USD';
@@ -43,6 +141,7 @@ router.get('/price/:ticker', async (req, res) => {
       currency: 'THB'
     });
   } catch (error) {
+    console.error(`Error fetching price for ${ticker}:`, error.message);
     res.status(404).json({ error: `Could not fetch price for ${ticker}` });
   }
 });

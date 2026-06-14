@@ -1,0 +1,38 @@
+<h2>How should the AI demonstrate its strict SOP logic?</h2>
+<p class="subtitle">To fix the "Superficial AI", we need the AI to prove it's following the rules. How should this look in the Command Center?</p>
+
+<div class="split" style="gap: 20px; margin-top: 20px;">
+  <div class="card" data-choice="raw-data" onclick="toggleSelect(this)" style="flex: 1; cursor: pointer;">
+    <div class="card-body">
+      <h3>A. Show the Verification Checklist</h3>
+      <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 0.9rem;">Before the AI speaks, a literal checklist appears showing the data it verified.</p>
+      <div style="background: var(--surface-hover); padding: 10px; border-radius: 4px; font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">
+        [✓] Price source verified (Yahoo)<br/>
+        [✓] R/R >= 1:2 (Pass)<br/>
+        [✓] Thesis integrity check (Pass)<br/>
+        -> Agents deployed.
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="agent-dialogue" onclick="toggleSelect(this)" style="flex: 1; cursor: pointer;">
+    <div class="card-body">
+      <h3>B. Agents cite the rules in Dialogue</h3>
+      <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 0.9rem;">The checklist is hidden, but the Pixel Agents explicitly state the SOP rules they are checking.</p>
+      <div style="background: var(--surface-hover); padding: 10px; border-radius: 4px; font-size: 0.8rem; color: var(--text-muted);">
+        <strong>@quant-technician:</strong> "Entry at 150, stop at 145. R/R is 1:3. SOP Gate 5 passed."<br/><br/>
+        <strong>@fundamental-auditor:</strong> "Moat is strong, but P/E is extended. Capping conviction score at 5."
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons" style="margin-top: 30px;">
+  <div class="pros">
+    <h4>My Recommendation: Both (Hybrid)</h4>
+    <ul style="font-size: 0.85rem;">
+      <li>Show a quick <strong>Traffic-Light Dashboard</strong> (Gate pass/fail) at the top of the AI Floor.</li>
+      <li>Let the <strong>Pixel Agents</strong> explain the "Why" in the chat area.</li>
+    </ul>
+  </div>
+</div>

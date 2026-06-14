@@ -1,0 +1,35 @@
+<h2>Handling Real-Time Data Gaps</h2>
+<p class="subtitle">Yahoo Finance can be delayed (especially for Thai stocks). The SOP says "No Buy without verified data". How should the UI handle this?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Hard Block (Strict SOP)</h3>
+      <p>If the data is delayed or missing, the system refuses to analyze. It immediately returns a "Wait / Inconclusive Data" verdict and stops the agents.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Soft Warning (Provisional)</h3>
+      <p>Show a yellow warning banner: "Data delayed by 15 mins". The AI still runs, but the final verdict is stamped "PROVISIONAL" until verified.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Manual Price Override</h3>
+      <p>The system pauses. A popup asks: "We can't verify the live price. Please enter the current price from your broker app to continue."</p>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons" style="margin-top: 30px;">
+  <div class="pros">
+    <h4>My Recommendation: B + C</h4>
+    <ul style="font-size: 0.85rem;">
+      <li>Show the warning (B), but give the user an input box to manually override the price (C) if they want a firm verdict.</li>
+    </ul>
+  </div>
+</div>

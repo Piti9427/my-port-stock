@@ -1,13 +1,15 @@
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-dotenv.config();
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL || 'https://placeholder', 
-  process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder'
+  supabaseUrl || 'https://placeholder', 
+  supabaseKey || 'placeholder'
 );
 
-export async function getUserHoldings(userId) {
+async function getUserHoldings(userId) {
   if (!userId) throw new Error('User ID is required');
   const { data, error } = await supabase
     .from('holdings')
@@ -15,5 +17,21 @@ export async function getUserHoldings(userId) {
     .eq('user_id', userId);
     
   if (error) throw error;
-  return data;
+  return data || [];
 }
+
+async function getUserWatchlists(userId) {
+  if (!userId) throw new Error('User ID is required');
+  const { data, error } = await supabase
+    .from('watchlists')
+    .select('*')
+    .eq('user_id', userId);
+    
+  if (error) throw error;
+  return data || [];
+}
+
+module.exports = {
+  getUserHoldings,
+  getUserWatchlists
+};

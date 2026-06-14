@@ -1,70 +1,131 @@
 ---
-name: MyPortStock Terminal
-description: A premium, dark-mode, glassmorphism-inspired design system for an elite personal trading assistant and portfolio manager.
+name: MyPortStock Dark Terminal
+description: Canonical product UI design system for the MyPortStock trading dashboard.
 ---
 
-# Design System: MyPortStock Terminal
+# Design System: MyPortStock Dark Terminal
+
+This is the canonical visual direction for MyPortStock. The app should feel like a precise, high-density trading terminal: dark-first, highly legible, restrained, and optimized for fast investment decisions. The design must preserve the mood of the auth screen while behaving like a serious product dashboard after login.
 
 ## 1. Core Principles
-- **Elite & Professional:** The interface should feel like a multi-million dollar institutional trading terminal, not a generic SaaS.
-- **Glass & Depth:** Utilize `backdrop-filter: blur` heavily for panels, overlaying a deep, dark void background.
-- **Glowing Highlights:** Use subtle glowing box-shadows or gradients to draw attention to critical data (P/L, AI verdicts).
-- **Data Density but Readable:** Financial data requires density, but ample padding and clear typography hierarchy must be maintained to prevent cognitive overload.
+
+- **Decision clarity over decoration:** Data, gate status, and next action must be easier to read than the interface styling.
+- **Dark-first everywhere:** Auth, app shell, dashboard, forms, tables, drawers, and empty states use one coherent dark terminal language.
+- **Color is data:** Emerald, red, amber, and blue are semantic signals. Do not use color as filler.
+- **Flat by default:** Use tonal contrast and 1px borders for structure. Avoid drop shadows as layout scaffolding.
+- **Dense but readable:** Keep dashboard density, but protect contrast, spacing, numeric alignment, and table scan speed.
+- **No AI slop:** Avoid decorative glow, glassmorphism by default, gradient text, oversized radii, bouncy motion, and generic SaaS card grids.
 
 ## 2. Color Tokens
 
-### Base & Backgrounds
-- `bg-void`: `#0f172a` (Slate 900) - The ultimate background.
-- `bg-panel`: `rgba(30, 41, 59, 0.7)` - For glassmorphic cards and containers.
-- `bg-panel-hover`: `rgba(51, 65, 85, 0.8)` - For interactive cards.
-- `border-subtle`: `rgba(255, 255, 255, 0.1)` - For panel borders and dividers.
+### Base
+
+- `bg-void`: `#0a0a0a` - App background and auth background.
+- `bg-shell`: `#111111` - Sidebar and persistent app chrome.
+- `bg-panel`: `#171717` - Main cards, panels, forms, and tables.
+- `bg-panel-hover`: `#1f1f1f` - Hover or selected row surface.
+- `bg-panel-solid`: `#0f0f0f` - Dense nested surfaces and table bodies.
+
+### Borders
+
+- `border-subtle`: `#262626` - Default structural border.
+- `border-medium`: `#333333` - Stronger dividers, focused regions, and table headers.
+- `border-strong`: `#525252` - Rare high-emphasis separators.
 
 ### Typography
-- `text-primary`: `#f8fafc` (Slate 50) - For headings and primary data points.
-- `text-secondary`: `#94a3b8` (Slate 400) - For labels, subtitles, and secondary text.
 
-### Brand & Accents
-- `brand-primary`: `#3b82f6` (Blue 500) - For primary actions and focus states.
-- `brand-glow`: `rgba(59, 130, 246, 0.5)` - For button dropshadows.
+- `text-primary`: `#ededed` - Primary text, page titles, important values.
+- `text-secondary`: `#a3a3a3` - Labels, descriptions, secondary values.
+- `text-muted`: `#737373` - Metadata only. Do not use for body text.
+- `text-inverse`: `#0a0a0a` - Text on high-contrast white buttons.
 
-### Semantic / Financial
-- `fin-profit` (Green Light): `#10b981` (Emerald 500) - For positive P/L, Buy signals.
-- `fin-loss` (Red Light): `#ef4444` (Red 500) - For negative P/L, Sell signals, Stop Loss alerts.
-- `fin-warning` (Yellow Light): `#f59e0b` (Amber 500) - For Trim signals, warnings.
+### Accent and Status
+
+- `brand-primary`: `#10b981` - Primary action, active nav, focus, live status.
+- `brand-dark`: `#059669` - Active or pressed primary state.
+- `fin-profit`: `#34d399` - Positive P/L and Buy/Pass states.
+- `fin-loss`: `#f87171` - Negative P/L, Stop, Sell, and danger states.
+- `fin-warning`: `#facc15` - Wait, warning, and risk-limit states.
+- `accent-primary`: `#60a5fa` - Info state only, not decoration.
 
 ## 3. Typography
-- **Font Family:** 'Inter', sans-serif (or system-ui if Inter fails).
-- **Headings (h1):** 2.5rem, Font Weight 700, tight letter-spacing (-0.5px). Often rendered with a gradient text clip (e.g., `#60a5fa` to `#34d399`).
-- **Data Points (Large Prices):** 1.8rem, Font Weight 300.
-- **Body Text:** 1rem to 1.1rem, Font Weight 400, Line Height 1.6.
 
-## 4. Components & Patterns
+- **Primary UI font:** `Plus Jakarta Sans`, with `IBM Plex Sans Thai` and system sans fallbacks.
+- **Numeric and ticker font:** `JetBrains Mono`, used for prices, portfolio values, tickers, percentages, and compact technical readouts.
+- **Scale:** Product UI uses fixed rem sizes, not fluid hero typography after login.
+- **Headings:** 600-700 weight, no gradient text, no oversized display treatment in dashboards.
+- **Body:** 400-500 weight, line-height around 1.5-1.6.
+- **Labels:** 600 weight, small size, optional uppercase only for short metadata and table headers.
 
-### 4.1 Glass Panels (The Core Container)
-- **Background:** `bg-panel` with `backdrop-filter: blur(16px)`.
-- **Border:** 1px solid `border-subtle`.
-- **Border Radius:** `24px` for main containers, `16px` for inner cards.
-- **Shadow:** `0 25px 50px -12px rgba(0, 0, 0, 0.5)` for depth.
+Contrast rules:
 
-### 4.2 Primary Buttons
-- **Background:** Linear gradient (`135deg, #3b82f6, #2563eb`).
-- **Text:** White, bold (600).
-- **Border Radius:** `12px`.
-- **Hover State:** Translate Y by `-2px`, increase shadow to `0 8px 25px var(--brand-glow)`.
+- Body text must meet WCAG 4.5:1 against its surface.
+- Muted text is for metadata, not explanatory copy.
+- Placeholder text must remain readable on dark fields.
 
-### 4.3 Financial Inputs (Guided Form)
-- **Background:** `rgba(15, 23, 42, 0.6)`.
-- **Border:** 1px solid `border-subtle`.
-- **Focus:** Change border to `brand-primary` and add an outer ring (`box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2)`).
-- **Text:** White, monospace for numbers to ensure tabular alignment.
+## 4. Surfaces and Layout
 
-### 4.4 The AI Verdict Card
-- A distinct inner card inside the glass panel.
-- If the verdict is highly positive, apply a subtle `fin-profit` left border (`4px solid`).
-- If negative or risky, apply a `fin-loss` left border.
-- The AI's rationale should be displayed in a clean, readable text block with `text-secondary` for the body, highlighting key metrics in `text-primary`.
+### App Shell
 
-## 5. Micro-Animations
-- **Page Load:** `fadeInDown` (0.8s) for headers, `fadeInUp` (0.8s, 0.2s delay) for main panels.
-- **Data Loading:** A clean, spinning CSS ring `border-top-color: white` when fetching APIs or running the Mega-Agent prompt.
-- **Transitions:** `all 0.3s ease` on buttons and input focus states.
+- Sidebar uses `bg-shell`, subtle borders, compact nav groups, and emerald only for the active link.
+- Main content uses `bg-void` with optional faint grid texture. The grid must not compete with data.
+- Persistent chrome should feel quiet and utilitarian.
+
+### Panels and Cards
+
+- Default card radius: `8px`.
+- Main panels may use `12px` only when they contain dense grouped data.
+- Avoid nested decorative cards. Use tables, sections, dividers, and spacing before adding another card layer.
+- No large soft shadows. If an active or critical state needs emphasis, use border color, background tint, or a small semantic badge.
+
+### Tables
+
+- Header rows should be clear on dark surfaces with strong enough contrast.
+- Numeric columns should align consistently and prefer monospace.
+- Empty states should be dark, calm, and useful; they should tell the user what data is missing or what action starts the workflow.
+
+## 5. Components
+
+### Buttons
+
+- **Primary:** high-contrast white or emerald depending on action criticality.
+- **Secondary:** transparent or panel-colored with border.
+- **Danger:** red semantic styling only for destructive or risk actions.
+- Radius: `8px`.
+- Motion: 150-200ms, state feedback only.
+
+### Inputs
+
+- Dark field background, 1px border, readable placeholder, visible focus state.
+- Focus may use emerald border or a subtle outline. Avoid thick glow rings.
+- Financial inputs should use monospace for numeric values.
+
+### Badges and Status
+
+- Use tinted backgrounds with semantic borders.
+- Traffic-light colors must preserve the meaning in `CONTEXT.md`: green action allowed, yellow wait/conditional, red avoid/broken thesis.
+- Badges should not become decorative confetti.
+
+### Motion
+
+- Motion must communicate state: loading, focus, selection, drawer open/close, or data update.
+- No bouncy, elastic, or theatrical page-load sequences.
+- Always support reduced motion.
+
+## 6. Explicit Bans
+
+- Light-mode dashboard surfaces as the default logged-in experience.
+- Gradient text.
+- Glassmorphism as a default container style.
+- Large soft drop shadows for cards.
+- Border radius above `16px` for cards, panels, inputs, or tables.
+- Decorative neon glow.
+- Color used without semantic meaning.
+- Motion that does not communicate state.
+
+## 7. Implementation Guidance
+
+- Keep `frontend/DESIGN.md` and this file aligned. If they diverge, this file is the product-level source of truth and `frontend/DESIGN.md` should be updated to match.
+- Start with shared tokens in `frontend/src/index.css` so all logged-in pages inherit the same dark terminal foundation.
+- Then verify page-level surfaces: Dashboard, Command Center, Risk, Market, Journal, Analytics, Config, drawers, forms, tables, empty states, and Clerk/auth handoff.
+- Use Impeccable for UI critique, audit, polish, harden, clarify, and animate work.

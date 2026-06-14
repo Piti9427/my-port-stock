@@ -5,13 +5,17 @@ import { vi } from 'vitest';
 
 vi.mock('pixi.js', () => ({
   Application: class {
-    init() { return Promise.resolve(); }
+    init() {
+      return Promise.resolve();
+    }
     canvas = document.createElement('canvas');
     stage = { addChild: vi.fn() };
     ticker = { add: vi.fn(), remove: vi.fn() };
     destroy() {}
   },
-  Assets: { load: vi.fn().mockResolvedValue({ width: 32, height: 32, source: {} }) },
+  Assets: {
+    load: vi.fn().mockResolvedValue({ width: 32, height: 32, source: {} }),
+  },
   Sprite: class {
     anchor = { set: vi.fn() };
     scale = { set: vi.fn() };
