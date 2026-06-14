@@ -4,18 +4,18 @@ const AgentEventsContext = createContext(null);
 
 const WS_URL = (() => {
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host  = import.meta.env.VITE_WS_HOST || window.location.host;
+  const host = import.meta.env.VITE_WS_HOST || window.location.host;
   return `${proto}//${host}/ws/agent-events`;
 })();
 
 export function AgentEventsProvider({ children }) {
   const [agentStates, setAgentStates] = useState({
     cio: { state: 'IDLE', message: null },
-    'fundamental-auditor':    { state: 'IDLE', message: null },
-    'quant-technician':       { state: 'IDLE', message: null },
-    'macro-strategist':       { state: 'IDLE', message: null },
+    'fundamental-auditor': { state: 'IDLE', message: null },
+    'quant-technician': { state: 'IDLE', message: null },
+    'macro-strategist': { state: 'IDLE', message: null },
     'portfolio-risk-manager': { state: 'IDLE', message: null },
-    'catalyst-hunter':        { state: 'IDLE', message: null },
+    'catalyst-hunter': { state: 'IDLE', message: null },
   });
   const [lastEvent, setLastEvent] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -42,16 +42,22 @@ export function AgentEventsProvider({ children }) {
           setLastEvent(event);
 
           if (event.type === 'AGENT_STATE_CHANGE') {
-            setAgentStates(prev => ({
+            setAgentStates((prev) => ({
               ...prev,
-              [event.agent]: { state: event.state, message: event.message || null, ticker: event.ticker },
+              [event.agent]: {
+                state: event.state,
+                message: event.message || null,
+                ticker: event.ticker,
+              },
             }));
           }
 
           if (event.type === 'ANALYSIS_COMPLETE') {
             setAnalysisResult(event.payload);
           }
-        } catch (_) { /* ignore parse errors */ }
+        } catch (_) {
+          /* ignore parse errors */
+        }
       };
 
       ws.onclose = () => {
@@ -75,13 +81,19 @@ export function AgentEventsProvider({ children }) {
 
   const resetAnalysis = useCallback(() => {
     setAnalysisResult(null);
-    setAgentStates(prev => Object.fromEntries(
-      Object.keys(prev).map(k => [k, { state: 'IDLE', message: null }])
-    ));
+    setAgentStates((prev) => Object.fromEntries(Object.keys(prev).map((k) => [k, { state: 'IDLE', message: null }])));
   }, []);
 
   return (
-    <AgentEventsContext.Provider value={{ agentStates, lastEvent, analysisResult, connected, resetAnalysis }}>
+    <AgentEventsContext.Provider
+      value={{
+        agentStates,
+        lastEvent,
+        analysisResult,
+        connected,
+        resetAnalysis,
+      }}
+    >
       {children}
     </AgentEventsContext.Provider>
   );

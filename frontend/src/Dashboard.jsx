@@ -20,7 +20,7 @@ export default function Dashboard() {
       .split(/[\s,]+/)
       .map((t) => t.trim().toUpperCase())
       .filter((t) => t.length > 0);
-    
+
     setTickerInput('');
 
     const seen = new Set();
@@ -39,18 +39,22 @@ export default function Dashboard() {
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticker })
+        body: JSON.stringify({ ticker }),
       });
-      
+
       const data = await response.json();
-      
+
       let snapshot = null;
       if (data.decision_snapshot) {
         snapshot = data.decision_snapshot;
       } else if (data.signal) {
         snapshot = data;
       } else {
-        snapshot = { ...data, signal: data.verdict || "WAIT", reason: data.analysis || "Data processed." };
+        snapshot = {
+          ...data,
+          signal: data.verdict || 'WAIT',
+          reason: data.analysis || 'Data processed.',
+        };
       }
 
       setResults((prev) => {
@@ -73,11 +77,11 @@ export default function Dashboard() {
   };
 
   const getBadgeVariant = (signal) => {
-    if (!signal) return "outline";
+    if (!signal) return 'outline';
     const s = signal.toUpperCase();
-    if (s.includes('BUY') || s.includes('ADD')) return "success";
-    if (s.includes('SELL') || s.includes('AVOID')) return "destructive";
-    return "warning";
+    if (s.includes('BUY') || s.includes('ADD')) return 'success';
+    if (s.includes('SELL') || s.includes('AVOID')) return 'destructive';
+    return 'warning';
   };
 
   return (
@@ -144,14 +148,19 @@ export default function Dashboard() {
             if (res.isError) {
               return (
                 <Card key={res.ticker} className="bg-surface border-status-danger/30 rounded-md relative overflow-hidden group">
-                  <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-muted opacity-50 hover:opacity-100 hover:text-foreground transition-opacity" onClick={() => removeCard(res.ticker)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 h-6 w-6 text-muted opacity-50 hover:opacity-100 hover:text-foreground transition-opacity"
+                    onClick={() => removeCard(res.ticker)}
+                  >
                     <X className="h-4 w-4" />
                   </Button>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg font-bold tracking-tight text-status-danger">{res.ticker}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted">{errors[res.ticker] || "Failed to retrieve signal."}</p>
+                    <p className="text-sm text-muted">{errors[res.ticker] || 'Failed to retrieve signal.'}</p>
                   </CardContent>
                 </Card>
               );
@@ -160,45 +169,57 @@ export default function Dashboard() {
             const signalClass = getBadgeVariant(res.signal);
 
             return (
-              <Card key={res.ticker} className="bg-surface border-border hover:border-border-hover transition-colors rounded-md relative overflow-hidden group">
+              <Card
+                key={res.ticker}
+                className="bg-surface border-border hover:border-border-hover transition-colors rounded-md relative overflow-hidden group"
+              >
                 {/* Layout: Changed from opacity-0 group-hover:opacity-100 to opacity-50 hover:opacity-100 */}
-                <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-muted opacity-50 hover:opacity-100 hover:text-foreground transition-opacity" onClick={() => removeCard(res.ticker)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 h-6 w-6 text-muted opacity-50 hover:opacity-100 hover:text-foreground transition-opacity"
+                  onClick={() => removeCard(res.ticker)}
+                >
                   <X className="h-4 w-4" />
                 </Button>
 
                 <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-xl font-bold tracking-tight">{res.ticker}</CardTitle>
-                  <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
-                    signalClass === 'success' ? 'bg-status-success-bg text-status-success border border-status-success/20' : 
-                    signalClass === 'destructive' ? 'bg-status-danger-bg text-status-danger border border-status-danger/20' : 
-                    'bg-status-warning-bg text-status-warning border border-status-warning/20'
-                  }`}>
-                    {res.signal || "WAIT"}
+                  <div
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
+                      signalClass === 'success'
+                        ? 'bg-status-success-bg text-status-success border border-status-success/20'
+                        : signalClass === 'destructive'
+                          ? 'bg-status-danger-bg text-status-danger border border-status-danger/20'
+                          : 'bg-status-warning-bg text-status-warning border border-status-warning/20'
+                    }`}
+                  >
+                    {res.signal || 'WAIT'}
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="pb-4">
                   <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-3xl font-light font-mono">${res.last_price || res.price || "---"}</span>
+                    <span className="text-3xl font-light font-mono">${res.last_price || res.price || '---'}</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3 mb-4">
                     <div className="flex flex-col">
                       {/* Polish: Changed text-[10px] to text-xs */}
                       <span className="text-xs text-muted uppercase tracking-wider font-semibold">PEG Ratio</span>
-                      <span className="text-sm font-mono text-foreground">{res.peg || "N/A"}</span>
+                      <span className="text-sm font-mono text-foreground">{res.peg || 'N/A'}</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs text-muted uppercase tracking-wider font-semibold">50D MA</span>
-                      <span className="text-sm font-mono text-foreground">{res.ma50 || "N/A"}</span>
+                      <span className="text-sm font-mono text-foreground">{res.ma50 || 'N/A'}</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs text-muted uppercase tracking-wider font-semibold">ATR</span>
-                      <span className="text-sm font-mono text-foreground">{res.atr || "N/A"}</span>
+                      <span className="text-sm font-mono text-foreground">{res.atr || 'N/A'}</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs text-muted uppercase tracking-wider font-semibold">Stop Loss</span>
-                      <span className="text-sm font-mono text-status-danger">{res.stop_loss || "N/A"}</span>
+                      <span className="text-sm font-mono text-status-danger">{res.stop_loss || 'N/A'}</span>
                     </div>
                   </div>
 

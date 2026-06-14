@@ -5,40 +5,175 @@ import { useNavigate } from 'react-router-dom';
 /* ─── Default ticker universe ─────────────────────────────── */
 const TICKERS = [
   // US Mega-cap
-  { symbol: 'AAPL',   name: 'Apple Inc.',              market: 'NASDAQ', sector: 'Technology' },
-  { symbol: 'NVDA',   name: 'NVIDIA Corp.',             market: 'NASDAQ', sector: 'Technology' },
-  { symbol: 'MSFT',   name: 'Microsoft Corp.',          market: 'NASDAQ', sector: 'Technology' },
-  { symbol: 'GOOGL',  name: 'Alphabet Inc.',            market: 'NASDAQ', sector: 'Technology' },
-  { symbol: 'AMZN',   name: 'Amazon.com Inc.',          market: 'NASDAQ', sector: 'Consumer' },
-  { symbol: 'META',   name: 'Meta Platforms Inc.',      market: 'NASDAQ', sector: 'Technology' },
-  { symbol: 'TSLA',   name: 'Tesla Inc.',               market: 'NASDAQ', sector: 'Automotive' },
-  { symbol: 'AVGO',   name: 'Broadcom Inc.',            market: 'NASDAQ', sector: 'Semiconductors' },
-  { symbol: 'TSM',    name: 'Taiwan Semiconductor',     market: 'NYSE',   sector: 'Semiconductors' },
-  { symbol: 'AMD',    name: 'Advanced Micro Devices',   market: 'NASDAQ', sector: 'Semiconductors' },
-  { symbol: 'INTC',   name: 'Intel Corp.',              market: 'NASDAQ', sector: 'Semiconductors' },
-  { symbol: 'ORCL',   name: 'Oracle Corp.',             market: 'NYSE',   sector: 'Technology' },
-  { symbol: 'CRM',    name: 'Salesforce Inc.',          market: 'NYSE',   sector: 'Technology' },
-  { symbol: 'NFLX',   name: 'Netflix Inc.',             market: 'NASDAQ', sector: 'Media' },
-  { symbol: 'ADBE',   name: 'Adobe Inc.',               market: 'NASDAQ', sector: 'Technology' },
+  {
+    symbol: 'AAPL',
+    name: 'Apple Inc.',
+    market: 'NASDAQ',
+    sector: 'Technology',
+  },
+  {
+    symbol: 'NVDA',
+    name: 'NVIDIA Corp.',
+    market: 'NASDAQ',
+    sector: 'Technology',
+  },
+  {
+    symbol: 'MSFT',
+    name: 'Microsoft Corp.',
+    market: 'NASDAQ',
+    sector: 'Technology',
+  },
+  {
+    symbol: 'GOOGL',
+    name: 'Alphabet Inc.',
+    market: 'NASDAQ',
+    sector: 'Technology',
+  },
+  {
+    symbol: 'AMZN',
+    name: 'Amazon.com Inc.',
+    market: 'NASDAQ',
+    sector: 'Consumer',
+  },
+  {
+    symbol: 'META',
+    name: 'Meta Platforms Inc.',
+    market: 'NASDAQ',
+    sector: 'Technology',
+  },
+  {
+    symbol: 'TSLA',
+    name: 'Tesla Inc.',
+    market: 'NASDAQ',
+    sector: 'Automotive',
+  },
+  {
+    symbol: 'AVGO',
+    name: 'Broadcom Inc.',
+    market: 'NASDAQ',
+    sector: 'Semiconductors',
+  },
+  {
+    symbol: 'TSM',
+    name: 'Taiwan Semiconductor',
+    market: 'NYSE',
+    sector: 'Semiconductors',
+  },
+  {
+    symbol: 'AMD',
+    name: 'Advanced Micro Devices',
+    market: 'NASDAQ',
+    sector: 'Semiconductors',
+  },
+  {
+    symbol: 'INTC',
+    name: 'Intel Corp.',
+    market: 'NASDAQ',
+    sector: 'Semiconductors',
+  },
+  {
+    symbol: 'ORCL',
+    name: 'Oracle Corp.',
+    market: 'NYSE',
+    sector: 'Technology',
+  },
+  {
+    symbol: 'CRM',
+    name: 'Salesforce Inc.',
+    market: 'NYSE',
+    sector: 'Technology',
+  },
+  { symbol: 'NFLX', name: 'Netflix Inc.', market: 'NASDAQ', sector: 'Media' },
+  {
+    symbol: 'ADBE',
+    name: 'Adobe Inc.',
+    market: 'NASDAQ',
+    sector: 'Technology',
+  },
   // ETF / Indices
-  { symbol: 'SPY',    name: 'SPDR S&P 500 ETF',        market: 'NYSE',   sector: 'ETF' },
-  { symbol: 'QQQ',    name: 'Invesco QQQ Trust',        market: 'NASDAQ', sector: 'ETF' },
-  { symbol: 'SOXX',   name: 'iShares Semiconductor ETF',market: 'NASDAQ', sector: 'ETF' },
+  { symbol: 'SPY', name: 'SPDR S&P 500 ETF', market: 'NYSE', sector: 'ETF' },
+  { symbol: 'QQQ', name: 'Invesco QQQ Trust', market: 'NASDAQ', sector: 'ETF' },
+  {
+    symbol: 'SOXX',
+    name: 'iShares Semiconductor ETF',
+    market: 'NASDAQ',
+    sector: 'ETF',
+  },
   // Finance
-  { symbol: 'JPM',    name: 'JPMorgan Chase & Co.',     market: 'NYSE',   sector: 'Finance' },
-  { symbol: 'GS',     name: 'Goldman Sachs Group',      market: 'NYSE',   sector: 'Finance' },
-  { symbol: 'BRK-B',  name: 'Berkshire Hathaway B',     market: 'NYSE',   sector: 'Finance' },
+  {
+    symbol: 'JPM',
+    name: 'JPMorgan Chase & Co.',
+    market: 'NYSE',
+    sector: 'Finance',
+  },
+  {
+    symbol: 'GS',
+    name: 'Goldman Sachs Group',
+    market: 'NYSE',
+    sector: 'Finance',
+  },
+  {
+    symbol: 'BRK-B',
+    name: 'Berkshire Hathaway B',
+    market: 'NYSE',
+    sector: 'Finance',
+  },
   // Energy & Macro
-  { symbol: 'XOM',    name: 'Exxon Mobil Corp.',        market: 'NYSE',   sector: 'Energy' },
-  { symbol: 'GLD',    name: 'SPDR Gold Shares ETF',     market: 'NYSE',   sector: 'Commodity' },
-  { symbol: 'BTC-USD',name: 'Bitcoin USD',              market: 'CRYPTO', sector: 'Crypto' },
-  { symbol: 'ETH-USD',name: 'Ethereum USD',             market: 'CRYPTO', sector: 'Crypto' },
+  {
+    symbol: 'XOM',
+    name: 'Exxon Mobil Corp.',
+    market: 'NYSE',
+    sector: 'Energy',
+  },
+  {
+    symbol: 'GLD',
+    name: 'SPDR Gold Shares ETF',
+    market: 'NYSE',
+    sector: 'Commodity',
+  },
+  {
+    symbol: 'BTC-USD',
+    name: 'Bitcoin USD',
+    market: 'CRYPTO',
+    sector: 'Crypto',
+  },
+  {
+    symbol: 'ETH-USD',
+    name: 'Ethereum USD',
+    market: 'CRYPTO',
+    sector: 'Crypto',
+  },
   // Thai SET
-  { symbol: 'SET:PTT',  name: 'PTT Public Co.',         market: 'SET',    sector: 'Energy' },
-  { symbol: 'SET:AOT',  name: 'Airports of Thailand',   market: 'SET',    sector: 'Transport' },
-  { symbol: 'SET:CPALL',name: 'CP All PCL',             market: 'SET',    sector: 'Consumer' },
-  { symbol: 'SET:SCB',  name: 'Siam Commercial Bank',   market: 'SET',    sector: 'Finance' },
-  { symbol: 'SET:KBANK',name: 'Kasikornbank PCL',       market: 'SET',    sector: 'Finance' },
+  {
+    symbol: 'SET:PTT',
+    name: 'PTT Public Co.',
+    market: 'SET',
+    sector: 'Energy',
+  },
+  {
+    symbol: 'SET:AOT',
+    name: 'Airports of Thailand',
+    market: 'SET',
+    sector: 'Transport',
+  },
+  {
+    symbol: 'SET:CPALL',
+    name: 'CP All PCL',
+    market: 'SET',
+    sector: 'Consumer',
+  },
+  {
+    symbol: 'SET:SCB',
+    name: 'Siam Commercial Bank',
+    market: 'SET',
+    sector: 'Finance',
+  },
+  {
+    symbol: 'SET:KBANK',
+    name: 'Kasikornbank PCL',
+    market: 'SET',
+    sector: 'Finance',
+  },
 ];
 
 /* ─── TradingView Widget ──────────────────────────────────── */
@@ -83,11 +218,7 @@ function TradingViewChart({ symbol }) {
   }, [symbol]);
 
   return (
-    <div
-      className="tradingview-widget-container"
-      ref={containerRef}
-      style={{ height: '100%', width: '100%' }}
-    >
+    <div className="tradingview-widget-container" ref={containerRef} style={{ height: '100%', width: '100%' }}>
       <div className="tradingview-widget-container__widget" style={{ height: '100%', width: '100%' }} />
     </div>
   );
@@ -96,11 +227,7 @@ function TradingViewChart({ symbol }) {
 /* ─── Ticker Row ──────────────────────────────────────────── */
 function TickerRow({ ticker, isActive, onClick }) {
   return (
-    <button
-      className={`ticker-row${isActive ? ' ticker-row--active' : ''}`}
-      onClick={onClick}
-      aria-pressed={isActive}
-    >
+    <button className={`ticker-row${isActive ? ' ticker-row--active' : ''}`} onClick={onClick} aria-pressed={isActive}>
       <div className="ticker-row__icon" data-market={ticker.market}>
         {ticker.symbol.replace('SET:', '').slice(0, 3)}
       </div>
@@ -126,10 +253,11 @@ export default function MarketExplorerPage() {
   const searchRef = useRef(null);
 
   const filtered = query.trim()
-    ? TICKERS.filter(t =>
-        t.symbol.toLowerCase().includes(query.toLowerCase()) ||
-        t.name.toLowerCase().includes(query.toLowerCase()) ||
-        t.sector.toLowerCase().includes(query.toLowerCase())
+    ? TICKERS.filter(
+        (t) =>
+          t.symbol.toLowerCase().includes(query.toLowerCase()) ||
+          t.name.toLowerCase().includes(query.toLowerCase()) ||
+          t.sector.toLowerCase().includes(query.toLowerCase())
       )
     : TICKERS;
 
@@ -137,7 +265,10 @@ export default function MarketExplorerPage() {
   const fetchPrice = useCallback(async (symbol) => {
     // Skip for SET and crypto which Yahoo Finance may not support well via our proxy
     const ySymbol = symbol.replace('SET:', '') + (symbol.startsWith('SET:') ? '.BK' : '');
-    if (symbol.includes('USD')) { setPriceData(null); return; }
+    if (symbol.includes('USD')) {
+      setPriceData(null);
+      return;
+    }
     setPriceLoading(true);
     try {
       const res = await fetch(`/api/price/${encodeURIComponent(ySymbol)}`);
@@ -189,21 +320,19 @@ export default function MarketExplorerPage() {
               type="search"
               placeholder="ค้นหาชื่อหุ้นหรือบริษัท..."
               value={query}
-              onChange={e => setQuery(e.target.value)}
+              onChange={(e) => setQuery(e.target.value)}
               aria-label="Search tickers"
               autoComplete="off"
               spellCheck={false}
             />
             {query && (
-              <button
-                className="search-clear"
-                onClick={() => setQuery('')}
-                aria-label="Clear search"
-              >
+              <button className="search-clear" onClick={() => setQuery('')} aria-label="Clear search">
                 <X size={12} />
               </button>
             )}
-            <kbd className="search-kbd" aria-hidden="true">⌘K</kbd>
+            <kbd className="search-kbd" aria-hidden="true">
+              ⌘K
+            </kbd>
           </div>
         </div>
 
@@ -214,19 +343,16 @@ export default function MarketExplorerPage() {
               <p>ไม่พบผลลัพธ์สำหรับ "{query}"</p>
             </div>
           ) : (
-            filtered.map(ticker => (
-              <TickerRow
-                key={ticker.symbol}
-                ticker={ticker}
-                isActive={selected.symbol === ticker.symbol}
-                onClick={() => setSelected(ticker)}
-              />
+            filtered.map((ticker) => (
+              <TickerRow key={ticker.symbol} ticker={ticker} isActive={selected.symbol === ticker.symbol} onClick={() => setSelected(ticker)} />
             ))
           )}
         </div>
 
         <div className="sidebar-footer">
-          <span>{TICKERS.length} รายการ · แสดง {filtered.length} รายการ</span>
+          <span>
+            {TICKERS.length} รายการ · แสดง {filtered.length} รายการ
+          </span>
         </div>
       </aside>
 
@@ -252,18 +378,17 @@ export default function MarketExplorerPage() {
             {!priceLoading && priceData && (
               <div className="live-price">
                 <span className="live-price__value">
-                  ฿{priceData.price?.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) ?? '—'}
+                  ฿
+                  {priceData.price?.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }) ?? '—'}
                 </span>
                 {priceData.change != null && (
-                  <span
-                    className={`live-price__change ${priceData.change >= 0 ? 'up' : 'down'}`}
-                  >
-                    {priceData.change >= 0 ? (
-                      <TrendingUp size={13} aria-hidden="true" />
-                    ) : (
-                      <TrendingDown size={13} aria-hidden="true" />
-                    )}
-                    {priceData.change >= 0 ? '+' : ''}{priceData.changePct?.toFixed(2)}%
+                  <span className={`live-price__change ${priceData.change >= 0 ? 'up' : 'down'}`}>
+                    {priceData.change >= 0 ? <TrendingUp size={13} aria-hidden="true" /> : <TrendingDown size={13} aria-hidden="true" />}
+                    {priceData.change >= 0 ? '+' : ''}
+                    {priceData.changePct?.toFixed(2)}%
                   </span>
                 )}
               </div>

@@ -32,9 +32,14 @@ const AGENT_ICONS = {
 
 export default function PixelTradingFloor() {
   const [agents, setAgents] = useState({
-    cio: { id: 'cio', state: 'IDLE', ...DESK_COORDINATES.cio, message: 'Monitoring' }
+    cio: {
+      id: 'cio',
+      state: 'IDLE',
+      ...DESK_COORDINATES.cio,
+      message: 'Monitoring',
+    },
   });
-  
+
   const wsRef = useRef(null);
 
   useEffect(() => {
@@ -63,11 +68,11 @@ export default function PixelTradingFloor() {
 
   const handleAgentStateChange = (data) => {
     const { agent, state, message } = data;
-    
-    setAgents(prev => {
+
+    setAgents((prev) => {
       const current = prev[agent] || { id: agent, ...SPAWN_POINT };
       let newCoords = { top: current.top, left: current.left };
-      
+
       // Update coordinates based on state
       if (state === 'SPAWNED') {
         newCoords = { ...SPAWN_POINT };
@@ -77,7 +82,7 @@ export default function PixelTradingFloor() {
         // Walk back to door, then remove after delay
         newCoords = { ...SPAWN_POINT };
         setTimeout(() => {
-          setAgents(p => {
+          setAgents((p) => {
             const next = { ...p };
             delete next[agent];
             // Ensure CIO is always there
@@ -86,7 +91,7 @@ export default function PixelTradingFloor() {
           });
         }, 1500);
       }
-      
+
       return {
         ...prev,
         [agent]: {
@@ -94,15 +99,15 @@ export default function PixelTradingFloor() {
           ...newCoords,
           state,
           message: message || current.message,
-          lastUpdated: Date.now()
-        }
+          lastUpdated: Date.now(),
+        },
       };
     });
   };
 
   return (
-    <div 
-      className="pixel-trading-floor" 
+    <div
+      className="pixel-trading-floor"
       style={{
         width: '100%',
         aspectRatio: '1 / 1',
@@ -113,18 +118,20 @@ export default function PixelTradingFloor() {
         borderRadius: '8px',
         overflow: 'hidden',
         border: '1px solid var(--border-color)',
-        boxShadow: 'inset 0 0 40px rgba(0,0,0,0.8)'
+        boxShadow: 'inset 0 0 40px rgba(0,0,0,0.8)',
       }}
     >
       {/* Dimming overlay when active analysis is happening to focus on agents */}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        backgroundColor: Object.keys(agents).length > 1 ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)',
-        transition: 'background-color 1s ease'
-      }} />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: Object.keys(agents).length > 1 ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)',
+          transition: 'background-color 1s ease',
+        }}
+      />
 
-      {Object.values(agents).map(agent => (
+      {Object.values(agents).map((agent) => (
         <AgentSprite key={agent.id} agent={agent} />
       ))}
     </div>
@@ -134,13 +141,13 @@ export default function PixelTradingFloor() {
 function AgentSprite({ agent }) {
   const Icon = AGENT_ICONS[agent.id] || User;
   const color = AGENT_COLORS[agent.id] || '#ffffff';
-  
+
   const isTyping = agent.state === 'TYPING';
   const isWalking = agent.state === 'WALKING' || agent.state === 'EXITED';
   const isDone = agent.state === 'DONE' || agent.state === 'PRESENTING';
 
   return (
-    <div 
+    <div
       style={{
         position: 'absolute',
         top: `${agent.top}%`,
@@ -150,96 +157,106 @@ function AgentSprite({ agent }) {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        zIndex: agent.top // Fake depth sorting
+        zIndex: agent.top, // Fake depth sorting
       }}
     >
       {/* Speech Bubble / Message */}
-      {(agent.message && (isTyping || isDone || agent.id === 'cio')) && (
-        <div style={{
-          position: 'absolute',
-          bottom: '100%',
-          marginBottom: '16px',
-          backgroundColor: 'var(--surface)',
-          border: `1px solid var(--border-medium)`,
-          color: 'var(--text-primary)',
-          padding: '8px 12px',
-          borderRadius: '8px',
-          fontSize: '0.75rem',
-          fontWeight: '600',
-          whiteSpace: 'nowrap',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-          animation: 'popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-          zIndex: 100
-        }}>
-          {agent.message}
-          <div style={{
+      {agent.message && (isTyping || isDone || agent.id === 'cio') && (
+        <div
+          style={{
             position: 'absolute',
-            bottom: '-6px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '12px',
-            height: '12px',
+            bottom: '100%',
+            marginBottom: '16px',
             backgroundColor: 'var(--surface)',
-            borderRight: '1px solid var(--border-medium)',
-            borderBottom: '1px solid var(--border-medium)',
-            clipPath: 'polygon(100% 0, 0 100%, 100% 100%)',
-            rotate: '45deg'
-          }} />
+            border: `1px solid var(--border-medium)`,
+            color: 'var(--text-primary)',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            fontSize: '0.75rem',
+            fontWeight: '600',
+            whiteSpace: 'nowrap',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            animation: 'popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            zIndex: 100,
+          }}
+        >
+          {agent.message}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '-6px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '12px',
+              height: '12px',
+              backgroundColor: 'var(--surface)',
+              borderRight: '1px solid var(--border-medium)',
+              borderBottom: '1px solid var(--border-medium)',
+              clipPath: 'polygon(100% 0, 0 100%, 100% 100%)',
+              rotate: '45deg',
+            }}
+          />
         </div>
       )}
 
       {/* The Pixel Agent Character */}
-      <div 
+      <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          animation: isWalking ? 'walkBob 0.5s ease-in-out infinite alternate' : 'none'
+          animation: isWalking ? 'walkBob 0.5s ease-in-out infinite alternate' : 'none',
         }}
       >
         {/* Head */}
-        <div style={{
-          width: '20px',
-          height: '20px',
-          backgroundColor: isDone ? 'var(--status-success)' : color,
-          borderRadius: '6px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: '2px',
-          boxShadow: isTyping ? `0 0 12px ${color}` : '0 2px 4px rgba(0,0,0,0.1)',
-          animation: isTyping ? 'pulseGlow 1.5s ease-in-out infinite alternate' : 'none',
-          position: 'relative',
-          zIndex: 2
-        }}>
+        <div
+          style={{
+            width: '20px',
+            height: '20px',
+            backgroundColor: isDone ? 'var(--status-success)' : color,
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '2px',
+            boxShadow: isTyping ? `0 0 12px ${color}` : '0 2px 4px rgba(0,0,0,0.1)',
+            animation: isTyping ? 'pulseGlow 1.5s ease-in-out infinite alternate' : 'none',
+            position: 'relative',
+            zIndex: 2,
+          }}
+        >
           <Icon size={12} color="#ffffff" />
         </div>
         {/* Body */}
-        <div style={{
-          width: '24px',
-          height: '14px',
-          backgroundColor: 'var(--foreground)',
-          borderRadius: '4px',
-          position: 'relative',
-          zIndex: 1,
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }} />
+        <div
+          style={{
+            width: '24px',
+            height: '14px',
+            backgroundColor: 'var(--foreground)',
+            borderRadius: '4px',
+            position: 'relative',
+            zIndex: 1,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          }}
+        />
       </div>
-      
+
       {/* Name tag */}
-      <div style={{
-        marginTop: '6px',
-        backgroundColor: 'var(--surface)',
-        border: '1px solid var(--border-subtle)',
-        padding: '2px 8px',
-        borderRadius: '12px',
-        fontSize: '0.65rem',
-        color: 'var(--text-secondary)',
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: '0.05em',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-      }}>
+      <div
+        style={{
+          marginTop: '6px',
+          backgroundColor: 'var(--surface)',
+          border: '1px solid var(--border-subtle)',
+          padding: '2px 8px',
+          borderRadius: '12px',
+          fontSize: '0.65rem',
+          color: 'var(--text-secondary)',
+          fontWeight: '700',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+        }}
+      >
         {agent.id.replace(/-/g, ' ')}
       </div>
 
@@ -260,4 +277,3 @@ function AgentSprite({ agent }) {
     </div>
   );
 }
-

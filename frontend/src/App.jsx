@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { LayoutDashboard, Bot, BookOpen, ShieldAlert, BarChart2, Crosshair, Settings2 } from 'lucide-react';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/react';
+import { Show, UserButton } from '@clerk/react';
 import DashboardPage from './pages/DashboardPage';
 import CommandCenterPage from './pages/CommandCenterPage';
 import JournalPage from './pages/JournalPage';
@@ -27,11 +27,11 @@ function App() {
     <BrowserRouter>
       <KeyboardShortcuts />
       <div className="app-root">
-        <SignedOut>
+        <Show when="signed-out">
           <LandingPage />
-        </SignedOut>
+        </Show>
 
-        <SignedIn>
+        <Show when="signed-in">
           {/* Sidebar Navigation */}
           <nav className="side-nav" aria-label="Main navigation">
             <div className="side-nav-brand">
@@ -44,7 +44,7 @@ function App() {
                   key={to}
                   to={to}
                   end={end}
-                  className={({ isActive }) => isActive ? 'side-link active' : 'side-link'}
+                  className={({ isActive }) => (isActive ? 'side-link active' : 'side-link')}
                   role="tab"
                   aria-label={label}
                 >
@@ -58,7 +58,7 @@ function App() {
                 <span className="status-dot" aria-hidden="true" />
                 <span className="status-text">Live Systems</span>
               </div>
-              
+
               {/* Clerk Auth UI */}
               <UserButton />
             </div>
@@ -76,7 +76,7 @@ function App() {
               <Route path="/config" element={<ConfigPage />} />
             </Routes>
           </main>
-        </SignedIn>
+        </Show>
       </div>
     </BrowserRouter>
   );
