@@ -7,6 +7,15 @@ import './index.css';
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
+const clerkAppearance = {
+  variables: {
+    colorBackground: '#111111',
+    colorForeground: '#ededed',
+    colorInput: '#171717',
+    colorBorder: '#262626',
+  },
+};
+
 if (!PUBLISHABLE_KEY) {
   createRoot(document.getElementById('root')).render(
     <div
@@ -27,7 +36,7 @@ if (!PUBLISHABLE_KEY) {
 } else {
   createRoot(document.getElementById('root')).render(
     <StrictMode>
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY} appearance={clerkAppearance}>
         <AgentEventsProvider>
           <App />
         </AgentEventsProvider>
