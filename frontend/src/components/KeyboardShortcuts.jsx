@@ -96,7 +96,7 @@ export default function KeyboardShortcuts() {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0,0,0,0.6)',
+        backgroundColor: 'rgba(var(--black-rgb),0.6)',
         backdropFilter: 'blur(4px)',
         zIndex: 9999,
         display: 'flex',

@@ -118,7 +118,7 @@ export default function PixelTradingFloor() {
         borderRadius: '8px',
         overflow: 'hidden',
         border: '1px solid var(--border-color)',
-        boxShadow: 'inset 0 0 40px rgba(0,0,0,0.8)',
+        boxShadow: 'inset 0 0 40px rgba(var(--black-rgb),0.8)',
       }}
     >
       {/* Dimming overlay when active analysis is happening to focus on agents */}
@@ -126,7 +126,7 @@ export default function PixelTradingFloor() {
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundColor: Object.keys(agents).length > 1 ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)',
+          backgroundColor: Object.keys(agents).length > 1 ? 'rgba(var(--black-rgb),0.4)' : 'rgba(var(--black-rgb),0.1)',
           transition: 'background-color 1s ease',
         }}
       />
@@ -175,7 +175,7 @@ function AgentSprite({ agent }) {
             fontSize: '0.75rem',
             fontWeight: '600',
             whiteSpace: 'nowrap',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            boxShadow: '0 4px 12px rgba(var(--black-rgb),0.05)',
             animation: 'popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
             zIndex: 100,
           }}
@@ -219,7 +219,7 @@ function AgentSprite({ agent }) {
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: '2px',
-            boxShadow: isTyping ? `0 0 12px ${color}` : '0 2px 4px rgba(0,0,0,0.1)',
+            boxShadow: isTyping ? `0 0 12px ${color}` : '0 2px 4px rgba(var(--black-rgb),0.1)',
             animation: isTyping ? 'pulseGlow 1.5s ease-in-out infinite alternate' : 'none',
             position: 'relative',
             zIndex: 2,
@@ -236,7 +236,7 @@ function AgentSprite({ agent }) {
             borderRadius: '4px',
             position: 'relative',
             zIndex: 1,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            boxShadow: '0 2px 4px rgba(var(--black-rgb),0.1)',
           }}
         />
       </div>
@@ -254,7 +254,7 @@ function AgentSprite({ agent }) {
           fontWeight: '700',
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+          boxShadow: '0 2px 4px rgba(var(--black-rgb),0.02)',
         }}
       >
         {agent.id.replace(/-/g, ' ')}

@@ -12,14 +12,34 @@ import LandingPage from './pages/LandingPage';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
 import './index.css';
 
-const NAV_LINKS = [
-  { to: '/', label: 'แดชบอร์ด', end: true, icon: LayoutDashboard },
-  { to: '/risk', label: 'บริหารความเสี่ยง', icon: ShieldAlert },
-  { to: '/market', label: 'ตลาดหุ้น', icon: Crosshair },
-  { to: '/command-center', label: 'Command Center', icon: Bot },
-  { to: '/journal', label: 'บันทึกการเทรด', icon: BookOpen },
-  { to: '/analytics', label: 'วิเคราะห์ผลงาน', icon: BarChart2 },
-  { to: '/config', label: 'ตั้งค่าระบบ', icon: Settings2 },
+const NAV_GROUPS = [
+  {
+    title: 'OVERVIEW',
+    links: [
+      { to: '/', label: 'แดชบอร์ด', end: true, icon: LayoutDashboard },
+      { to: '/risk', label: 'บริหารความเสี่ยง', icon: ShieldAlert },
+      { to: '/market', label: 'ตลาดหุ้น', icon: Crosshair },
+    ],
+  },
+  {
+    title: 'EXECUTION',
+    links: [
+      { to: '/command-center', label: 'Command Center', icon: Bot },
+      { to: '/journal', label: 'บันทึกการเทรด', icon: BookOpen },
+    ],
+  },
+  {
+    title: 'ANALYSIS',
+    links: [
+      { to: '/analytics', label: 'วิเคราะห์ผลงาน', icon: BarChart2 },
+    ],
+  },
+  {
+    title: 'SETTINGS',
+    links: [
+      { to: '/config', label: 'ตั้งค่าระบบ', icon: Settings2 },
+    ],
+  }
 ];
 
 function App() {
@@ -38,19 +58,26 @@ function App() {
               <span className="brand-dot" aria-hidden="true" />
               <span className="brand-name">MyPortStock</span>
             </div>
-            <div className="side-nav-links" role="tablist">
-              {NAV_LINKS.map(({ to, label, end, icon: Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={end}
-                  className={({ isActive }) => (isActive ? 'side-link active' : 'side-link')}
-                  role="tab"
-                  aria-label={label}
-                >
-                  <Icon size={18} aria-hidden="true" />
-                  {label}
-                </NavLink>
+            <div className="side-nav-links">
+              {NAV_GROUPS.map((group) => (
+                <div key={group.title} className="nav-group">
+                  <div className="nav-group-title" id={`group-${group.title}`}>{group.title}</div>
+                  <ul aria-labelledby={`group-${group.title}`} className="nav-group-list">
+                    {group.links.map(({ to, label, end, icon: Icon }) => (
+                      <li key={to}>
+                        <NavLink
+                          to={to}
+                          end={end}
+                          className={({ isActive }) => (isActive ? 'side-link active' : 'side-link')}
+                          aria-label={label}
+                        >
+                          <Icon size={18} aria-hidden="true" />
+                          {label}
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
             </div>
             <div className="side-nav-status">

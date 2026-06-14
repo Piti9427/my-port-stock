@@ -150,6 +150,18 @@ const SECTOR_DATA = [
 const TOTAL_PORT_THB = 8_540_000;
 const MAX_DRAWDOWN_RISK_THB = TOTAL_PORT_THB * 0.068;
 
+const MAX_RISK_CAP = 25000;
+const RISK_WARNING_HIGH = 20000;
+const RISK_WARNING_MED = 18000;
+const CASH_ALLOCATION_PCT = 0.058;
+
+const SORTED_SECTORS = [...SECTOR_DATA].sort((a, b) => b.weight - a.weight);
+const OVER_LIMIT_SECTORS = SECTOR_DATA.filter((s) => s.weight > s.limit);
+const TOTAL_RISK_THB = SECTOR_DATA.flatMap((s) => s.holdings).reduce((sum, h) => sum + h.riskThb, 0);
+const TOP_RISK_HOLDINGS = SECTOR_DATA.flatMap((s) => s.holdings)
+  .sort((a, b) => b.riskThb - a.riskThb)
+  .slice(0, 6);
+
 function TreemapBlock({ sector, onSelect, selected }) {
   const isOver = sector.weight > sector.limit;
   const isWarn = !isOver && sector.weight / sector.limit >= 0.85;
@@ -187,20 +199,14 @@ function limit(sector) {
 }
 
 export default function PortfolioRiskPage() {
-  // Sort by weight descending so we can easily pick the highest weight as default
-  const sortedSectors = [...SECTOR_DATA].sort((a, b) => b.weight - a.weight);
-
-  const [selectedSector, setSelectedSector] = useState(sortedSectors[0]);
+  const [selectedSector, setSelectedSector] = useState(SORTED_SECTORS[0]);
   const [alertDismissed, setAlertDismissed] = useState(false);
 
-  const overLimitSectors = SECTOR_DATA.filter((s) => s.weight > s.limit);
-  const showAlert = overLimitSectors.length > 0 && !alertDismissed;
+  const showAlert = OVER_LIMIT_SECTORS.length > 0 && !alertDismissed;
 
   const handleSelect = (sector) => {
     setSelectedSector((prev) => (prev?.sector === sector.sector ? null : sector));
   };
-
-  const totalRiskThb = SECTOR_DATA.flatMap((s) => s.holdings).reduce((sum, h) => sum + h.riskThb, 0);
 
   return (
     <div className="risk-page">
@@ -209,7 +215,7 @@ export default function PortfolioRiskPage() {
         <div className="risk-alert-banner" role="alert">
           <ShieldAlert size={16} aria-hidden="true" className="alert-icon-glyph" />
           <span>
-            คำเตือนสัดส่วนการลงทุน: <strong>{overLimitSectors.map((s) => s.sector).join(', ')}</strong> เกินเพดานที่ตั้งไว้
+            คำเตือนสัดส่วนการลงทุน: <strong>{OVER_LIMIT_SECTORS.map((s) => s.sector).join(', ')}</strong> เกินเพดานที่ตั้งไว้
           </span>
           <button className="btn-icon" onClick={() => setAlertDismissed(true)} aria-label="Dismiss alert">
             <X size={14} />
@@ -237,13 +243,13 @@ export default function PortfolioRiskPage() {
         </div>
         <div className="glass-panel risk-kpi-card">
           <div className="kpi-label">ความเสี่ยงสูงสุดต่อไม้ (THB)</div>
-          <div className="kpi-value kpi-warning">฿25,000</div>
+          <div className="kpi-value kpi-warning">฿{MAX_RISK_CAP.toLocaleString()}</div>
           <div className="kpi-sub">จำกัดความเสี่ยงสูงสุดที่ตั้งไว้</div>
         </div>
         <div className="glass-panel risk-kpi-card">
           <div className="kpi-label">สัดส่วนเงินสด</div>
-          <div className="kpi-value kpi-neutral">5.8%</div>
-          <div className="kpi-sub">฿{((TOTAL_PORT_THB * 0.058) / 1000).toFixed(0)}K คงเหลือ</div>
+          <div className="kpi-value kpi-neutral">{(CASH_ALLOCATION_PCT * 100).toFixed(1)}%</div>
+          <div className="kpi-sub">฿{((TOTAL_PORT_THB * CASH_ALLOCATION_PCT) / 1000).toFixed(0)}K คงเหลือ</div>
         </div>
       </div>
 
@@ -285,7 +291,7 @@ export default function PortfolioRiskPage() {
                 >
                   <div className="sector-bar-name">{s.sector}</div>
                   <div className="sector-bar-track">
-                    <div className="sector-bar-fill" style={{ width: `${pct}%`, background: barColor }} />
+                    <div className="sector-bar-fill" style={{ transform: `scaleX(${pct / 100})`, background: barColor }} />
                     <div className="sector-bar-limit-marker" style={{ left: '100%' }} />
                   </div>
                   <div className="sector-bar-meta">
@@ -339,7 +345,7 @@ export default function PortfolioRiskPage() {
                               <div
                                 className="ticker-icon"
                                 style={{
-                                  background: 'rgba(59,130,246,0.15)',
+                                  background: 'rgba(var(--accent-rgb),0.15)',
                                   color: 'var(--brand-primary)',
                                 }}
                               >
@@ -365,7 +371,7 @@ export default function PortfolioRiskPage() {
                           <td
                             className="price-mono"
                             style={{
-                              color: h.riskThb > 20000 ? 'var(--fin-warning)' : 'var(--text-primary)',
+                              color: h.riskThb > RISK_WARNING_HIGH ? 'var(--fin-warning)' : 'var(--text-primary)',
                             }}
                           >
                             ฿{h.riskThb.toLocaleString()}
@@ -403,18 +409,15 @@ export default function PortfolioRiskPage() {
               <span
                 className="panel-badge"
                 style={{
-                  background: 'rgba(239,68,68,0.12)',
+                  background: 'rgba(var(--status-danger-rgb),0.12)',
                   color: 'var(--fin-loss)',
                 }}
               >
-                ฿{(totalRiskThb / 1000).toFixed(0)}K ความเสี่ยงรวม
+                ฿{(TOTAL_RISK_THB / 1000).toFixed(0)}K ความเสี่ยงรวม
               </span>
             </div>
             <div className="stops-list">
-              {SECTOR_DATA.flatMap((s) => s.holdings)
-                .sort((a, b) => b.riskThb - a.riskThb)
-                .slice(0, 6)
-                .map((h) => (
+              {TOP_RISK_HOLDINGS.map((h) => (
                   <div key={h.ticker} className="stop-row">
                     <div className="stop-ticker">{h.ticker}</div>
                     <div className="stop-details">
@@ -422,7 +425,7 @@ export default function PortfolioRiskPage() {
                       <span
                         className="stop-risk price-mono"
                         style={{
-                          color: h.riskThb > 20000 ? 'var(--fin-warning)' : 'var(--text-secondary)',
+                          color: h.riskThb > RISK_WARNING_HIGH ? 'var(--fin-warning)' : 'var(--text-secondary)',
                         }}
                       >
                         ฿{h.riskThb.toLocaleString()}
@@ -432,8 +435,8 @@ export default function PortfolioRiskPage() {
                       <div
                         className="stop-bar-fill"
                         style={{
-                          width: `${Math.min((h.riskThb / 25000) * 100, 100)}%`,
-                          background: h.riskThb >= 25000 ? 'var(--fin-loss)' : h.riskThb > 18000 ? 'var(--fin-warning)' : 'var(--fin-profit)',
+                          transform: `scaleX(${Math.min(h.riskThb / MAX_RISK_CAP, 1)})`,
+                          background: h.riskThb >= MAX_RISK_CAP ? 'var(--fin-loss)' : h.riskThb > RISK_WARNING_MED ? 'var(--fin-warning)' : 'var(--fin-profit)',
                         }}
                       />
                     </div>

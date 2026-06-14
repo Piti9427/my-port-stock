@@ -512,7 +512,7 @@ export default function CommandCenterPage() {
                 flexDirection: 'column',
                 gap: '8px',
                 padding: '16px',
-                background: 'rgba(0,0,0,0.2)',
+                background: 'rgba(var(--black-rgb),0.2)',
               }}
             >
               <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>

@@ -12,7 +12,7 @@ const SIGNAL_META = {
   accumulate: {
     label: 'Accumulate',
     color: '#34d399',
-    bg: 'rgba(52,211,153,0.12)',
+    bg: 'rgba(var(--status-success-rgb),0.12)',
   },
   wait: {
     label: 'Wait',
@@ -22,7 +22,7 @@ const SIGNAL_META = {
   monitor: {
     label: 'Monitor',
     color: 'var(--text-secondary)',
-    bg: 'rgba(148,163,184,0.1)',
+    bg: 'rgba(var(--muted-rgb),0.1)',
   },
   avoid: {
     label: 'Avoid',
@@ -291,7 +291,7 @@ export default function WatchlistPage() {
                             <div
                               className="ticker-icon"
                               style={{
-                                background: 'rgba(59,130,246,0.15)',
+                                background: 'rgba(var(--accent-rgb),0.15)',
                                 color: 'var(--brand-primary)',
                               }}
                               aria-hidden="true"

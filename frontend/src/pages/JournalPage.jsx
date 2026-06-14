@@ -36,7 +36,7 @@ export default function JournalPage() {
               style={{
                 width: 'auto',
                 padding: '6px 16px',
-                background: filter === 'ALL' ? 'rgba(255,255,255,0.1)' : '',
+                background: filter === 'ALL' ? 'rgba(var(--text-inverse-rgb),0.1)' : '',
               }}
               onClick={() => setFilter('ALL')}
             >
@@ -47,7 +47,7 @@ export default function JournalPage() {
               style={{
                 width: 'auto',
                 padding: '6px 16px',
-                background: filter === 'OPEN' ? 'rgba(255,255,255,0.1)' : '',
+                background: filter === 'OPEN' ? 'rgba(var(--text-inverse-rgb),0.1)' : '',
               }}
               onClick={() => setFilter('OPEN')}
             >
@@ -58,7 +58,7 @@ export default function JournalPage() {
               style={{
                 width: 'auto',
                 padding: '6px 16px',
-                background: filter === 'CLOSED' ? 'rgba(255,255,255,0.1)' : '',
+                background: filter === 'CLOSED' ? 'rgba(var(--text-inverse-rgb),0.1)' : '',
               }}
               onClick={() => setFilter('CLOSED')}
             >
@@ -179,7 +179,7 @@ export default function JournalPage() {
                       <span
                         className="panel-badge"
                         style={{
-                          background: 'rgba(255,255,255,0.05)',
+                          background: 'rgba(var(--text-inverse-rgb),0.05)',
                           color: 'var(--text-secondary)',
                         }}
                       >
@@ -190,7 +190,7 @@ export default function JournalPage() {
                       <span
                         className="panel-badge"
                         style={{
-                          background: t.status === 'OPEN' ? 'var(--brand-glow)' : 'rgba(255,255,255,0.1)',
+                          background: t.status === 'OPEN' ? 'var(--brand-glow)' : 'rgba(var(--text-inverse-rgb),0.1)',
                           color: t.status === 'OPEN' ? 'var(--brand-primary)' : 'var(--text-secondary)',
                         }}
                       >

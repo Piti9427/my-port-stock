@@ -334,7 +334,7 @@ export default function AIFloorPage() {
               fontSize: '1rem',
               marginBottom: '12px',
               paddingBottom: '8px',
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              borderBottom: '1px solid rgba(var(--text-inverse-rgb),0.1)',
             }}
           >
             Activity Log
