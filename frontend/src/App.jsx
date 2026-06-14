@@ -30,16 +30,12 @@ const NAV_GROUPS = [
   },
   {
     title: 'ANALYSIS',
-    links: [
-      { to: '/analytics', label: 'วิเคราะห์ผลงาน', icon: BarChart2 },
-    ],
+    links: [{ to: '/analytics', label: 'วิเคราะห์ผลงาน', icon: BarChart2 }],
   },
   {
     title: 'SETTINGS',
-    links: [
-      { to: '/config', label: 'ตั้งค่าระบบ', icon: Settings2 },
-    ],
-  }
+    links: [{ to: '/config', label: 'ตั้งค่าระบบ', icon: Settings2 }],
+  },
 ];
 
 function App() {
@@ -61,16 +57,13 @@ function App() {
             <div className="side-nav-links">
               {NAV_GROUPS.map((group) => (
                 <div key={group.title} className="nav-group">
-                  <div className="nav-group-title" id={`group-${group.title}`}>{group.title}</div>
+                  <div className="nav-group-title" id={`group-${group.title}`}>
+                    {group.title}
+                  </div>
                   <ul aria-labelledby={`group-${group.title}`} className="nav-group-list">
                     {group.links.map(({ to, label, end, icon: Icon }) => (
                       <li key={to}>
-                        <NavLink
-                          to={to}
-                          end={end}
-                          className={({ isActive }) => (isActive ? 'side-link active' : 'side-link')}
-                          aria-label={label}
-                        >
+                        <NavLink to={to} end={end} className={({ isActive }) => (isActive ? 'side-link active' : 'side-link')} aria-label={label}>
                           <Icon size={18} aria-hidden="true" />
                           {label}
                         </NavLink>

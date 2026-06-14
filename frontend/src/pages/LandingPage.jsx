@@ -16,9 +16,7 @@ export default function LandingPage() {
           <span className="font-semibold tracking-tight text-zinc-100 text-lg">MyPortStock</span>
         </div>
         <SignInButton mode="modal">
-          <button className="text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-200">
-            Sign In
-          </button>
+          <button className="text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-200">Sign In</button>
         </SignInButton>
       </header>
 
@@ -35,7 +33,8 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            A personal AI trading assistant providing real-time quantitative screening, risk management, and decision snapshots based on strict algorithmic rules.
+            A personal AI trading assistant providing real-time quantitative screening, risk management, and decision snapshots based on strict
+            algorithmic rules.
           </p>
 
           <SignInButton mode="modal">

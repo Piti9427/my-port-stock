@@ -418,30 +418,31 @@ export default function PortfolioRiskPage() {
             </div>
             <div className="stops-list">
               {TOP_RISK_HOLDINGS.map((h) => (
-                  <div key={h.ticker} className="stop-row">
-                    <div className="stop-ticker">{h.ticker}</div>
-                    <div className="stop-details">
-                      <span className="stop-price price-mono">จุดตัด: ฿{h.stop.toFixed(2)}</span>
-                      <span
-                        className="stop-risk price-mono"
-                        style={{
-                          color: h.riskThb > RISK_WARNING_HIGH ? 'var(--fin-warning)' : 'var(--text-secondary)',
-                        }}
-                      >
-                        ฿{h.riskThb.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="stop-bar-track" aria-hidden="true">
-                      <div
-                        className="stop-bar-fill"
-                        style={{
-                          transform: `scaleX(${Math.min(h.riskThb / MAX_RISK_CAP, 1)})`,
-                          background: h.riskThb >= MAX_RISK_CAP ? 'var(--fin-loss)' : h.riskThb > RISK_WARNING_MED ? 'var(--fin-warning)' : 'var(--fin-profit)',
-                        }}
-                      />
-                    </div>
+                <div key={h.ticker} className="stop-row">
+                  <div className="stop-ticker">{h.ticker}</div>
+                  <div className="stop-details">
+                    <span className="stop-price price-mono">จุดตัด: ฿{h.stop.toFixed(2)}</span>
+                    <span
+                      className="stop-risk price-mono"
+                      style={{
+                        color: h.riskThb > RISK_WARNING_HIGH ? 'var(--fin-warning)' : 'var(--text-secondary)',
+                      }}
+                    >
+                      ฿{h.riskThb.toLocaleString()}
+                    </span>
                   </div>
-                ))}
+                  <div className="stop-bar-track" aria-hidden="true">
+                    <div
+                      className="stop-bar-fill"
+                      style={{
+                        transform: `scaleX(${Math.min(h.riskThb / MAX_RISK_CAP, 1)})`,
+                        background:
+                          h.riskThb >= MAX_RISK_CAP ? 'var(--fin-loss)' : h.riskThb > RISK_WARNING_MED ? 'var(--fin-warning)' : 'var(--fin-profit)',
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

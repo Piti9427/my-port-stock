@@ -196,7 +196,15 @@ export default function AnalyticsPage() {
             </defs>
             {/* Grid lines */}
             {[0.25, 0.5, 0.75].map((r) => (
-              <line key={r} x1="24" y1={24 + (200 - 48) * r} x2="676" y2={24 + (200 - 48) * r} stroke="rgba(var(--text-inverse-rgb),0.04)" strokeWidth="1" />
+              <line
+                key={r}
+                x1="24"
+                y1={24 + (200 - 48) * r}
+                x2="676"
+                y2={24 + (200 - 48) * r}
+                stroke="rgba(var(--text-inverse-rgb),0.04)"
+                strokeWidth="1"
+              />
             ))}
             {/* Area fill */}
             <path d={eqPath.area} fill="url(#equityGrad)" />

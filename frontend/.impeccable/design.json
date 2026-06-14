@@ -4,20 +4,37 @@
   "title": "Design System: MyPortStock",
   "extensions": {
     "colorMeta": {
-      "primary": { "role": "primary", "displayName": "Emerald Accent", "canonical": "#10b981", "tonalRamp": ["#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7", "#a7f3d0"] },
-      "background": { "role": "neutral", "displayName": "Deep Void", "canonical": "#0a0a0a", "tonalRamp": ["#000000", "#0a0a0a", "#171717", "#262626", "#404040", "#525252", "#737373", "#a3a3a3"] },
-      "foreground": { "role": "neutral", "displayName": "Stark White", "canonical": "#ededed", "tonalRamp": ["#525252", "#737373", "#a3a3a3", "#d4d4d4", "#e5e5e5", "#ededed", "#f5f5f5", "#fafafa"] }
+      "primary": {
+        "role": "primary",
+        "displayName": "Emerald Accent",
+        "canonical": "#10b981",
+        "tonalRamp": ["#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7", "#a7f3d0"]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Deep Void",
+        "canonical": "#0a0a0a",
+        "tonalRamp": ["#000000", "#0a0a0a", "#171717", "#262626", "#404040", "#525252", "#737373", "#a3a3a3"]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Stark White",
+        "canonical": "#ededed",
+        "tonalRamp": ["#525252", "#737373", "#a3a3a3", "#d4d4d4", "#e5e5e5", "#ededed", "#f5f5f5", "#fafafa"]
+      }
     },
     "typographyMeta": {
       "display": { "displayName": "Display", "purpose": "Hero headlines and major terminal states." },
       "body": { "displayName": "Body", "purpose": "Standard prose and descriptions." }
     },
     "shadows": [
-      { "name": "ambient-glow", "value": "0 0 100px rgba(16,185,129,0.2)", "purpose": "Used only behind hero text or critical active states to simulate a CRT/Terminal glow." }
+      {
+        "name": "ambient-glow",
+        "value": "0 0 100px rgba(16,185,129,0.2)",
+        "purpose": "Used only behind hero text or critical active states to simulate a CRT/Terminal glow."
+      }
     ],
-    "motion": [
-      { "name": "fast", "value": "200ms ease-out", "purpose": "Fast, purposeful, almost imperceptible hover states." }
-    ],
+    "motion": [{ "name": "fast", "value": "200ms ease-out", "purpose": "Fast, purposeful, almost imperceptible hover states." }],
     "breakpoints": [
       { "name": "md", "value": "768px" },
       { "name": "lg", "value": "1024px" }
@@ -59,9 +76,21 @@
       "Surgical Precision: Thin borders, tight tracking, and crisp components."
     ],
     "rules": [
-      { "name": "The One Voice Rule", "body": "The primary accent is used on ≤5% of any given screen. Its rarity is the point. Color is data, not decoration.", "section": "colors" },
-      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. Drop shadows are strictly forbidden for layout structuring.", "section": "elevation" },
-      { "name": "The Capital Rule", "body": "Small metadata and column headers should utilize uppercase styling with wide tracking (`tracking-widest`) to resemble technical readouts.", "section": "typography" }
+      {
+        "name": "The One Voice Rule",
+        "body": "The primary accent is used on ≤5% of any given screen. Its rarity is the point. Color is data, not decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Surfaces are flat at rest. Drop shadows are strictly forbidden for layout structuring.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Capital Rule",
+        "body": "Small metadata and column headers should utilize uppercase styling with wide tracking (`tracking-widest`) to resemble technical readouts.",
+        "section": "typography"
+      }
     ],
     "dos": [
       "Do use responsive CSS grids (`grid-cols-1 md:grid-cols-2 lg:grid-cols-4`) for dense data layouts.",
