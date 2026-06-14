@@ -6,27 +6,41 @@ const { broadcast } = require('../ws/agentEventBus');
 
 const router = express.Router();
 
-const { requireAuth: clerkRequireAuth, getAuth } = require('@clerk/express');
+const { getAuth } = require('@clerk/express');
+
 const requireAuth = () => {
-  if (process.env.CLERK_SECRET_KEY) return clerkRequireAuth();
-  if (process.env.NODE_ENV !== 'production') {
-    return (req, res, next) => {
-      if (!req.auth) req.auth = { userId: "dev_mock_user_123" };
-      next();
-    };
-  }
-  return clerkRequireAuth();
+  return (req, res, next) => {
+    if (req.auth?.userId) {
+      return next();
+    }
+    try {
+      const auth = getAuth(req);
+      if (!auth?.userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      return next();
+    } catch (err) {
+      console.error('Auth error:', err.message);
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+  };
 };
 
 function getUserId(req) {
-  if (typeof req.auth === 'function') {
-    return getAuth(req).userId;
+  if (req.auth?.userId) {
+    return req.auth.userId;
   }
-  return req.auth ? req.auth.userId : null;
+  try {
+    return getAuth(req).userId;
+  } catch (err) {
+    console.error('Error getting userId:', err.message);
+    return null;
+  }
 }
 
 const { getUserHoldings, getUserWatchlists } = require('../db');
 const { default: YahooFinance } = require('yahoo-finance2');
+const yahooFinance = new YahooFinance();
 
 // Simple sparkline cache
 const sparklineCache = new Map();
@@ -40,11 +54,12 @@ async function getSparkline(ticker) {
   }
   try {
     const period1 = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const res = await YahooFinance.historical(ticker, { period1, interval: '1d' });
+    const res = await yahooFinance.historical(ticker, { period1, interval: '1d' });
     const data = res.map(r => r.close);
     sparklineCache.set(ticker, { timestamp: now, data });
     return data;
   } catch (e) {
+    console.error(`Error fetching sparkline for ${ticker}:`, e.message);
     return [0, 0];
   }
 }
@@ -52,7 +67,7 @@ async function getSparkline(ticker) {
 async function enrichWithMarketData(items) {
   return Promise.all(items.map(async (item) => {
     try {
-      const quote = await YahooFinance.quote(item.ticker);
+      const quote = await yahooFinance.quote(item.ticker);
       const spark = await getSparkline(item.ticker);
       return {
         ...item,
@@ -62,6 +77,7 @@ async function enrichWithMarketData(items) {
         spark
       };
     } catch (e) {
+      console.error(`Error enriching market data for ${item.ticker}:`, e.message);
       return { ...item, price: 0, change: 0, changePct: 0, spark: [] };
     }
   }));
@@ -106,10 +122,8 @@ function getAgentsForMode(decisionMode) {
 router.get('/price/:ticker', async (req, res) => {
   const { ticker } = req.params;
   try {
-    const { getLivePrice, getUsdThbRate } = require('../services/marketData');
-    const { default: YahooFinance } = require('yahoo-finance2');
-    const yf = new YahooFinance();
-    const quote = await yf.quote(ticker);
+    const { getUsdThbRate } = require('../services/marketData');
+    const quote = await yahooFinance.quote(ticker);
     
     const thbRate = await getUsdThbRate();
     const isUsd = quote.currency === 'USD';
@@ -127,6 +141,7 @@ router.get('/price/:ticker', async (req, res) => {
       currency: 'THB'
     });
   } catch (error) {
+    console.error(`Error fetching price for ${ticker}:`, error.message);
     res.status(404).json({ error: `Could not fetch price for ${ticker}` });
   }
 });

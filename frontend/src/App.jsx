@@ -26,12 +26,12 @@ function App() {
   return (
     <BrowserRouter>
       <KeyboardShortcuts />
-      <div className="app-root">
-        <Show when="signed-out">
-          <LandingPage />
-        </Show>
+      <Show when="signed-out">
+        <LandingPage />
+      </Show>
 
-        <Show when="signed-in">
+      <Show when="signed-in">
+        <div className="app-root">
           {/* Sidebar Navigation */}
           <nav className="side-nav" aria-label="Main navigation">
             <div className="side-nav-brand">
@@ -76,8 +76,8 @@ function App() {
               <Route path="/config" element={<ConfigPage />} />
             </Routes>
           </main>
-        </Show>
-      </div>
+        </div>
+      </Show>
     </BrowserRouter>
   );
 }

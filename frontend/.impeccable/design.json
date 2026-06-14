@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-14T16:27:15+07:00",
+  "title": "Design System: MyPortStock",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Emerald Accent", "canonical": "#10b981", "tonalRamp": ["#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7", "#a7f3d0"] },
+      "background": { "role": "neutral", "displayName": "Deep Void", "canonical": "#0a0a0a", "tonalRamp": ["#000000", "#0a0a0a", "#171717", "#262626", "#404040", "#525252", "#737373", "#a3a3a3"] },
+      "foreground": { "role": "neutral", "displayName": "Stark White", "canonical": "#ededed", "tonalRamp": ["#525252", "#737373", "#a3a3a3", "#d4d4d4", "#e5e5e5", "#ededed", "#f5f5f5", "#fafafa"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headlines and major terminal states." },
+      "body": { "displayName": "Body", "purpose": "Standard prose and descriptions." }
+    },
+    "shadows": [
+      { "name": "ambient-glow", "value": "0 0 100px rgba(16,185,129,0.2)", "purpose": "Used only behind hero text or critical active states to simulate a CRT/Terminal glow." }
+    ],
+    "motion": [
+      { "name": "fast", "value": "200ms ease-out", "purpose": "Fast, purposeful, almost imperceptible hover states." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "High-contrast Stark White button.",
+      "html": "<button class=\"ds-btn-primary\">Enter Terminal</button>",
+      "css": ".ds-btn-primary { background: #ededed; color: #0a0a0a; padding: 16px 32px; font-weight: 600; font-family: Inter, sans-serif; border: none; border-radius: 8px; transition: all 0.2s; cursor: pointer; } .ds-btn-primary:hover { background: #d4d4d4; transform: scale(1.02); }"
+    },
+    {
+      "name": "Terminal Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Crisp data container with thin border.",
+      "html": "<div class=\"ds-card\"><h3>NVDA</h3><p>Signal: Strong Buy</p></div>",
+      "css": ".ds-card { background: #171717; border: 1px solid #262626; border-radius: 8px; padding: 24px; color: #ededed; transition: border-color 0.2s; } .ds-card:hover { border-color: #404040; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-success",
+      "description": "Glowing technical metadata label.",
+      "html": "<span class=\"ds-badge\">AI-Powered</span>",
+      "css": ".ds-badge { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #34d399; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 12px; border-radius: 9999px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Terminal for the Elite Quantitative Investor",
+    "overview": "This visual system embodies precision, speed, and algorithmic confidence. It explicitly rejects the bloated, playful, and overly colorful \"SaaS cliché\" or \"AI slop\" aesthetics. Instead, it leans entirely into a Vercel/Linear-inspired dark-first universe where data is the absolute focus. The atmosphere is stark, technical, and strictly utilitarian, optimized for high-density information scanning and split-second decisions without eye strain.",
+    "keyCharacteristics": [
+      "Dark-First: Pure blacks and dark zincs form the canvas.",
+      "Monochrome Dominance: Stark white on black for primary elements.",
+      "Data-Driven Colors: Hues are reserved strictly for intent (Pass/Fail) and data visualization.",
+      "Surgical Precision: Thin borders, tight tracking, and crisp components."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "The primary accent is used on ≤5% of any given screen. Its rarity is the point. Color is data, not decoration.", "section": "colors" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. Drop shadows are strictly forbidden for layout structuring.", "section": "elevation" },
+      { "name": "The Capital Rule", "body": "Small metadata and column headers should utilize uppercase styling with wide tracking (`tracking-widest`) to resemble technical readouts.", "section": "typography" }
+    ],
+    "dos": [
+      "Do use responsive CSS grids (`grid-cols-1 md:grid-cols-2 lg:grid-cols-4`) for dense data layouts.",
+      "Do ensure every interactive element has a subtle, fast transition (≤200ms).",
+      "Do prioritize contrast; ensure financial figures are the most legible element on screen."
+    ],
+    "donts": [
+      "Don't use light mode colors (e.g., beige, cream, pure white backgrounds).",
+      "Don't use large, soft drop-shadows to separate sections. Use 1px borders instead.",
+      "Don't introduce \"friendly\" or \"bouncy\" animations. Motion must be purposeful and nearly instant.",
+      "Don't use gradients on text or surfaces unless it's a very faint radial background glow."
+    ]
+  }
+}
