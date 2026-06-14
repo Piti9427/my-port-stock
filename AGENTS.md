@@ -42,6 +42,7 @@ Use skills as scoped workflow helpers, not as replacements for this repo's inves
 | New feature, UI, behavior, config, or durable workflow change | `superpowers:brainstorming` | Design first, compare approaches, and get user approval before implementation. |
 | Implementation planning | `superpowers:writing-plans` | Convert an approved design into a concrete plan before multi-step changes. |
 | Executing an approved plan | `superpowers:executing-plans` | Work through a written plan and update progress as tasks complete. |
+| Any code change | `tdd` or `superpowers:test-driven-development` | Create a TDD plan before coding, identify the public behavior to protect, write one failing test first, then implement the minimal change to pass. |
 | Bug, broken behavior, data mismatch, or uncertain root cause | `superpowers:systematic-debugging` or `diagnose` | Reproduce, classify, and diagnose before changing code. |
 | Logic with regression risk | `superpowers:test-driven-development` or `tdd` | Add or update tests first for gates, API contracts, packet building, decision rules, and bug fixes. |
 | Frontend React/Vite work | `build-web-apps:react-best-practices` or `vercel:react-best-practices` | Component structure, state/data flow, performance, and maintainability. |
@@ -66,6 +67,7 @@ Use skills as scoped workflow helpers, not as replacements for this repo's inves
 - Treat external finance skills as experimental unless their source, install count, behavior, and risks have been reviewed.
 - For autonomous scans or alert loops, define max tickers, max API calls, timeout, retry limit, cost cap, and kill switch before implementation.
 - For frontend changes, verify both automated checks and visible UI behavior when practical.
+- Before any code change, write or update a TDD plan first. Prefer one behavior-focused RED test through a public interface, make it fail, implement the smallest GREEN change, then continue one vertical slice at a time. If a change is truly not testable with automation, state why and define the manual verification before editing.
 - For Impeccable-driven work, run its setup/context step, use the product UI register for this dashboard, preserve the dark-first high-legibility design language, and avoid AI-slop patterns such as decorative glow, gradient text, over-rounded cards, glassmorphism by default, and motion that does not communicate state.
 - For investment logic changes, add tests for fail-closed behavior and false `Buy/Add` prevention.
 

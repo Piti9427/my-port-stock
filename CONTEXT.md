@@ -92,6 +92,20 @@ _Avoid_: permanent hold, marry the stock
 A decision mode for held or previously traded assets where journal evidence, thesis integrity, downside protection, and tax/position impact dominate new upside.
 _Avoid_: fresh buy analysis
 
+## Product UI Language
+
+**Dark Terminal Product UI**:
+The canonical visual language for MyPortStock: dark-first black and zinc surfaces, sparse emerald accents, flat bordered panels, high-contrast typography, and monospace financial readouts. It is a product dashboard language optimized for dense investment decisions, not a decorative landing-page style.
+_Avoid_: light dashboard, glass terminal, neon dashboard, generic SaaS dark mode
+
+**Color Is Data**:
+The rule that color is reserved for semantic meaning such as action, selection, risk, success, warning, danger, and data visualization. Accent color should not be used as decoration.
+_Avoid_: decorative glow, colorful filler, gradient emphasis
+
+**Terminal Readability**:
+The requirement that dark terminal styling must preserve scan speed, text contrast, numeric alignment, table clarity, and accessible interaction states. A screen that looks dramatic but slows decision-making fails this standard.
+_Avoid_: dark aesthetic, moody UI, cinematic terminal
+
 ## Example Dialogue
 
 Dev: "Should the agent maximize upside capture?"

@@ -27,6 +27,20 @@
 
 ## Durable Entries
 
+### 2026-06-14 - TDD Gate Before Code
+
+- Keywords: `tdd-gate`, `agent-workflow`, `test-first`, `code-change`, `red-green`
+- Decision: Any code change must start with a TDD plan and one behavior-focused failing test through a public interface unless automation is not practical and manual verification is defined first.
+- Action: Updated `AGENTS.md` skill workflow to require `tdd` or `superpowers:test-driven-development` before coding.
+- Source: `AGENTS.md`
+
+### 2026-06-14 - Dark Terminal Product UI Canonical Theme
+
+- Keywords: `dark-terminal`, `product-ui`, `design-system`, `readability`, `impeccable`
+- Decision: Make Dark Terminal Product UI the canonical visual language for MyPortStock: dark-first black/zinc surfaces, sparse emerald accent, flat bordered panels, high-contrast text, and monospace financial readouts.
+- Action: Added UI glossary terms to `CONTEXT.md`; replaced the older glass/blue/glow `docs/DESIGN.md`; made `docs/DESIGN.md` the single source of truth and reduced `frontend/DESIGN.md` to a frontend checklist that points back to it.
+- Source: `CONTEXT.md`, `docs/DESIGN.md`, `frontend/DESIGN.md`, `PRODUCT.md`
+
 ### 2026-06-14 - Agent Skill Workflow Guide
 
 - Keywords: `skill-workflow`, `agent-skills`, `superpowers`, `impeccable`, `frontend-verification`, `workflow-gate`
