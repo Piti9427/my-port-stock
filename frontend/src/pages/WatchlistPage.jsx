@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, BellOff, Trash2, Plus, TrendingUp, TrendingDown, Minus, RotateCcw, Clock } from 'lucide-react';
+import { BellOff, Trash2, Plus, TrendingUp, TrendingDown, Minus, RotateCcw, Clock } from 'lucide-react';
 import { useAuth } from '@clerk/react';
 import { fetchWithAuth } from '../lib/api';
 
@@ -31,37 +31,10 @@ const SIGNAL_META = {
   },
 };
 
-const INITIAL_ALERTS = [
-  {
-    id: 1,
-    ticker: 'META',
-    type: 'AI Signal',
-    msg: 'Breakout confirmed above $525 resistance. Bull flag target $560.',
-    time: '14:32',
-    severity: 'profit',
-  },
-  {
-    id: 2,
-    ticker: 'PLTR',
-    type: 'Price Alert',
-    msg: 'Approaching alert threshold $95.00. Current: $88.70.',
-    time: '13:10',
-    severity: 'warning',
-  },
-  {
-    id: 3,
-    ticker: 'NVDA',
-    type: 'AI Signal',
-    msg: 'Pullback to 21-EMA — accumulation zone confirmed.',
-    time: '11:45',
-    severity: 'profit',
-  },
-];
-
-const DATA_STAMP = 'Manual data · No live feed';
+const DATA_STAMP = 'Supabase holdings + market data gateway';
 
 // ── Toast component ──────────────────────────────────────────
-function UndoToast({ ticker, onUndo, onDismiss }) {
+function UndoToast({ ticker, message, onUndo, onDismiss }) {
   useEffect(() => {
     const t = setTimeout(onDismiss, 4000);
     return () => clearTimeout(t);
@@ -71,7 +44,7 @@ function UndoToast({ ticker, onUndo, onDismiss }) {
     <div className="undo-toast" role="status" aria-live="polite">
       <span className="undo-toast-msg">
         <Trash2 size={13} aria-hidden="true" />
-        Removed <strong>{ticker}</strong> from watchlist
+        {message ? message : <>Removed <strong>{ticker}</strong> from watchlist</>}
       </span>
       <button className="undo-toast-btn" onClick={onUndo} aria-label={`Undo removal of ${ticker}`}>
         <RotateCcw size={12} aria-hidden="true" />
@@ -88,7 +61,7 @@ export default function WatchlistPage() {
   const { getToken } = useAuth();
   const [watchlist, setWatchlist] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [alerts, setAlerts] = useState(INITIAL_ALERTS);
+  const [alerts, setAlerts] = useState([]);
   const [signalFilter, setSignalFilter] = useState('All');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTicker, setNewTicker] = useState('');
@@ -96,7 +69,11 @@ export default function WatchlistPage() {
   const [toast, setToast] = useState(null); // { ticker, item }
   const toastTimerRef = useRef(null);
 
-  useEffect(() => {
+  const [error, setError] = useState(false);
+
+  const loadData = () => {
+    setLoading(true);
+    setError(false);
     fetchWithAuth('/api/watchlists', getToken)
       .then((data) => {
         const mapped = data.map((item) => ({
@@ -105,11 +82,20 @@ export default function WatchlistPage() {
           aiSignal: item.aiSignal || 'monitor',
           setup: item.setup || 'Tracked in watchlist',
           sector: item.sector || 'Unknown',
+          alertPrice: Number(item.alertPrice ?? item.alert_price ?? 0),
+          alertType: item.alertType || item.alert_type || 'above',
         }));
         setWatchlist(mapped);
       })
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err);
+        setError(true);
+      })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
   }, [getToken]);
 
   const signals = ['All', 'buy-zone', 'accumulate', 'wait', 'monitor'];
@@ -121,7 +107,7 @@ export default function WatchlistPage() {
     if (!item) return;
     setWatchlist((w) => w.filter((s) => s.ticker !== ticker));
     clearTimeout(toastTimerRef.current);
-    setToast({ ticker, item });
+    setToast({ ticker, item, message: 'Removed locally. Supabase delete endpoint not connected yet.' });
   };
 
   const handleUndo = () => {
@@ -144,15 +130,21 @@ export default function WatchlistPage() {
       setAddError('Enter a ticker symbol.');
       return;
     }
-    if (watchlist.find((s) => s.ticker === trimmed)) {
-      setAddError(`${trimmed} is already in your watchlist.`);
+    const normalizedTicker = trimmed.toUpperCase();
+    const validTicker = /^[A-Z0-9.-]{1,10}$/.test(normalizedTicker);
+    if (!validTicker) {
+      setAddError('Use 1-10 ticker characters: A-Z, 0-9, dot, or dash.');
+      return;
+    }
+    if (watchlist.find((s) => s.ticker === normalizedTicker)) {
+      setAddError(`${normalizedTicker} is already in your watchlist.`);
       return;
     }
     setWatchlist((w) => [
       ...w,
       {
-        ticker: trimmed,
-        name: trimmed,
+        ticker: normalizedTicker,
+        name: normalizedTicker,
         last: 0,
         change: 0,
         changePct: 0,
@@ -266,6 +258,18 @@ export default function WatchlistPage() {
                       }}
                     >
                       Loading watchlists...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={8} style={{ padding: 0 }}>
+                      <div className="empty-state" role="status">
+                        <div className="empty-title">Insufficient data</div>
+                        <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
+                        <button className="btn-secondary" onClick={loadData}>
+                          Retry
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
@@ -564,7 +568,7 @@ export default function WatchlistPage() {
       )}
 
       {/* Undo Toast */}
-      {toast && <UndoToast ticker={toast.ticker} onUndo={handleUndo} onDismiss={dismissToast} />}
+      {toast && <UndoToast ticker={toast.ticker} message={toast.message} onUndo={handleUndo} onDismiss={dismissToast} />}
     </div>
   );
 }

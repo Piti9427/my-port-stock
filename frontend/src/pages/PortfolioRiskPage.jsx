@@ -1,451 +1,192 @@
-import { useState } from 'react';
-import { ShieldAlert, AlertTriangle, ChevronRight, X, Clock } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, Clock, ShieldAlert } from 'lucide-react';
+import { useAuth } from '@clerk/react';
+import { fetchWithAuth } from '../lib/api';
 
-const DATA_STAMP = 'ข้อมูลจำลอง · ไม่อัปเดตแบบเรียลไทม์';
-
-const SECTOR_DATA = [
-  {
-    sector: 'Technology',
-    weight: 38.4,
-    var: 4.2,
-    limit: 35,
-    holdings: [
-      {
-        ticker: 'NVDA',
-        name: 'NVIDIA Corp',
-        weight: 14.8,
-        cost: 92.0,
-        current: 131.5,
-        pl: +39.5,
-        stop: 115.0,
-        riskThb: 24500,
-      },
-      {
-        ticker: 'AAPL',
-        name: 'Apple Inc',
-        weight: 12.2,
-        cost: 195.0,
-        current: 210.5,
-        pl: +7.9,
-        stop: 195.0,
-        riskThb: 18200,
-      },
-      {
-        ticker: 'MSFT',
-        name: 'Microsoft',
-        weight: 11.4,
-        cost: 390.0,
-        current: 425.0,
-        pl: +8.9,
-        stop: 400.0,
-        riskThb: 15600,
-      },
-    ],
-  },
-  {
-    sector: 'Healthcare',
-    weight: 18.6,
-    var: 1.8,
-    limit: 25,
-    holdings: [
-      {
-        ticker: 'LLY',
-        name: 'Eli Lilly',
-        weight: 10.2,
-        cost: 740.0,
-        current: 810.0,
-        pl: +9.4,
-        stop: 780.0,
-        riskThb: 21000,
-      },
-      {
-        ticker: 'UNH',
-        name: 'UnitedHealth',
-        weight: 8.4,
-        cost: 490.0,
-        current: 528.0,
-        pl: +7.7,
-        stop: 500.0,
-        riskThb: 12600,
-      },
-    ],
-  },
-  {
-    sector: 'Financials',
-    weight: 16.2,
-    var: 1.4,
-    limit: 20,
-    holdings: [
-      {
-        ticker: 'JPM',
-        name: 'JPMorgan Chase',
-        weight: 9.8,
-        cost: 188.0,
-        current: 215.0,
-        pl: +14.3,
-        stop: 200.0,
-        riskThb: 14700,
-      },
-      {
-        ticker: 'V',
-        name: 'Visa Inc',
-        weight: 6.4,
-        cost: 268.0,
-        current: 285.0,
-        pl: +6.3,
-        stop: 272.0,
-        riskThb: 8960,
-      },
-    ],
-  },
-  {
-    sector: 'Consumer Disc.',
-    weight: 12.8,
-    var: 1.6,
-    limit: 20,
-    holdings: [
-      {
-        ticker: 'AMZN',
-        name: 'Amazon',
-        weight: 8.2,
-        cost: 195.0,
-        current: 225.0,
-        pl: +15.3,
-        stop: 205.0,
-        riskThb: 16400,
-      },
-      {
-        ticker: 'TSLA',
-        name: 'Tesla',
-        weight: 4.6,
-        cost: 172.0,
-        current: 185.0,
-        pl: +7.5,
-        stop: 170.0,
-        riskThb: 9200,
-      },
-    ],
-  },
-  {
-    sector: 'Energy',
-    weight: 8.2,
-    var: 0.9,
-    limit: 15,
-    holdings: [
-      {
-        ticker: 'XOM',
-        name: 'ExxonMobil',
-        weight: 8.2,
-        cost: 105.0,
-        current: 112.0,
-        pl: +6.6,
-        stop: 103.0,
-        riskThb: 7380,
-      },
-    ],
-  },
-  { sector: 'Cash / Fixed', weight: 5.8, var: 0, limit: 100, holdings: [] },
-];
-
-const TOTAL_PORT_THB = 8_540_000;
-const MAX_DRAWDOWN_RISK_THB = TOTAL_PORT_THB * 0.068;
-
-const MAX_RISK_CAP = 25000;
-const RISK_WARNING_HIGH = 20000;
-const RISK_WARNING_MED = 18000;
-const CASH_ALLOCATION_PCT = 0.058;
-
-const SORTED_SECTORS = [...SECTOR_DATA].sort((a, b) => b.weight - a.weight);
-const OVER_LIMIT_SECTORS = SECTOR_DATA.filter((s) => s.weight > s.limit);
-const TOTAL_RISK_THB = SECTOR_DATA.flatMap((s) => s.holdings).reduce((sum, h) => sum + h.riskThb, 0);
-const TOP_RISK_HOLDINGS = SECTOR_DATA.flatMap((s) => s.holdings)
-  .sort((a, b) => b.riskThb - a.riskThb)
-  .slice(0, 6);
-
-function TreemapBlock({ sector, onSelect, selected }) {
-  const isOver = sector.weight > sector.limit;
-  const isWarn = !isOver && sector.weight / sector.limit >= 0.85;
-  const widthPct = sector.weight;
-
-  return (
-    <button
-      className={`treemap-block ${isOver ? 'treemap-over' : ''} ${isWarn ? 'treemap-warn' : ''} ${selected ? 'treemap-selected' : ''}`}
-      style={{ flexBasis: `${Math.max(widthPct, 6)}%` }}
-      onClick={() => onSelect(sector)}
-      title={`${sector.sector}: ${sector.weight}%`}
-      aria-pressed={selected}
-    >
-      <div className="treemap-label">
-        <span className="treemap-sector">{sector.sector}</span>
-        <span className="treemap-pct">{sector.weight}%</span>
-      </div>
-      {(isOver || isWarn) && (
-        <div className="treemap-alert-icon">
-          <AlertTriangle size={12} />
-        </div>
-      )}
-      <div
-        className="treemap-fill"
-        style={{
-          '--fill-color': isOver ? 'var(--fin-loss)' : isWarn ? 'var(--fin-warning)' : 'var(--fin-profit)',
-        }}
-      />
-    </button>
-  );
-}
-
-function limit(sector) {
-  return sector.limit;
-}
+const DATA_STAMP = 'Supabase holdings + market data gateway';
+const DEFAULT_SECTOR_LIMIT = 35;
 
 export default function PortfolioRiskPage() {
-  const [selectedSector, setSelectedSector] = useState(SORTED_SECTORS[0]);
-  const [alertDismissed, setAlertDismissed] = useState(false);
+  const { getToken } = useAuth();
+  const [holdings, setHoldings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedSector, setSelectedSector] = useState(null);
 
-  const showAlert = OVER_LIMIT_SECTORS.length > 0 && !alertDismissed;
+  const [error, setError] = useState(false);
 
-  const handleSelect = (sector) => {
-    setSelectedSector((prev) => (prev?.sector === sector.sector ? null : sector));
+  const loadData = () => {
+    setLoading(true);
+    setError(false);
+    fetchWithAuth('/api/holdings', getToken)
+      .then((data) => setHoldings(Array.isArray(data) ? data : []))
+      .catch(() => {
+        setHoldings([]);
+        setError(true);
+      })
+      .finally(() => setLoading(false));
   };
+
+  useEffect(() => {
+    loadData();
+  }, [getToken]);
+
+  const risk = useMemo(() => {
+    const totalValue = holdings.reduce((sum, h) => sum + Number(h.shares || 0) * Number(h.price || 0), 0);
+    const bySector = new Map();
+
+    for (const holding of holdings) {
+      const sector = holding.sector || 'Unknown';
+      const value = Number(holding.shares || 0) * Number(holding.price || 0);
+      const current = bySector.get(sector) || { sector, value: 0, holdings: [] };
+      current.value += value;
+      current.holdings.push(holding);
+      bySector.set(sector, current);
+    }
+
+    const sectors = Array.from(bySector.values())
+      .map((sector) => ({
+        ...sector,
+        weight: totalValue > 0 ? (sector.value / totalValue) * 100 : 0,
+        limit: DEFAULT_SECTOR_LIMIT,
+      }))
+      .sort((a, b) => b.weight - a.weight);
+
+    return {
+      totalValue,
+      sectors,
+      overLimit: sectors.filter((sector) => sector.weight > sector.limit),
+    };
+  }, [holdings]);
+
+  const activeSector = useMemo(() => {
+    if (selectedSector) {
+      return risk.sectors.find((sector) => sector.sector === selectedSector) || risk.sectors[0];
+    }
+    return risk.overLimit[0] || risk.sectors[0] || null;
+  }, [risk.sectors, risk.overLimit, selectedSector]);
 
   return (
     <div className="risk-page">
-      {/* Breach Alert Banner */}
-      {showAlert && (
+      {risk.overLimit.length > 0 && (
         <div className="risk-alert-banner" role="alert">
           <ShieldAlert size={16} aria-hidden="true" className="alert-icon-glyph" />
           <span>
-            คำเตือนสัดส่วนการลงทุน: <strong>{OVER_LIMIT_SECTORS.map((s) => s.sector).join(', ')}</strong> เกินเพดานที่ตั้งไว้
+            คำเตือนสัดส่วนการลงทุน: <strong>{risk.overLimit.map((s) => s.sector).join(', ')}</strong> เกินเพดานที่ตั้งไว้
           </span>
-          <button className="btn-icon" onClick={() => setAlertDismissed(true)} aria-label="Dismiss alert">
-            <X size={14} />
-          </button>
         </div>
       )}
 
-      {/* KPI Row */}
       <div className="risk-kpi-row">
         <div className="glass-panel risk-kpi-card" style={{ position: 'relative' }}>
           <div className="kpi-label">
-            มูลค่าพอร์ต (THB)
+            มูลค่าพอร์ต
             <span className="data-stamp" style={{ position: 'absolute', top: 24, right: 24 }}>
               <Clock size={10} aria-hidden="true" />
               {DATA_STAMP}
             </span>
           </div>
-          <div className="kpi-value kpi-neutral">฿{(TOTAL_PORT_THB / 1_000_000).toFixed(2)}M</div>
-          <div className="kpi-sub">4 สถานะ + เงินสด</div>
+          <div className="kpi-value kpi-neutral">{risk.totalValue > 0 ? `฿${risk.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}</div>
+          <div className="kpi-sub">{holdings.length} สถานะจาก Supabase</div>
         </div>
         <div className="glass-panel risk-kpi-card">
-          <div className="kpi-label">มูลค่าความเสี่ยงรวม (VaR 1-day, 95%)</div>
-          <div className="kpi-value kpi-loss">฿{(MAX_DRAWDOWN_RISK_THB / 1000).toFixed(0)}K</div>
-          <div className="kpi-sub">{((MAX_DRAWDOWN_RISK_THB / TOTAL_PORT_THB) * 100).toFixed(1)}% ของพอร์ต</div>
+          <div className="kpi-label">กลุ่มที่เกินเพดาน</div>
+          <div className={`kpi-value ${risk.overLimit.length > 0 ? 'kpi-loss' : 'kpi-neutral'}`}>{risk.overLimit.length}</div>
+          <div className="kpi-sub">เพดานเริ่มต้น {DEFAULT_SECTOR_LIMIT}% ต่อ sector</div>
         </div>
         <div className="glass-panel risk-kpi-card">
-          <div className="kpi-label">ความเสี่ยงสูงสุดต่อไม้ (THB)</div>
-          <div className="kpi-value kpi-warning">฿{MAX_RISK_CAP.toLocaleString()}</div>
-          <div className="kpi-sub">จำกัดความเสี่ยงสูงสุดที่ตั้งไว้</div>
-        </div>
-        <div className="glass-panel risk-kpi-card">
-          <div className="kpi-label">สัดส่วนเงินสด</div>
-          <div className="kpi-value kpi-neutral">{(CASH_ALLOCATION_PCT * 100).toFixed(1)}%</div>
-          <div className="kpi-sub">฿{((TOTAL_PORT_THB * CASH_ALLOCATION_PCT) / 1000).toFixed(0)}K คงเหลือ</div>
+          <div className="kpi-label">ข้อมูล VaR</div>
+          <div className="kpi-value kpi-neutral">—</div>
+          <div className="kpi-sub">ต้องมี volatility history ก่อนคำนวณ</div>
         </div>
       </div>
 
-      {/* Main Grid */}
-      <div className="risk-main-grid">
-        {/* Treemap Panel */}
-        <div className="glass-panel risk-treemap-panel">
-          <div className="panel-header">
-            <div>
-              <h2 className="panel-heading">การกระจายความเสี่ยงรายกลุ่ม</h2>
-              <p className="panel-subtext">คลิกกลุ่มอุตสาหกรรมเพื่อดูหุ้นในพอร์ต (สีแดง = เกินเพดานที่ตั้งไว้)</p>
-            </div>
-            <div className="treemap-legend">
-              <span className="legend-item legend-ok">อยู่ในเกณฑ์ปกติ</span>
-              <span className="legend-item legend-warn">ใกล้ชนเพดาน (&gt;85%)</span>
-              <span className="legend-item legend-over">เกินเพดาน</span>
-            </div>
+      <div className="glass-panel risk-treemap-panel">
+        <div className="panel-header">
+          <div>
+            <h2 className="panel-heading">การกระจายความเสี่ยงรายกลุ่ม</h2>
+            <p className="panel-subtext">คำนวณจาก holdings จริง ไม่มีข้อมูลจำลอง</p>
           </div>
+        </div>
 
-          {/* Treemap */}
-          <div className="treemap-container" role="group" aria-label="Sector allocation heatmap">
-            {SECTOR_DATA.map((s) => (
-              <TreemapBlock key={s.sector} sector={s} onSelect={handleSelect} selected={selectedSector?.sector === s.sector} />
-            ))}
+        {loading ? (
+          <div className="empty-state" style={{ padding: '48px 24px' }}>
+            Loading portfolio risk...
           </div>
-
-          {/* Sector Bars */}
+        ) : error ? (
+          <div className="empty-state" role="status">
+            <div className="empty-title">Insufficient data</div>
+            <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
+            <button className="btn-secondary" onClick={loadData}>
+              Retry
+            </button>
+          </div>
+        ) : risk.sectors.length === 0 ? (
+          <div className="empty-state" role="status">
+            <div className="empty-title">Insufficient data</div>
+            <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
+          </div>
+        ) : (
           <div className="sector-bars">
-            {SECTOR_DATA.map((s) => {
-              const pct = Math.min((s.weight / s.limit) * 100, 100);
-              const isOver = s.weight > s.limit;
-              const isWarn = !isOver && pct >= 85;
-              const barColor = isOver ? 'var(--fin-loss)' : isWarn ? 'var(--fin-warning)' : 'var(--fin-profit)';
+            {risk.sectors.map((sector) => {
+              const pct = Math.min((sector.weight / sector.limit) * 100, 100);
+              const isOver = sector.weight > sector.limit;
+              const barColor = isOver ? 'var(--fin-loss)' : 'var(--fin-profit)';
               return (
                 <button
-                  key={s.sector}
-                  className={`sector-bar-row ${selectedSector?.sector === s.sector ? 'sector-bar-active' : ''}`}
-                  onClick={() => handleSelect(s)}
+                  key={sector.sector}
+                  type="button"
+                  className="sector-bar-row"
+                  onClick={() => setSelectedSector(sector.sector)}
+                  aria-pressed={activeSector?.sector === sector.sector}
+                  aria-label={`${sector.sector}: ${sector.weight.toFixed(1)} percent of portfolio, limit ${sector.limit} percent`}
+                  style={{ textAlign: 'left', width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
                 >
-                  <div className="sector-bar-name">{s.sector}</div>
+                  <div className="sector-bar-name">{sector.sector}</div>
                   <div className="sector-bar-track">
                     <div className="sector-bar-fill" style={{ transform: `scaleX(${pct / 100})`, background: barColor }} />
                     <div className="sector-bar-limit-marker" style={{ left: '100%' }} />
                   </div>
                   <div className="sector-bar-meta">
                     <span style={{ color: barColor }} className="sector-weight-val">
-                      {s.weight}%
+                      {sector.weight.toFixed(1)}%
                     </span>
-                    <span className="sector-limit-val">/ เพดาน {s.limit}%</span>
+                    <span className="sector-limit-val">/ เพดาน {sector.limit}%</span>
+                    <span className="sector-risk-label sr-only" style={{ marginLeft: 8 }}>{isOver ? 'Over limit' : 'Within limit'}</span>
                   </div>
-                  <ChevronRight size={14} aria-hidden="true" className="sector-bar-chevron" />
                 </button>
               );
             })}
           </div>
-        </div>
+        )}
 
-        {/* Right Column */}
-        <div className="risk-right-col">
-          {/* Drilldown */}
-          {selectedSector ? (
-            <div className="glass-panel risk-drilldown">
-              <div className="panel-header">
-                <div>
-                  <h3 className="panel-heading">{selectedSector.sector}</h3>
-                  <p className="panel-subtext">
-                    {selectedSector.holdings.length} รายการ · {selectedSector.weight}% ของพอร์ต
-                  </p>
-                </div>
-              </div>
-              {selectedSector.holdings.length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-icon">💵</div>
-                  <div>เป็นเงินสด - ไม่มีหุ้น</div>
-                </div>
-              ) : (
-                <div className="drilldown-table-wrap">
-                  <table className="drilldown-table">
-                    <thead>
-                      <tr>
-                        <th>ชื่อหุ้น</th>
-                        <th>สัดส่วน %</th>
-                        <th>P/L %</th>
-                        <th>จุดตัด</th>
-                        <th>ความเสี่ยง (THB)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedSector.holdings.map((h) => (
-                        <tr key={h.ticker}>
-                          <td>
-                            <div className="ticker-cell">
-                              <div
-                                className="ticker-icon"
-                                style={{
-                                  background: 'rgba(var(--accent-rgb),0.15)',
-                                  color: 'var(--brand-primary)',
-                                }}
-                              >
-                                {h.ticker.slice(0, 2)}
-                              </div>
-                              <div>
-                                <div className="ticker-symbol">{h.ticker}</div>
-                                <div className="ticker-name">{h.name}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="price-mono">{h.weight}%</td>
-                          <td
-                            className="price-mono"
-                            style={{
-                              color: h.pl >= 0 ? 'var(--fin-profit)' : 'var(--fin-loss)',
-                            }}
-                          >
-                            {h.pl >= 0 ? '+' : ''}
-                            {h.pl}%
-                          </td>
-                          <td className="price-mono">฿{h.stop.toFixed(2)}</td>
-                          <td
-                            className="price-mono"
-                            style={{
-                              color: h.riskThb > RISK_WARNING_HIGH ? 'var(--fin-warning)' : 'var(--text-primary)',
-                            }}
-                          >
-                            ฿{h.riskThb.toLocaleString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+        {activeSector && (
+          <section className="risk-drilldown" aria-label={`${activeSector.sector} holdings`} style={{ marginTop: '24px' }}>
+            <div className="panel-heading">Showing: {activeSector.sector}</div>
+            <div className="panel-subtext">
+              {activeSector.weight > activeSector.limit ? 'Highest breach risk' : 'Highest current allocation'}
             </div>
-          ) : (
-            <div className="glass-panel risk-drilldown risk-drilldown-empty">
-              <div className="empty-state">
-                <div
-                  style={{
-                    color: 'var(--text-muted)',
-                    fontSize: '0.8rem',
-                    textAlign: 'center',
-                    lineHeight: 1.6,
-                  }}
-                >
-                  เลือกกลุ่มอุตสาหกรรมจากแผนภูมิด้านซ้าย
-                  <br />
-                  เพื่อดูรายการหุ้นและจุดตัดขาดทุน
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Stop-Loss Summary */}
-          <div className="glass-panel risk-stops">
-            <div className="panel-header">
-              <span className="panel-heading">จุดตัดขาดทุนที่ทำงานอยู่</span>
-              <span
-                className="panel-badge"
-                style={{
-                  background: 'rgba(var(--status-danger-rgb),0.12)',
-                  color: 'var(--fin-loss)',
-                }}
-              >
-                ฿{(TOTAL_RISK_THB / 1000).toFixed(0)}K ความเสี่ยงรวม
-              </span>
-            </div>
-            <div className="stops-list">
-              {TOP_RISK_HOLDINGS.map((h) => (
-                <div key={h.ticker} className="stop-row">
-                  <div className="stop-ticker">{h.ticker}</div>
-                  <div className="stop-details">
-                    <span className="stop-price price-mono">จุดตัด: ฿{h.stop.toFixed(2)}</span>
-                    <span
-                      className="stop-risk price-mono"
-                      style={{
-                        color: h.riskThb > RISK_WARNING_HIGH ? 'var(--fin-warning)' : 'var(--text-secondary)',
-                      }}
-                    >
-                      ฿{h.riskThb.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="stop-bar-track" aria-hidden="true">
-                    <div
-                      className="stop-bar-fill"
-                      style={{
-                        transform: `scaleX(${Math.min(h.riskThb / MAX_RISK_CAP, 1)})`,
-                        background:
-                          h.riskThb >= MAX_RISK_CAP ? 'var(--fin-loss)' : h.riskThb > RISK_WARNING_MED ? 'var(--fin-warning)' : 'var(--fin-profit)',
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+            <table className="risk-holdings-table" style={{ width: '100%', marginTop: '16px', textAlign: 'left' }}>
+              <thead>
+                <tr>
+                  <th>Ticker</th>
+                  <th>Value</th>
+                  <th>Weight</th>
+                  <th>Risk</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeSector.holdings.map((holding) => (
+                  <tr key={holding.id || holding.ticker}>
+                    <td>{holding.ticker}</td>
+                    <td>฿{(Number(holding.shares || 0) * Number(holding.price || 0)).toLocaleString()}</td>
+                    <td>{activeSector.weight.toFixed(1)}%</td>
+                    <td>{activeSector.weight > activeSector.limit ? 'Over limit' : 'Within limit'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
       </div>
     </div>
   );
