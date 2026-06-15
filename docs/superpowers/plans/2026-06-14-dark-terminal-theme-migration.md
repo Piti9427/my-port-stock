@@ -1,6 +1,6 @@
 # Dark Terminal Theme Migration Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]` / `- [x]`) syntax for tracking.
 
 **Goal:** Convert the logged-in MyPortStock app from the current light dashboard styling to the canonical Dark Terminal Product UI while preserving readability and dashboard density.
 
@@ -26,7 +26,7 @@
 - Create: `frontend/tests/themeContract.test.js`
 - Test: `frontend/tests/themeContract.test.js`
 
-- [ ] **Step 1: Write the failing theme contract test**
+- [x] **Step 1: Write the failing theme contract test**
 
 Create `frontend/tests/themeContract.test.js`:
 
@@ -70,7 +70,7 @@ describe('Dark Terminal Product UI theme contract', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify RED**
+- [x] **Step 2: Run the test to verify RED**
 
 Run:
 
@@ -80,11 +80,11 @@ npm run test --workspace=frontend -- themeContract.test.js --run
 
 Expected: FAIL because the current root tokens still expose the light dashboard theme.
 
-- [ ] **Step 3: Implement only Task 1 token changes**
+- [x] **Step 3: Implement only Task 1 token changes**
 
 Complete Task 1 below.
 
-- [ ] **Step 4: Run the test to verify GREEN**
+- [x] **Step 4: Run the test to verify GREEN**
 
 Run:
 
@@ -99,7 +99,7 @@ Expected: PASS.
 **Files:**
 - Modify: `frontend/src/index.css:7-80`
 
-- [ ] **Step 1: Replace the root token block**
+- [x] **Step 1: Replace the root token block**
 
 Replace the current `:root` variables with this token block inside `@layer base`:
 
@@ -181,7 +181,7 @@ Replace the current `:root` variables with this token block inside `@layer base`
   }
 ```
 
-- [ ] **Step 2: Update the body background**
+- [x] **Step 2: Update the body background**
 
 Replace the existing `body` background image block with:
 
@@ -194,7 +194,7 @@ Replace the existing `body` background image block with:
     background-size: 24px 24px, 24px 24px, auto;
 ```
 
-- [ ] **Step 3: Verify no light root tokens remain**
+- [x] **Step 3: Verify no light root tokens remain**
 
 Run:
 
@@ -209,7 +209,7 @@ Expected: no matches in the `:root` token block. Matches are acceptable only in 
 **Files:**
 - Modify: `frontend/src/index.css:111-260`
 
-- [ ] **Step 1: Darken app shell and content**
+- [x] **Step 1: Darken app shell and content**
 
 Update the app shell selectors to:
 
@@ -244,7 +244,7 @@ Update the app shell selectors to:
 }
 ```
 
-- [ ] **Step 2: Align brand mark and active nav**
+- [x] **Step 2: Align brand mark and active nav**
 
 Update these selectors:
 
@@ -274,7 +274,7 @@ Update these selectors:
 }
 ```
 
-- [ ] **Step 3: Keep cards flat**
+- [x] **Step 3: Keep cards flat**
 
 Update shared panel classes:
 
@@ -294,7 +294,7 @@ Update shared panel classes:
 }
 ```
 
-- [ ] **Step 4: Verify app shell uses dark tokens**
+- [x] **Step 4: Verify app shell uses dark tokens**
 
 Run:
 
@@ -309,7 +309,7 @@ Expected: selectors exist and use `--bg-shell`, `--bg-panel`, `--bg-panel-solid`
 **Files:**
 - Modify: `frontend/src/index.css:367-760`
 
-- [ ] **Step 1: Make table headers dark and readable**
+- [x] **Step 1: Make table headers dark and readable**
 
 Update table header and row states:
 
@@ -344,7 +344,7 @@ Update table header and row states:
 }
 ```
 
-- [ ] **Step 2: Align input and select fields**
+- [x] **Step 2: Align input and select fields**
 
 Update form controls:
 
@@ -370,7 +370,7 @@ Update form controls:
 }
 ```
 
-- [ ] **Step 3: Keep drawer dark terminal**
+- [x] **Step 3: Keep drawer dark terminal**
 
 Update scenario drawer selectors:
 
@@ -399,7 +399,7 @@ Update scenario drawer selectors:
 }
 ```
 
-- [ ] **Step 4: Verify light table colors are gone**
+- [x] **Step 4: Verify light table colors are gone**
 
 Run:
 
@@ -416,7 +416,7 @@ Expected: no matches in table, row, drawer, or form selectors.
 - Modify: `frontend/src/components/ui/input.jsx`
 - Modify: `frontend/src/components/PixelTradingFloor.jsx`
 
-- [ ] **Step 1: Remove shadcn shadow classes from buttons**
+- [x] **Step 1: Remove shadcn shadow classes from buttons**
 
 In `frontend/src/components/ui/button.jsx`, replace the `buttonVariants` variant strings with:
 
@@ -448,7 +448,7 @@ const buttonVariants = cva(
 );
 ```
 
-- [ ] **Step 2: Remove shadcn shadow class from inputs**
+- [x] **Step 2: Remove shadcn shadow class from inputs**
 
 In `frontend/src/components/ui/input.jsx`, replace the class string with:
 
@@ -456,7 +456,7 @@ In `frontend/src/components/ui/input.jsx`, replace the class string with:
 'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm'
 ```
 
-- [ ] **Step 3: Reduce PixelTradingFloor decorative shadows**
+- [x] **Step 3: Reduce PixelTradingFloor decorative shadows**
 
 In `frontend/src/components/PixelTradingFloor.jsx`, replace these style values:
 
@@ -482,7 +482,7 @@ const pulseKeyframes = `
 `;
 ```
 
-- [ ] **Step 4: Verify no component shadows remain in targeted files**
+- [x] **Step 4: Verify no component shadows remain in targeted files**
 
 Run:
 
@@ -497,7 +497,7 @@ Expected: no matches except `boxShadow: 'none'` and the floor inset shadow if re
 **Files:**
 - No production file edits.
 
-- [ ] **Step 1: Run frontend lint**
+- [x] **Step 1: Run frontend lint**
 
 Run:
 
@@ -507,7 +507,7 @@ npm run lint --workspace=frontend
 
 Expected: command exits `0`.
 
-- [ ] **Step 2: Run frontend tests**
+- [x] **Step 2: Run frontend tests**
 
 Run:
 
@@ -517,7 +517,7 @@ npm run test --workspace=frontend -- --run
 
 Expected: command exits `0`.
 
-- [ ] **Step 3: Run frontend build**
+- [x] **Step 3: Run frontend build**
 
 Run:
 
@@ -527,7 +527,7 @@ npm run build --workspace=frontend
 
 Expected: command exits `0` and Vite reports a successful production build.
 
-- [ ] **Step 4: Run full frontend standard check if earlier steps pass**
+- [x] **Step 4: Run full frontend standard check if earlier steps pass**
 
 Run:
 
@@ -542,7 +542,7 @@ Expected: command exits `0`.
 **Files:**
 - No production file edits unless visual verification reveals concrete issues.
 
-- [ ] **Step 1: Start the dev server**
+- [x] **Step 1: Start the dev server**
 
 Run:
 
@@ -552,7 +552,7 @@ npm run dev --workspace=frontend
 
 Expected: Vite serves the app on `http://localhost:5173/` or the next available port.
 
-- [ ] **Step 2: Inspect the signed-out auth page**
+- [x] **Step 2: Inspect the signed-out auth page**
 
 Open the dev URL in a browser.
 
@@ -561,7 +561,7 @@ Expected:
 - Header, grid texture, emerald accent, and primary CTA still look consistent.
 - Text remains readable.
 
-- [ ] **Step 3: Inspect the signed-in dashboard**
+- [x] **Step 3: Inspect the signed-in dashboard**
 
 Use the existing signed-in browser session.
 
@@ -571,7 +571,7 @@ Expected:
 - Active nav uses emerald sparingly.
 - Numeric values are readable and aligned.
 
-- [ ] **Step 4: Inspect secondary pages**
+- [x] **Step 4: Inspect secondary pages**
 
 Navigate to:
 

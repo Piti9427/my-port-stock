@@ -20,6 +20,18 @@ _Avoid_: bullishness, confidence, upside only
 The Orchestrator-controlled evidence set used for investment analysis, including current market data, source timestamps, portfolio context, journal context, and known conflicts.
 _Avoid_: search result, snippet, raw data dump
 
+**Runtime Data Source**:
+The live application source of truth used for portfolio, journal, watchlist, and user-owned operational data.
+_Avoid_: markdown snapshot, sample seed, UI fixture
+
+**Historical Context Source**:
+A dated evidence source used to understand prior decisions, snapshots, theses, and post-mortems, but not to serve runtime application state.
+_Avoid_: executable data source, live database, current quote
+
+**Fail-Closed Analysis**:
+The required behavior when data, credentials, services, or verification gates are incomplete: return `INSUFFICIENT_DATA` or `Wait` instead of inventing values or emitting `Buy/Add`.
+_Avoid_: mock fallback, optimistic default, provisional buy
+
 **Insight Presentation**:
 A scan-friendly presentation layer that turns a **Verified Data Packet** and investment analysis into decision-ready chat output. It may use concise text blocks, tables, traffic-light labels, score bars, and visual grouping, but it is not a new evidence source and must preserve source provenance, hard gates, risk/reward, and uncertainty.
 _Avoid_: raw data dump, decorative summary, unsupported recommendation, export artifact

@@ -27,6 +27,20 @@
 
 ## Durable Entries
 
+### 2026-06-15 - Impeccable Critique UI Remediation Plan
+
+- Keywords: `impeccable-critique`, `ui-remediation`, `dark-terminal`, `anti-slop`, `frontend-ux`
+- Decision: Treat all existing Impeccable critique files as one remediation backlog; fix trust/data UX first, power-user efficiency second, and visual anti-slop cleanup third.
+- Action: Saved implementation plan with audit matrix, current detector baseline, route-by-route tasks, regression tests, and browser verification gates.
+- Source: `docs/superpowers/plans/2026-06-15-impeccable-critique-ui-remediation.md`
+
+### 2026-06-15 - Supabase Runtime Source Of Truth
+
+- Keywords: `supabase-runtime`, `fail-closed`, `mock-removal`, `per-user-data`, `markdown-context`
+- Decision: Supabase is the runtime source of truth for user-owned portfolio, journal, and watchlist data; markdown remains historical context only.
+- Action: Runtime endpoints must fail closed instead of returning sample rows, mock saves, or AI mock `Buy`; initial data should be imported from current markdown snapshots into per-user Supabase rows.
+- Source: `docs/adr/0001-supabase-runtime-source-of-truth.md`
+
 ### 2026-06-14 - Verify Before Mutating (Code Injection Post-Mortem)
 
 - Keywords: `blind-injection`, `test-failure`, `duplicate-declaration`, `view_file`, `post-mortem`
