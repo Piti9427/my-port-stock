@@ -1,11 +1,25 @@
-// src/db/supabaseClient.js
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://mock.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || 'mock_key';
+function isUsableSupabaseConfig(url, key) {
+  return Boolean(
+    url &&
+      key &&
+      !/mock|placeholder/i.test(url) &&
+      !/mock|placeholder/i.test(key)
+  );
+}
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseConfigured = isUsableSupabaseConfig(supabaseUrl, supabaseKey);
+const supabase = supabaseConfigured ? createClient(supabaseUrl, supabaseKey) : null;
 
-module.exports = { supabase };
+module.exports = {
+  isUsableSupabaseConfig,
+  supabase,
+  supabaseConfigured,
+  supabaseKey,
+  supabaseUrl,
+};

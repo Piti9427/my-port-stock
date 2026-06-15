@@ -1,19 +1,19 @@
-// tests/aiAnalyst.test.js
-const { analyzeTicker } = require("../src/");
+const test = require("node:test");
+const assert = require("node:assert/strict");
 
-jest.mock('@google/genai', () => {
-  return {
-    GoogleGenAI: jest.fn().mockImplementation(() => ({
-      models: {
-        generateContent: jest.fn().mockResolvedValue({ text: "Buy based on strong support." })
-      }
-    }))
-  };
-});
+test("AI analyst fails closed when Gemini API key is missing", async () => {
+  const previousKey = process.env.GEMINI_API_KEY;
+  delete process.env.GEMINI_API_KEY;
+  delete require.cache[require.resolve("../src/services/aiAnalyst")];
 
-describe('AI Analyst Service', () => {
-  it('should return analysis text for a specific ticker', async () => {
-    const analysis = await analyzeTicker('AAPL', { shares: 100 }, 150.50);
-    expect(analysis).toBe("Buy based on strong support.");
-  });
+  const { analyzeTicker } = require("../src/services/aiAnalyst");
+  const analysis = await analyzeTicker("AAPL", { shares: 100 }, { last_price: 150.5 });
+
+  assert.equal(analysis.status, "INSUFFICIENT_DATA");
+  assert.equal(analysis.reason_code, "AI_ANALYST_UNAVAILABLE");
+  assert.notEqual(analysis.decision_snapshot?.verdict, "Buy");
+
+  if (previousKey) {
+    process.env.GEMINI_API_KEY = previousKey;
+  }
 });

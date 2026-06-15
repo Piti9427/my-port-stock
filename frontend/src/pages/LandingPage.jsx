@@ -10,9 +10,9 @@ export default function LandingPage() {
       <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-emerald-500 opacity-20 blur-[100px]"></div>
 
       {/* Header */}
-      <header className="h-16 flex items-center justify-between px-6 md:px-12 border-b border-white/5 relative z-10 backdrop-blur-md">
+      <header className="h-16 flex items-center justify-between px-6 md:px-12 border-b border-white/5 relative z-10 bg-black/50">
         <div className="flex items-center gap-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(var(--status-success-rgb),0.5)]"></div>
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
           <span className="font-semibold tracking-tight text-zinc-100 text-lg">MyPortStock</span>
         </div>
         <SignInButton mode="modal">

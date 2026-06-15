@@ -1,12 +1,15 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Play, Target, Check, BarChart3, AlertTriangle, RotateCcw } from 'lucide-react';
+import { Play, Target, Check, BarChart3, AlertTriangle, RotateCcw, Clock } from 'lucide-react';
 import PixelTradingFloor from '../components/PixelTradingFloor';
 import { useAuth } from '@clerk/react';
 import { fetchWithAuth } from '../lib/api';
 
 /* ─── Sparkline component (pure SVG) ───────────────────────── */
 const Sparkline = React.memo(function Sparkline({ data, positive }) {
+  if (!Array.isArray(data) || data.length < 2) {
+    return <span style={{ color: 'var(--text-muted)' }}>—</span>;
+  }
   const w = 80,
     h = 32,
     pad = 2;
@@ -29,13 +32,14 @@ const Sparkline = React.memo(function Sparkline({ data, positive }) {
 });
 
 /* ─── Scenario Planner Drawer ─────────────────────────────── */
-function ScenarioPlannerDrawer({ ticker, onClose }) {
+function ScenarioPlannerDrawer({ ticker, onClose, getToken }) {
   const [supports, setSupports] = useState({ s1: '', s2: '', s3: '' });
   const [stopLoss, setStopLoss] = useState('');
   const [target, setTarget] = useState('');
   const [held, setHeld] = useState(100);
   const [avgCost, setAvgCost] = useState(110);
   const [addAmt, setAddAmt] = useState(10000);
+  const [saveStatus, setSaveStatus] = useState('');
 
   const handleReset = useCallback(() => {
     setSupports({ s1: '', s2: '', s3: '' });
@@ -86,11 +90,62 @@ function ScenarioPlannerDrawer({ ticker, onClose }) {
     });
   }, [supports, stopLoss, target, held, avgCost, addAmt]);
 
+  const validation = useMemo(() => {
+    const s1 = parseFloat(supports.s1);
+    const s2 = parseFloat(supports.s2);
+    const s3 = parseFloat(supports.s3);
+    const sl = parseFloat(stopLoss);
+    const tgt = parseFloat(target);
+
+    const supportOrderInvalid =
+      (Number.isFinite(s1) && Number.isFinite(s2) && s1 < s2) ||
+      (Number.isFinite(s2) && Number.isFinite(s3) && s2 < s3);
+    const targetStopInvalid = Number.isFinite(tgt) && Number.isFinite(sl) && tgt <= sl;
+    const negativePosition = held < 0 || avgCost < 0 || addAmt < 0;
+    const missingPlan = rows.length === 0;
+
+    return {
+      supportOrderInvalid,
+      targetStopInvalid,
+      negativePosition,
+      missingPlan,
+      canSave: !supportOrderInvalid && !targetStopInvalid && !negativePosition && !missingPlan,
+    };
+  }, [supports, stopLoss, target, held, avgCost, addAmt, rows.length]);
+
   const rrClass = (rr) => {
     if (!rr) return '';
     if (rr >= 2) return 'rr-good';
     if (rr >= 1) return 'rr-warn';
     return 'rr-bad';
+  };
+
+  const handleSavePlan = async () => {
+    const firstRow = rows[0];
+    if (!firstRow) return;
+    setSaveStatus('Saving...');
+    try {
+      const token = await getToken();
+      const response = await fetch('/api/journal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          ticker,
+          entry: firstRow.price,
+          target: parseFloat(target),
+          stop_loss: parseFloat(stopLoss),
+          risk_reward: firstRow.rr,
+          shares: firstRow.sharesAdded,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload.status === 'INSUFFICIENT_DATA') {
+        throw new Error(payload.error_details || payload.error || 'Journal persistence unavailable');
+      }
+      setSaveStatus('Saved');
+    } catch (error) {
+      setSaveStatus(error.message);
+    }
   };
 
   return (
@@ -157,6 +212,17 @@ function ScenarioPlannerDrawer({ ticker, onClose }) {
                   min="0"
                   onFocus={(e) => e.target.select()}
                 />
+                <div style={{ marginTop: '8px', display: 'flex', gap: '4px' }}>
+                  <button type="button" className="quick-fill-btn" onClick={() => setAddAmt(5000)}>
+                    ฿5k
+                  </button>
+                  <button type="button" className="quick-fill-btn" onClick={() => setAddAmt(10000)}>
+                    ฿10k
+                  </button>
+                  <button type="button" className="quick-fill-btn" onClick={() => setAddAmt(25000)}>
+                    ฿25k
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -184,22 +250,6 @@ function ScenarioPlannerDrawer({ ticker, onClose }) {
                 </div>
               ))}
             </div>
-            {((supports.s1 && supports.s2 && parseFloat(supports.s1) < parseFloat(supports.s2)) ||
-              (supports.s2 && supports.s3 && parseFloat(supports.s2) < parseFloat(supports.s3))) && (
-              <div
-                style={{
-                  color: 'var(--fin-warning)',
-                  fontSize: '0.8rem',
-                  marginTop: '8px',
-                  marginBottom: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                <AlertTriangle size={14} /> แนวรับควรเรียงจากราคาสูงสุด (S1) ไปต่ำสุด (S3)
-              </div>
-            )}
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="input-sl" className="form-label">
@@ -316,6 +366,14 @@ function ScenarioPlannerDrawer({ ticker, onClose }) {
         </div>
 
         <div className="drawer-footer">
+          {!validation.canSave && (
+            <div className="validation-summary" role="alert">
+              {validation.supportOrderInvalid && <div>แนวรับต้องเรียงจาก S1 สูงสุดไป S3 ต่ำสุด</div>}
+              {validation.targetStopInvalid && <div>ราคาเป้าหมายต้องสูงกว่าจุดตัดขาดทุน</div>}
+              {validation.negativePosition && <div>จำนวนหุ้น ราคาเฉลี่ย และงบซื้อเพิ่มต้องไม่ติดลบ</div>}
+              {validation.missingPlan && <div>กรอกแนวรับอย่างน้อย 1 จุดก่อนบันทึกแผน</div>}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               className="btn-secondary"
@@ -334,10 +392,8 @@ function ScenarioPlannerDrawer({ ticker, onClose }) {
             <button
               className="btn-analyze"
               style={{ flex: 1 }}
-              disabled={parseFloat(target) <= parseFloat(stopLoss)}
-              onClick={() => {
-                /* Log to journal */
-              }}
+              disabled={!validation.canSave || saveStatus === 'Saving...'}
+              onClick={handleSavePlan}
             >
               <span
                 style={{
@@ -352,16 +408,9 @@ function ScenarioPlannerDrawer({ ticker, onClose }) {
               </span>
             </button>
           </div>
-          {parseFloat(target) <= parseFloat(stopLoss) && stopLoss && target && (
-            <div
-              style={{
-                color: 'var(--fin-loss)',
-                fontSize: '0.8rem',
-                marginTop: '8px',
-                textAlign: 'center',
-              }}
-            >
-              ราคาเป้าหมายต้องสูงกว่าจุดตัดขาดทุนเสมอ
+          {saveStatus && (
+            <div style={{ color: saveStatus === 'Saved' ? 'var(--fin-profit)' : 'var(--fin-warning)', fontSize: '0.8rem', marginTop: '8px', textAlign: 'center' }}>
+              {saveStatus}
             </div>
           )}
         </div>
@@ -437,6 +486,23 @@ export default function DashboardPage() {
       .finally(() => setLoadingWatchlist(false));
   }, [getToken]);
 
+  const portfolioMetrics = useMemo(() => {
+    const rows = Array.isArray(watchlist) ? watchlist : [];
+    const totalValue = rows.reduce((sum, row) => sum + Number(row.shares || 0) * Number(row.price || 0), 0);
+    const totalCost = rows.reduce((sum, row) => sum + Number(row.shares || 0) * Number(row.avg_cost || 0), 0);
+    const totalPl = totalValue && totalCost ? totalValue - totalCost : null;
+    const dayPl = rows.reduce((sum, row) => sum + Number(row.shares || 0) * Number(row.change || 0), 0);
+
+    return {
+      totalValue,
+      dayPl,
+      dayPlPct: totalValue > 0 ? (dayPl / totalValue) * 100 : null,
+      totalPl,
+    };
+  }, [watchlist]);
+
+  const formatThb = (value) => (Number.isFinite(value) && value > 0 ? `฿${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—');
+
   const handleAnalyze = useCallback(
     async (manualPrice = null) => {
       if (!selectedTicker || loading) return;
@@ -498,31 +564,38 @@ export default function DashboardPage() {
         <div className="header-metrics">
           <div className="metric-item">
             <span className="metric-label">มูลค่ารวมพอร์ต</span>
-            <span className="metric-value">฿1,240,500</span>
+            <span className="metric-value">{formatThb(portfolioMetrics.totalValue)}</span>
           </div>
           <div className="metric-item">
             <span className="metric-label">กำไร/ขาดทุนรายวัน</span>
-            <span className="metric-value profit">+฿12,450</span>
-            <span className="metric-change" style={{ color: 'var(--fin-profit)' }}>
-              +1.02%
+            <span className={`metric-value ${portfolioMetrics.dayPl >= 0 ? 'profit' : 'loss'}`}>{Number.isFinite(portfolioMetrics.dayPl) ? `${portfolioMetrics.dayPl >= 0 ? '+' : ''}${formatThb(Math.abs(portfolioMetrics.dayPl))}` : '—'}</span>
+            <span className="metric-change" style={{ color: portfolioMetrics.dayPl >= 0 ? 'var(--fin-profit)' : 'var(--fin-loss)' }}>
+              {portfolioMetrics.dayPlPct == null ? '—' : `${portfolioMetrics.dayPlPct >= 0 ? '+' : ''}${portfolioMetrics.dayPlPct.toFixed(2)}%`}
             </span>
           </div>
           <div className="metric-item">
             <span className="metric-label">กำไร/ขาดทุนรวม</span>
-            <span className="metric-value profit">+฿84,300</span>
+            <span className={`metric-value ${portfolioMetrics.totalPl >= 0 ? 'profit' : 'loss'}`}>{portfolioMetrics.totalPl == null ? '—' : `${portfolioMetrics.totalPl >= 0 ? '+' : '-'}${formatThb(Math.abs(portfolioMetrics.totalPl))}`}</span>
           </div>
           <div className="metric-item">
             <span className="metric-label">เงินสดคงเหลือ</span>
-            <span className="metric-value">฿45,200</span>
+            <span className="metric-value">—</span>
           </div>
         </div>
+        <span className="data-stamp" style={{ marginLeft: 'auto' }}>
+          <Clock size={10} aria-hidden="true" />
+          Supabase holdings + market data gateway
+        </span>
       </header>
 
       {/* ── Watchlist ── */}
       <section className="glass-panel watchlist-panel">
         <div className="panel-header">
           <span className="panel-title">ภาพรวมตลาดและพอร์ตโฟลิโอ</span>
-          <span className="panel-badge">Live</span>
+          <span className="data-stamp">
+            <Clock size={10} aria-hidden="true" />
+            Supabase holdings + market data gateway
+          </span>
         </div>
         <div className="watchlist-table">
           <table>
@@ -595,25 +668,11 @@ export default function DashboardPage() {
                   ))
               ) : watchlist.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan="5"
-                    style={{
-                      textAlign: 'center',
-                      padding: '40px 0',
-                      color: 'var(--text-muted)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        marginBottom: '8px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <BarChart3 size={32} opacity={0.5} />
+                  <td colSpan="5" style={{ padding: 0 }}>
+                    <div className="empty-state" role="status">
+                      <div className="empty-title">Insufficient data</div>
+                      <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
                     </div>
-                    <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>ไม่มีข้อมูลในพอร์ตโฟลิโอ</div>
-                    <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>เริ่มต้นวิเคราะห์และบันทึกการเทรดเพื่อดูข้อมูลตรงนี้</div>
                   </td>
                 </tr>
               ) : (
@@ -643,12 +702,16 @@ export default function DashboardPage() {
                       </div>
                     </td>
                     <td>
-                      <span className="price-mono">฿{row.price.toFixed(2)}</span>
+                      <span className="price-mono">{Number.isFinite(Number(row.price)) ? `฿${Number(row.price).toFixed(2)}` : '—'}</span>
                     </td>
                     <td>
-                      <span className={`change-pill ${row.change >= 0 ? 'up' : 'down'}`}>
-                        {row.change >= 0 ? '▲' : '▼'} {Math.abs(row.changePct).toFixed(2)}%
-                      </span>
+                      {Number.isFinite(Number(row.changePct)) ? (
+                        <span className={`change-pill ${row.change >= 0 ? 'up' : 'down'}`}>
+                          {row.change >= 0 ? '▲' : '▼'} {Math.abs(Number(row.changePct)).toFixed(2)}%
+                        </span>
+                      ) : (
+                        <span className="price-mono" style={{ color: 'var(--text-muted)' }}>—</span>
+                      )}
                     </td>
                     <td>
                       <Sparkline data={row.spark} positive={row.change >= 0} />
@@ -693,10 +756,10 @@ export default function DashboardPage() {
             maxLength={10}
           />
           <select className="mode-select" value={decisionMode} onChange={(e) => setDecisionMode(e.target.value)}>
-            <option>เทรดเร็ว (Quick Trade)</option>
-            <option>เทรดรอบ (Swing Trade)</option>
-            <option>ลงทุนระยะยาว (Long-Term/Core)</option>
-            <option>รีวิวพอร์ตเดิม (Position/Exit Review)</option>
+            <option value="Quick Trade">เทรดเร็ว (Quick Trade)</option>
+            <option value="Swing Trade">เทรดรอบ (Swing Trade)</option>
+            <option value="Long-Term/Core">ลงทุนระยะยาว (Long-Term/Core)</option>
+            <option value="Existing Position / Exit Review">รีวิวพอร์ตเดิม (Position/Exit Review)</option>
           </select>
           <button
             className="btn-analyze"
@@ -856,7 +919,7 @@ export default function DashboardPage() {
       </aside>
 
       {/* ── Scenario Planner ── */}
-      {showScenario && <ScenarioPlannerDrawer ticker={selectedTicker} onClose={() => setShowScenario(false)} />}
+      {showScenario && <ScenarioPlannerDrawer ticker={selectedTicker} onClose={() => setShowScenario(false)} getToken={getToken} />}
     </div>
   );
 }

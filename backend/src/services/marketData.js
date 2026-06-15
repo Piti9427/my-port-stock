@@ -16,7 +16,8 @@ async function getUsdThbRate() {
     return cachedThbRate;
   } catch (err) {
     console.error('[MarketData] Error fetching USDTHB rate:', err.message);
-    return cachedThbRate || 34.5;
+    if (cachedThbRate) return cachedThbRate;
+    throw err;
   }
 }
 
