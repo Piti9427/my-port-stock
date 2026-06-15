@@ -1,18 +1,31 @@
 import { useState, useEffect } from 'react';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Clock } from 'lucide-react';
+import { useAuth } from '@clerk/react';
+import { fetchWithAuth } from '../lib/api';
 
 export default function JournalPage() {
+  const { getToken } = useAuth();
   const [filter, setFilter] = useState('ALL');
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch('/api/journal')
-      .then((res) => res.json())
+  const [error, setError] = useState(false);
+
+  const loadData = () => {
+    setLoading(true);
+    setError(false);
+    fetchWithAuth('/api/journal', getToken)
       .then((data) => setTrades(data.trades || []))
-      .catch(() => setTrades([]))
+      .catch(() => {
+        setTrades([]);
+        setError(true);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [getToken]);
 
   const filteredTrades = trades.filter((t) => filter === 'ALL' || t.status === filter);
 
@@ -71,6 +84,10 @@ export default function JournalPage() {
       <div className="glass-panel journal-trades">
         <div className="panel-header">
           <span className="panel-title">ประวัติคำสั่งซื้อขาย</span>
+          <span className="data-stamp">
+            <Clock size={10} aria-hidden="true" />
+            Supabase journal data
+          </span>
         </div>
         <div className="watchlist-table">
           <table>
@@ -118,6 +135,18 @@ export default function JournalPage() {
                       </td>
                     </tr>
                   ))
+              ) : error ? (
+                <tr>
+                  <td colSpan="8" style={{ padding: 0 }}>
+                    <div className="empty-state" role="status">
+                      <div className="empty-title">Insufficient data</div>
+                      <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
+                      <button className="btn-secondary" onClick={loadData}>
+                        Retry
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               ) : filteredTrades.length === 0 ? (
                 <tr>
                   <td

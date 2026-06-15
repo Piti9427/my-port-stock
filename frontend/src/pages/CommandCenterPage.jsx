@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as PIXI from 'pixi.js';
 import { useAgentEvents } from '../hooks/useAgentEvents';
+import { Clock } from 'lucide-react';
 
 // Agent configuration
 const AGENT_CONFIG = {
@@ -214,8 +215,7 @@ export default function CommandCenterPage() {
 
   const { agentStates, analysisResult, connected, lastEvent } = useAgentEvents();
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
+  const loadPrice = async () => {
     if (!searchTicker) return;
 
     setTicker(searchTicker);
@@ -229,6 +229,11 @@ export default function CommandCenterPage() {
     } catch (err) {
       setFetchError(err.message);
     }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    loadPrice();
   };
 
   const handleAnalyze = async () => {
@@ -301,7 +306,13 @@ export default function CommandCenterPage() {
             overflowY: 'auto',
           }}
         >
-          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Live Data Feed</h2>
+          <div>
+            <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Live Data Feed</h2>
+            <span className="data-stamp" style={{ marginTop: '4px' }}>
+              <Clock size={10} aria-hidden="true" />
+              Quote packet + decision gate
+            </span>
+          </div>
 
           <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px' }}>
             <input
@@ -321,7 +332,14 @@ export default function CommandCenterPage() {
             </button>
           </form>
 
-          {fetchError && <div style={{ color: 'var(--fin-danger)' }}>{fetchError}</div>}
+          {fetchError && (
+            <div>
+              <div style={{ color: 'var(--fin-danger)' }}>{fetchError}</div>
+              <button className="btn-secondary" onClick={loadPrice}>
+                Retry quote
+              </button>
+            </div>
+          )}
 
           {quoteData && (
             <div
@@ -335,7 +353,7 @@ export default function CommandCenterPage() {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Current Price:</span> <strong>{quoteData.current_price || '-'}</strong>
+                <span>Current Price:</span> <strong>{quoteData.last_price || '-'}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>High:</span> <span>{quoteData.high || '-'}</span>
@@ -362,6 +380,12 @@ export default function CommandCenterPage() {
                   {quoteData.current_price_acceptance_gate || '-'}
                 </strong>
               </div>
+            </div>
+          )}
+
+          {quoteData && quoteData.current_price_acceptance_gate !== 'pass' && (
+            <div className="gate-warning" role="alert" style={{ color: 'var(--fin-danger)', fontSize: '0.85rem' }}>
+              Price gate failed. Enter manual Tier 1 price before considering execution.
             </div>
           )}
 

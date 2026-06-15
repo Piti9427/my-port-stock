@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, TrendingUp, TrendingDown, Zap, ChevronRight, X } from 'lucide-react';
+import { Search, TrendingUp, TrendingDown, Zap, ChevronRight, X, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 /* ─── Default ticker universe ─────────────────────────────── */
@@ -367,6 +367,10 @@ export default function MarketExplorerPage() {
               {selected.market}
             </span>
             <span className="chart-header__sector">{selected.sector}</span>
+            <span className="data-stamp" style={{ marginLeft: 8 }}>
+              <Clock size={10} aria-hidden="true" />
+              Display quote only, not execution gate
+            </span>
           </div>
           <div className="chart-header__right">
             {priceLoading && (
@@ -374,6 +378,11 @@ export default function MarketExplorerPage() {
                 <div className="skeleton-bar" style={{ width: 80 }} />
                 <div className="skeleton-bar" style={{ width: 50 }} />
               </div>
+            )}
+            {!priceLoading && !priceData && !selected.symbol.includes('USD') && (
+              <button className="btn-secondary" style={{ padding: '6px 12px', marginTop: 0 }} onClick={() => fetchPrice(selected.symbol)}>
+                Retry quote
+              </button>
             )}
             {!priceLoading && priceData && (
               <div className="live-price">
