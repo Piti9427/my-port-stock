@@ -5,19 +5,37 @@ const { GoogleGenAI } = require('@google/genai');
 const apiKey = process.env.GEMINI_API_KEY || 'mock';
 const ai = new GoogleGenAI({ apiKey });
 
-async function analyzeTicker(ticker, portfolioData, oracleData) {
-  const getMockData = () => ({
+function unavailableAnalysis(reason) {
+  return {
+    status: 'INSUFFICIENT_DATA',
+    reason_code: 'AI_ANALYST_UNAVAILABLE',
+    error_details: reason,
     decision_snapshot: {
-      verdict: 'Buy',
-      score: 8.5,
-      one_line_reason: `Strong fundamentals and technical setup. (Mock Fallback)`
+      verdict: 'Wait',
+      score: null,
+      one_line_reason: reason,
     },
-    sub_agent_scores: { fundamental: 8, technical: 9, macro: 7 },
-    analysis: `Mock Analysis for ${ticker}. The Gemini API may be experiencing high demand or using an invalid key.`
-  });
+    sub_agent_scores: {},
+    analysis: null,
+  };
+}
 
+function validateAnalysisShape(value) {
+  if (!value || typeof value !== 'object') {
+    throw new Error('Gemini response is not a JSON object');
+  }
+
+  const verdict = value.decision_snapshot?.verdict;
+  if (!verdict || typeof verdict !== 'string') {
+    throw new Error('Gemini response missing decision_snapshot.verdict');
+  }
+
+  return value;
+}
+
+async function analyzeTicker(ticker, portfolioData, oracleData) {
   if (apiKey === 'mock') {
-    return getMockData();
+    return unavailableAnalysis('Gemini API key is missing');
   }
 
   const prompt = `Act as Elite Investor CIO. 
@@ -50,14 +68,13 @@ Ensure you return a JSON object ONLY, with the following properties:
     
     // Attempt to parse if the model returned JSON
     const text = response.text.replace(/```json/i, '').replace(/```/g, '').trim();
-    return JSON.parse(text);
+    return validateAnalysisShape(JSON.parse(text));
   } catch (error) {
     console.error('Gemini API Error:', error.message);
-    // Fallback to mock data so the UI doesn't crash on 503 or 400 errors
-    return getMockData();
+    return unavailableAnalysis(`Gemini API unavailable: ${error.message}`);
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
   }
 }
 
-module.exports = { analyzeTicker };
+module.exports = { analyzeTicker, unavailableAnalysis, validateAnalysisShape };

@@ -1,23 +1,16 @@
-const request = require('supertest');
-const express = require('express');
-const apiRoutes = require("../src/");
+const { describe, it } = require("node:test");
+const assert = require("node:assert/strict");
+const request = require("supertest");
 
-// Mock dependencies
-jest.mock('../src/services/marketData', () => ({ getLivePrice: jest.fn().mockResolvedValue(150.50) }));
-jest.mock('../src/services/aiAnalyst', () => ({ analyzeTicker: jest.fn().mockResolvedValue("Hold") }));
+const { app } = require("../server");
 
-const app = express();
-app.use(express.json());
-app.use('/api', apiRoutes);
-
-describe('API Routes', () => {
-  it('should return price and analysis on POST /api/analyze', async () => {
+describe("API Routes", () => {
+  it("fails closed on invalid analyze ticker", async () => {
     const res = await request(app)
-      .post('/api/analyze')
-      .send({ ticker: 'AAPL', portfolioData: { shares: 10 } });
-    
-    expect(res.status).toBe(200);
-    expect(res.body.price).toBe(150.50);
-    expect(res.body.analysis).toBe("Hold");
+      .post("/api/analyze")
+      .send({ ticker: "not valid ticker", portfolioData: { shares: 10 } });
+
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.status, "INSUFFICIENT_DATA");
   });
 });

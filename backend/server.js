@@ -31,6 +31,26 @@ function getAgentWorkingMessage(agent, ticker) {
   return messages[agent] || `Analyzing ${ticker}...`;
 }
 
+function getRequestUserId(req) {
+  if (req.auth?.userId) return req.auth.userId;
+  if (typeof req.auth === "function") {
+    try {
+      return req.auth()?.userId || null;
+    } catch (_) {
+      return null;
+    }
+  }
+  return null;
+}
+
+function runtimeInsufficientData(reason, extras = {}) {
+  return {
+    status: "INSUFFICIENT_DATA",
+    error_details: reason,
+    ...extras,
+  };
+}
+
 function runMarketOracle(ticker) {
   return new Promise((resolve) => {
     execFile('python3', ['tools/market_oracle.py', ticker], { 
@@ -82,11 +102,16 @@ const {
 const { buildVerifiedDataPacket } = require("./src/packets/verifiedDataPacket");
 const {
   readJournalContext,
-  readPortfolioSnapshot,
   readTickerPortfolioContext,
 } = require("./src/journal/journalReader");
 const { evaluateDecision } = require("./src/decision/decisionEngine");
-const { supabase } = require("./src/db/supabaseClient");
+const { supabaseConfigured } = require("./src/db/supabaseClient");
+const {
+  getUserJournal,
+  getUserJournalByTicker,
+  getUserPortfolio,
+  insertJournalEntry,
+} = require("./src/db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -225,6 +250,9 @@ app.get("/api/quote/:ticker", async (req, res) => {
     if (!responsePacket.last_price && quote.regularMarketPrice) {
       responsePacket.last_price = quote.regularMarketPrice;
     }
+    if (responsePacket.last_price && !responsePacket.current_price) {
+      responsePacket.current_price = responsePacket.last_price;
+    }
   } catch (error) {
     console.error(`[Server] Error fetching Yahoo Finance fundamentals for ${ticker}:`, error.message);
     responsePacket.high = null;
@@ -317,12 +345,14 @@ app.post("/api/analyze", async (req, res) => {
       riskPlan: req.body.risk_plan,
     });
 
-    if (geminiData.decision_snapshot) {
+    if (geminiData.status !== "INSUFFICIENT_DATA" && geminiData.decision_snapshot) {
        analysis.decision_snapshot.score = geminiData.decision_snapshot.score || analysis.decision_snapshot.score;
        if (geminiData.decision_snapshot.one_line_reason && !analysis.decision_snapshot.one_line_reason) {
          analysis.decision_snapshot.one_line_reason = geminiData.decision_snapshot.one_line_reason;
        }
        analysis.analysis = geminiData.analysis;
+    } else if (geminiData.status === "INSUFFICIENT_DATA") {
+      analysis.adaptive_drilldown.warnings.push(geminiData.error_details || "AI analyst unavailable");
     }
 
     agents.forEach((agent, idx) => {
@@ -358,26 +388,33 @@ app.post("/api/analyze", async (req, res) => {
 });
 
 app.get("/api/portfolio", async (req, res) => {
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_URL !== 'https://mock.supabase.co') {
-    const { data, error } = await supabase.from('portfolio').select('*');
-    if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json({ holdings: data || [] });
+  if (!supabaseConfigured) {
+    return res.status(200).json(runtimeInsufficientData("Supabase is not configured", { holdings: [] }));
   }
-  return res.status(200).json(readPortfolioSnapshot());
+
+  try {
+    const userId = getRequestUserId(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const holdings = await getUserPortfolio(userId);
+    return res.status(200).json({ holdings });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 app.get("/api/journal", async (req, res) => {
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_URL !== 'https://mock.supabase.co') {
-    const { data, error } = await supabase.from('journal').select('*').order('created_at', { ascending: false });
-    if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json({ trades: data || [] });
+  if (!supabaseConfigured) {
+    return res.status(200).json(runtimeInsufficientData("Supabase is not configured", { trades: [] }));
   }
-  return res.status(200).json({ trades: [
-    { id: 1, date: '2026-06-09 14:30', ticker: 'AAPL', type: 'BUY', shares: 50, price: 210.5, mode: 'Swing Trade', rr: 2.5, status: 'OPEN' },
-    { id: 2, date: '2026-06-08 10:15', ticker: 'TSLA', type: 'SELL', shares: 100, price: 185.2, mode: 'Quick Trade', rr: 1.8, status: 'CLOSED', profit: +450 },
-    { id: 3, date: '2026-06-05 09:45', ticker: 'NVDA', type: 'BUY', shares: 20, price: 115, mode: 'Core', rr: 3, status: 'OPEN' },
-    { id: 4, date: '2026-06-01 15:50', ticker: 'AMZN', type: 'SELL', shares: 30, price: 215.1, mode: 'Swing Trade', rr: 1.2, status: 'CLOSED', profit: -120 },
-  ]});
+
+  try {
+    const userId = getRequestUserId(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const trades = await getUserJournal(userId);
+    return res.status(200).json({ trades });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 app.get("/api/journal/:ticker", async (req, res) => {
@@ -386,40 +423,60 @@ app.get("/api/journal/:ticker", async (req, res) => {
     return res.status(200).json(insufficientData("Invalid ticker format"));
   }
 
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_URL !== 'https://mock.supabase.co') {
-    const { data, error } = await supabase.from('journal').select('*').eq('ticker', ticker);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json({ trades: data || [] });
+  if (!supabaseConfigured) {
+    return res.status(200).json(runtimeInsufficientData("Supabase is not configured", { trades: [] }));
   }
-  return res.status(200).json(readJournalContext(ticker));
+
+  try {
+    const userId = getRequestUserId(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const trades = await getUserJournalByTicker(userId, ticker);
+    return res.status(200).json({ trades });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 app.post("/api/journal", async (req, res) => {
   const { ticker, entry, target, stop_loss, risk_reward, shares } = req.body;
   if (!ticker) return res.status(400).json({ error: "Ticker is required" });
 
-  if (shares !== undefined && (Number.isNaN(shares) || shares <= 0)) {
+  const numeric = {
+    shares: shares === undefined ? undefined : Number(shares),
+    entry: entry === undefined ? undefined : Number(entry),
+    target: target === undefined ? undefined : Number(target),
+    stop_loss: stop_loss === undefined ? undefined : Number(stop_loss),
+    risk_reward: risk_reward === undefined ? undefined : Number(risk_reward),
+  };
+
+  if (numeric.shares !== undefined && (!Number.isFinite(numeric.shares) || numeric.shares <= 0)) {
     return res.status(400).json({ error: "Shares must be a positive number" });
   }
-  if (entry !== undefined && (Number.isNaN(entry) || entry <= 0)) {
+  if (numeric.entry !== undefined && (!Number.isFinite(numeric.entry) || numeric.entry <= 0)) {
     return res.status(400).json({ error: "Entry price must be a positive number" });
   }
-  if (target !== undefined && (Number.isNaN(target) || target <= 0)) {
+  if (numeric.target !== undefined && (!Number.isFinite(numeric.target) || numeric.target <= 0)) {
     return res.status(400).json({ error: "Target price must be a positive number" });
   }
-  if (stop_loss !== undefined && (Number.isNaN(stop_loss) || stop_loss <= 0)) {
+  if (numeric.stop_loss !== undefined && (!Number.isFinite(numeric.stop_loss) || numeric.stop_loss <= 0)) {
     return res.status(400).json({ error: "Stop loss must be a positive number" });
   }
-  if (risk_reward !== undefined && (Number.isNaN(risk_reward) || risk_reward < 0)) {
+  if (numeric.risk_reward !== undefined && (!Number.isFinite(numeric.risk_reward) || numeric.risk_reward < 0)) {
     return res.status(400).json({ error: "Risk/reward must be non-negative" });
   }
 
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_URL !== 'https://mock.supabase.co') {
-    const { data, error } = await supabase.from('journal').insert([{ ticker, entry, target, stop_loss, risk_reward, shares }]);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json(data);
+  if (!supabaseConfigured) {
+    return res.status(503).json(runtimeInsufficientData("Supabase is not configured"));
   }
-  return res.status(200).json({ status: 'Mock save successful', data: req.body });
+
+  try {
+    const userId = getRequestUserId(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const data = await insertJournalEntry(userId, { ticker, ...numeric });
+    return res.status(200).json(data);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 Sentry.setupExpressErrorHandler(app);

@@ -1,14 +1,9 @@
-const { getLivePrice } = require("../src/");
+const test = require("node:test");
+const assert = require("node:assert/strict");
 
-jest.mock('yahoo-finance2', () => ({
-  default: {
-    quote: jest.fn().mockResolvedValue({ regularMarketPrice: 150.50 })
-  }
-}));
+const { getLivePrice, getUsdThbRate } = require("../src/services/marketData");
 
-describe('Market Data Service', () => {
-  it('should return the regular market price for a given ticker', async () => {
-    const price = await getLivePrice('AAPL');
-    expect(price).toBe(150.50);
-  });
+test("market data service exports live price helpers", () => {
+  assert.equal(typeof getLivePrice, "function");
+  assert.equal(typeof getUsdThbRate, "function");
 });

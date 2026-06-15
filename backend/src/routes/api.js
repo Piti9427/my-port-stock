@@ -78,7 +78,7 @@ async function enrichWithMarketData(items) {
       };
     } catch (e) {
       console.error(`Error enriching market data for ${item.ticker}:`, e.message);
-      return { ...item, price: 0, change: 0, changePct: 0, spark: [] };
+      return { ...item, price: null, change: null, changePct: null, spark: [] };
     }
   }));
 }
@@ -91,6 +91,9 @@ router.get('/holdings', requireAuth(), async (req, res) => {
     const enriched = await enrichWithMarketData(holdings);
     res.json(enriched);
   } catch (err) {
+    if (err.code === 'SUPABASE_NOT_CONFIGURED') {
+      return res.status(200).json([]);
+    }
     res.status(500).json({ error: err.message });
   }
 });
@@ -102,6 +105,9 @@ router.get('/watchlists', requireAuth(), async (req, res) => {
     const enriched = await enrichWithMarketData(watchlists);
     res.json(enriched);
   } catch (err) {
+    if (err.code === 'SUPABASE_NOT_CONFIGURED') {
+      return res.status(200).json([]);
+    }
     res.status(500).json({ error: err.message });
   }
 });

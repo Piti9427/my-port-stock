@@ -1,43 +1,76 @@
--- ตารางสำหรับเก็บพอร์ตหุ้น (Portfolio)
-CREATE TABLE IF NOT EXISTS public.portfolio (
+-- MyPortStock runtime schema.
+-- No sample rows here. Production data is per-user and must be imported from
+-- real portfolio/journal sources or entered through the app.
+
+CREATE TABLE IF NOT EXISTS public.holdings (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    user_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
     ticker TEXT NOT NULL,
     name TEXT,
     shares NUMERIC NOT NULL DEFAULT 0,
-    avg_cost NUMERIC NOT NULL DEFAULT 0
+    avg_cost NUMERIC NOT NULL DEFAULT 0,
+    sector TEXT,
+    notes TEXT,
+    source_note TEXT,
+    UNIQUE(user_id, ticker)
 );
 
--- ตารางสำหรับเก็บบันทึกการเทรด (Journal)
+CREATE TABLE IF NOT EXISTS public.portfolio (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    ticker TEXT NOT NULL,
+    name TEXT,
+    shares NUMERIC NOT NULL DEFAULT 0,
+    avg_cost NUMERIC NOT NULL DEFAULT 0,
+    sector TEXT,
+    notes TEXT,
+    source_note TEXT,
+    UNIQUE(user_id, ticker)
+);
+
+CREATE TABLE IF NOT EXISTS public.watchlists (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    ticker TEXT NOT NULL,
+    name TEXT,
+    sector TEXT,
+    setup TEXT,
+    alert_price NUMERIC,
+    alert_type TEXT DEFAULT 'above',
+    ai_signal TEXT DEFAULT 'monitor',
+    source_note TEXT,
+    UNIQUE(user_id, ticker)
+);
+
 CREATE TABLE IF NOT EXISTS public.journal (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    date TIMESTAMP WITH TIME ZONE,
+    user_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    date TIMESTAMPTZ,
     ticker TEXT NOT NULL,
-    type TEXT DEFAULT 'BUY', -- 'BUY' or 'SELL'
-    mode TEXT,               -- 'Quick Trade', 'Swing Trade', 'Core', etc.
-    status TEXT DEFAULT 'OPEN', -- 'OPEN' or 'CLOSED'
+    type TEXT DEFAULT 'BUY',
+    mode TEXT,
+    status TEXT DEFAULT 'OPEN',
     shares NUMERIC,
-    price NUMERIC,           -- Executed price
-    entry NUMERIC,           -- Planned entry
+    price NUMERIC,
+    entry NUMERIC,
     target NUMERIC,
     stop_loss NUMERIC,
     risk_reward NUMERIC,
-    profit NUMERIC
+    profit NUMERIC,
+    notes TEXT,
+    source_note TEXT
 );
 
-CREATE INDEX IF NOT EXISTS idx_journal_ticker ON public.journal(ticker);
-
--- ใส่ข้อมูลตัวอย่าง (Mock Data) ลงในตารางเพื่อทดสอบหน้า UI
-INSERT INTO public.portfolio (ticker, name, shares, avg_cost)
-VALUES 
-    ('AAPL', 'Apple Inc.', 100, 200.50),
-    ('NVDA', 'NVIDIA Corp.', 50, 110.25),
-    ('PTT.BK', 'PTT PCL', 1000, 33.50);
-
-INSERT INTO public.journal (ticker, type, mode, status, shares, price, profit)
-VALUES 
-    ('AAPL', 'BUY', 'Swing Trade', 'OPEN', 50, 210.50, NULL),
-    ('TSLA', 'SELL', 'Quick Trade', 'CLOSED', 100, 185.20, 450),
-    ('NVDA', 'BUY', 'Long-Term/Core', 'OPEN', 20, 115.00, NULL),
-    ('PTT.BK', 'BUY', 'Swing Trade', 'OPEN', 1000, 33.50, NULL);
+CREATE INDEX IF NOT EXISTS idx_holdings_user_id ON public.holdings(user_id);
+CREATE INDEX IF NOT EXISTS idx_portfolio_user_id ON public.portfolio(user_id);
+CREATE INDEX IF NOT EXISTS idx_watchlists_user_id ON public.watchlists(user_id);
+CREATE INDEX IF NOT EXISTS idx_journal_user_id ON public.journal(user_id);
+CREATE INDEX IF NOT EXISTS idx_journal_user_ticker ON public.journal(user_id, ticker);
