@@ -12,17 +12,20 @@ test("portfolio DB queries holdings by Clerk user id", async () => {
   const fakeClient = {
     from(table) {
       calls.push(["from", table]);
-      return {
+      const queryBuilder = {
         select(columns) {
           calls.push(["select", columns]);
-          return {
-            eq(column, value) {
-              calls.push(["eq", column, value]);
-              return Promise.resolve({ data: [], error: null });
-            },
-          };
+          return queryBuilder;
         },
+        eq(column, value) {
+          calls.push(["eq", column, value]);
+          return queryBuilder;
+        },
+        then(onFulfilled) {
+          return Promise.resolve({ data: [], error: null }).then(onFulfilled);
+        }
       };
+      return queryBuilder;
     },
   };
 
@@ -33,5 +36,6 @@ test("portfolio DB queries holdings by Clerk user id", async () => {
     ["from", "holdings"],
     ["select", "*"],
     ["eq", "user_id", "user_123"],
+    ["eq", "is_deleted", false],
   ]);
 });

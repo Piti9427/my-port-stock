@@ -97,9 +97,7 @@ function ScenarioPlannerDrawer({ ticker, onClose, getToken }) {
     const sl = parseFloat(stopLoss);
     const tgt = parseFloat(target);
 
-    const supportOrderInvalid =
-      (Number.isFinite(s1) && Number.isFinite(s2) && s1 < s2) ||
-      (Number.isFinite(s2) && Number.isFinite(s3) && s2 < s3);
+    const supportOrderInvalid = (Number.isFinite(s1) && Number.isFinite(s2) && s1 < s2) || (Number.isFinite(s2) && Number.isFinite(s3) && s2 < s3);
     const targetStopInvalid = Number.isFinite(tgt) && Number.isFinite(sl) && tgt <= sl;
     const negativePosition = held < 0 || avgCost < 0 || addAmt < 0;
     const missingPlan = rows.length === 0;
@@ -389,12 +387,7 @@ function ScenarioPlannerDrawer({ ticker, onClose, getToken }) {
             >
               <RotateCcw size={16} />
             </button>
-            <button
-              className="btn-analyze"
-              style={{ flex: 1 }}
-              disabled={!validation.canSave || saveStatus === 'Saving...'}
-              onClick={handleSavePlan}
-            >
+            <button className="btn-analyze" style={{ flex: 1 }} disabled={!validation.canSave || saveStatus === 'Saving...'} onClick={handleSavePlan}>
               <span
                 style={{
                   display: 'flex',
@@ -409,7 +402,14 @@ function ScenarioPlannerDrawer({ ticker, onClose, getToken }) {
             </button>
           </div>
           {saveStatus && (
-            <div style={{ color: saveStatus === 'Saved' ? 'var(--fin-profit)' : 'var(--fin-warning)', fontSize: '0.8rem', marginTop: '8px', textAlign: 'center' }}>
+            <div
+              style={{
+                color: saveStatus === 'Saved' ? 'var(--fin-profit)' : 'var(--fin-warning)',
+                fontSize: '0.8rem',
+                marginTop: '8px',
+                textAlign: 'center',
+              }}
+            >
               {saveStatus}
             </div>
           )}
@@ -568,14 +568,22 @@ export default function DashboardPage() {
           </div>
           <div className="metric-item">
             <span className="metric-label">กำไร/ขาดทุนรายวัน</span>
-            <span className={`metric-value ${portfolioMetrics.dayPl >= 0 ? 'profit' : 'loss'}`}>{Number.isFinite(portfolioMetrics.dayPl) ? `${portfolioMetrics.dayPl >= 0 ? '+' : ''}${formatThb(Math.abs(portfolioMetrics.dayPl))}` : '—'}</span>
+            <span className={`metric-value ${portfolioMetrics.dayPl >= 0 ? 'profit' : 'loss'}`}>
+              {Number.isFinite(portfolioMetrics.dayPl)
+                ? `${portfolioMetrics.dayPl >= 0 ? '+' : ''}${formatThb(Math.abs(portfolioMetrics.dayPl))}`
+                : '—'}
+            </span>
             <span className="metric-change" style={{ color: portfolioMetrics.dayPl >= 0 ? 'var(--fin-profit)' : 'var(--fin-loss)' }}>
               {portfolioMetrics.dayPlPct == null ? '—' : `${portfolioMetrics.dayPlPct >= 0 ? '+' : ''}${portfolioMetrics.dayPlPct.toFixed(2)}%`}
             </span>
           </div>
           <div className="metric-item">
             <span className="metric-label">กำไร/ขาดทุนรวม</span>
-            <span className={`metric-value ${portfolioMetrics.totalPl >= 0 ? 'profit' : 'loss'}`}>{portfolioMetrics.totalPl == null ? '—' : `${portfolioMetrics.totalPl >= 0 ? '+' : '-'}${formatThb(Math.abs(portfolioMetrics.totalPl))}`}</span>
+            <span className={`metric-value ${portfolioMetrics.totalPl >= 0 ? 'profit' : 'loss'}`}>
+              {portfolioMetrics.totalPl == null
+                ? '—'
+                : `${portfolioMetrics.totalPl >= 0 ? '+' : '-'}${formatThb(Math.abs(portfolioMetrics.totalPl))}`}
+            </span>
           </div>
           <div className="metric-item">
             <span className="metric-label">เงินสดคงเหลือ</span>
@@ -710,7 +718,9 @@ export default function DashboardPage() {
                           {row.change >= 0 ? '▲' : '▼'} {Math.abs(Number(row.changePct)).toFixed(2)}%
                         </span>
                       ) : (
-                        <span className="price-mono" style={{ color: 'var(--text-muted)' }}>—</span>
+                        <span className="price-mono" style={{ color: 'var(--text-muted)' }}>
+                          —
+                        </span>
                       )}
                     </td>
                     <td>

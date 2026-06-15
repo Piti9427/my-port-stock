@@ -146,3 +146,25 @@
 - Decision: Applied impeccable critique fixes to remove "AI Slop" neon halation, fix mobile card deletion, and harden search inputs.
 - Action: Updated `index.css` colors to deep graphite, adjusted hover states for touch screens, and improved search regex in `Dashboard.jsx`.
 - Detail: `notes/2026-06-12-dashboard-ui-critique-fixes.md`
+
+### 2026-06-15 - Impeccable Critique UI Remediation Plan
+
+- Keywords: `impeccable-critique`, `ui-remediation`, `dark-terminal`, `anti-slop`, `frontend-ux`
+- Decision: Treat all existing Impeccable critique files as one remediation backlog; fix trust/data UX first, power-user efficiency second, and visual anti-slop cleanup third.
+- Action: Saved implementation plan with audit matrix, current detector baseline, route-by-route tasks, regression tests, and browser verification gates.
+- Source: `docs/superpowers/plans/2026-06-15-impeccable-critique-ui-remediation.md`
+
+### 2026-06-15 - Supabase Runtime Source Of Truth
+
+- Keywords: `supabase-runtime`, `fail-closed`, `mock-removal`, `per-user-data`, `markdown-context`
+- Decision: Supabase is the runtime source of truth for user-owned portfolio, journal, and watchlist data; markdown remains historical context only.
+- Action: Runtime endpoints must fail closed instead of returning sample rows, mock saves, or AI mock `Buy`; initial data should be imported from current markdown snapshots into per-user Supabase rows.
+- Source: `docs/adr/0001-supabase-runtime-source-of-truth.md`
+
+### 2026-06-15 - Database Schema & Trigger Hardening (Task 1 & 2)
+
+- Keywords: `database-schema`, `soft-delete`, `rls`, `partial-unique-index`, `event-sourced-trigger`
+- Decision: Drop redundant `portfolio` table; utilize `is_deleted` column for soft deletions; create partial unique indexes; enforce Clerk JWT-based RLS; implement event-sourced `recalculate_holdings` trigger to eliminate float drift.
+- Action: Updated `backend/supabase_schema.sql` and `supabase/schema.sql` with the new schema, policies, triggers, and created verification script `backend/tests/verify_schema_rls.sql`. Updated `backend/src/db.js` and tests.
+- Source: `docs/superpowers/plans/2026-06-15-backend-supabase-implementation-plan.md`
+

@@ -85,7 +85,9 @@ export default function PortfolioRiskPage() {
               {DATA_STAMP}
             </span>
           </div>
-          <div className="kpi-value kpi-neutral">{risk.totalValue > 0 ? `฿${risk.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}</div>
+          <div className="kpi-value kpi-neutral">
+            {risk.totalValue > 0 ? `฿${risk.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}
+          </div>
           <div className="kpi-sub">{holdings.length} สถานะจาก Supabase</div>
         </div>
         <div className="glass-panel risk-kpi-card">
@@ -151,7 +153,9 @@ export default function PortfolioRiskPage() {
                       {sector.weight.toFixed(1)}%
                     </span>
                     <span className="sector-limit-val">/ เพดาน {sector.limit}%</span>
-                    <span className="sector-risk-label sr-only" style={{ marginLeft: 8 }}>{isOver ? 'Over limit' : 'Within limit'}</span>
+                    <span className="sector-risk-label sr-only" style={{ marginLeft: 8 }}>
+                      {isOver ? 'Over limit' : 'Within limit'}
+                    </span>
                   </div>
                 </button>
               );
@@ -162,9 +166,7 @@ export default function PortfolioRiskPage() {
         {activeSector && (
           <section className="risk-drilldown" aria-label={`${activeSector.sector} holdings`} style={{ marginTop: '24px' }}>
             <div className="panel-heading">Showing: {activeSector.sector}</div>
-            <div className="panel-subtext">
-              {activeSector.weight > activeSector.limit ? 'Highest breach risk' : 'Highest current allocation'}
-            </div>
+            <div className="panel-subtext">{activeSector.weight > activeSector.limit ? 'Highest breach risk' : 'Highest current allocation'}</div>
             <table className="risk-holdings-table" style={{ width: '100%', marginTop: '16px', textAlign: 'left' }}>
               <thead>
                 <tr>

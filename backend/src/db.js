@@ -3,6 +3,7 @@ require('dotenv').config();
 const {
   isUsableSupabaseConfig,
   supabase: configuredSupabase,
+  createScopedClient,
 } = require('./db/supabaseClient');
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -25,7 +26,8 @@ function createPortfolioDb(client) {
     const { data, error } = await requireSupabase(client)
       .from(table)
       .select('*')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('is_deleted', false);
 
     if (error) throw error;
     return data || [];
@@ -36,7 +38,8 @@ function createPortfolioDb(client) {
       return queryByUser('holdings', userId);
     },
     getUserPortfolio(userId) {
-      return queryByUser('portfolio', userId);
+      // Map to holdings table since portfolio table is dropped
+      return queryByUser('holdings', userId);
     },
     getUserWatchlists(userId) {
       return queryByUser('watchlists', userId);
@@ -51,6 +54,7 @@ function createPortfolioDb(client) {
         .select('*')
         .eq('user_id', userId)
         .eq('ticker', ticker)
+        .eq('is_deleted', false)
         .then(({ data, error }) => {
           if (error) throw error;
           return data || [];
@@ -96,8 +100,14 @@ async function insertJournalEntry(userId, entry) {
   return portfolioDb.insertJournalEntry(userId, entry);
 }
 
+function getScopedDb(userId) {
+  const client = createScopedClient(userId);
+  return createPortfolioDb(client);
+}
+
 module.exports = {
   createPortfolioDb,
+  getScopedDb,
   getUserJournal,
   getUserJournalByTicker,
   getUserHoldings,
