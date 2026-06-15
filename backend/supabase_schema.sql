@@ -2,8 +2,12 @@
 -- No sample rows here. Production data is per-user and must be imported from
 -- real portfolio/journal sources or entered through the app.
 
--- 1. Drop redundant tables
+-- 1. Drop redundant and conflicting tables to ensure clean schema generation
+-- Warning: This drops existing tables. Raw data remains safe in markdown files and will auto-migrate.
 DROP TABLE IF EXISTS public.portfolio CASCADE;
+DROP TABLE IF EXISTS public.holdings CASCADE;
+DROP TABLE IF EXISTS public.watchlists CASCADE;
+DROP TABLE IF EXISTS public.journal CASCADE;
 
 -- 2. Create a function to extract the Clerk user ID from the JWT
 CREATE OR REPLACE FUNCTION requesting_user_id()
