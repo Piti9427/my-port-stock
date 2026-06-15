@@ -92,21 +92,8 @@ export default function KeyboardShortcuts() {
   );
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(var(--black-rgb),0.6)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-      }}
-      onClick={() => setShowHelp(false)}
-    >
-      <div className="glass-card" style={{ padding: '24px', maxWidth: '400px', width: '100%' }} onClick={(e) => e.stopPropagation()}>
+    <div className="shortcut-backdrop" onClick={() => setShowHelp(false)}>
+      <div className="glass-card shortcut-dialog" onClick={(e) => e.stopPropagation()}>
         <h3
           style={{
             marginBottom: '20px',

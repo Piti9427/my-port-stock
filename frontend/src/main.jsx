@@ -17,7 +17,7 @@ const clerkAppearance = {
     colorBorder: '#262626',
     colorNeutral: '#a3a3a3',
     borderRadius: '0.5rem',
-    fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    fontFamily: '"Plus Jakarta Sans", "IBM Plex Sans Thai", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   elements: {
     modalBackdrop: 'bg-black/80 backdrop-blur-none',
