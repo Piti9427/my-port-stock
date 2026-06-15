@@ -32,7 +32,7 @@ describe('impeccable critique remediation contract', () => {
 
     expect(dashboard).toContain('ราคาเป้าหมายต้องสูงกว่าจุดตัดขาดทุน');
     expect(dashboard).toContain('แนวรับต้องเรียงจาก S1 สูงสุดไป S3 ต่ำสุด');
-    expect(dashboard).toContain('disabled={!validation.canSave || saveStatus === \'Saving...\'}');
+    expect(dashboard).toContain("disabled={!validation.canSave || saveStatus === 'Saving...'}");
   });
 
   it('does not keep Inter remnants in product UI CSS', () => {

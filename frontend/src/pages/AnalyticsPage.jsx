@@ -34,7 +34,7 @@ export default function AnalyticsPage() {
   const modeFilter = searchParams.get('mode') || 'ALL';
 
   const closedTrades = useMemo(() => trades.filter((t) => String(t.status || '').toUpperCase() === 'CLOSED'), [trades]);
-  
+
   const filteredClosedTrades = useMemo(() => {
     return closedTrades.filter((trade) => {
       const tickerOk = tickerFilter === 'ALL' || trade.ticker === tickerFilter;
@@ -88,22 +88,36 @@ export default function AnalyticsPage() {
                 className="input-field"
                 style={{ padding: '6px', fontSize: '0.85rem' }}
                 value={tickerFilter}
-                onChange={(e) => setSearchParams(prev => { prev.set('ticker', e.target.value); return prev; })}
+                onChange={(e) =>
+                  setSearchParams((prev) => {
+                    prev.set('ticker', e.target.value);
+                    return prev;
+                  })
+                }
               >
                 <option value="ALL">All Tickers</option>
-                {[...new Set(closedTrades.map(t => t.ticker))].map(ticker => (
-                  <option key={ticker} value={ticker}>{ticker}</option>
+                {[...new Set(closedTrades.map((t) => t.ticker))].map((ticker) => (
+                  <option key={ticker} value={ticker}>
+                    {ticker}
+                  </option>
                 ))}
               </select>
               <select
                 className="input-field"
                 style={{ padding: '6px', fontSize: '0.85rem' }}
                 value={modeFilter}
-                onChange={(e) => setSearchParams(prev => { prev.set('mode', e.target.value); return prev; })}
+                onChange={(e) =>
+                  setSearchParams((prev) => {
+                    prev.set('mode', e.target.value);
+                    return prev;
+                  })
+                }
               >
                 <option value="ALL">All Modes</option>
-                {[...new Set(closedTrades.map(t => t.mode).filter(Boolean))].map(mode => (
-                  <option key={mode} value={mode}>{mode}</option>
+                {[...new Set(closedTrades.map((t) => t.mode).filter(Boolean))].map((mode) => (
+                  <option key={mode} value={mode}>
+                    {mode}
+                  </option>
                 ))}
               </select>
             </div>
@@ -147,9 +161,7 @@ export default function AnalyticsPage() {
           <div className="glass-panel analytics-stat">
             <Activity size={18} aria-hidden="true" style={{ color: 'var(--fin-warning)', marginBottom: 10 }} />
             <div className="kpi-label">กำไรเฉลี่ย / ขาดทุนเฉลี่ย</div>
-            <div className="kpi-value kpi-neutral">
-              {stats.total === 0 ? '—' : `฿${stats.avgWin.toFixed(0)} / ฿${stats.avgLoss.toFixed(0)}`}
-            </div>
+            <div className="kpi-value kpi-neutral">{stats.total === 0 ? '—' : `฿${stats.avgWin.toFixed(0)} / ฿${stats.avgLoss.toFixed(0)}`}</div>
             <div className="kpi-sub">คำนวณจาก journal ที่ปิดแล้ว</div>
           </div>
           <div className="glass-panel analytics-stat">

@@ -44,7 +44,13 @@ function UndoToast({ ticker, message, onUndo, onDismiss }) {
     <div className="undo-toast" role="status" aria-live="polite">
       <span className="undo-toast-msg">
         <Trash2 size={13} aria-hidden="true" />
-        {message ? message : <>Removed <strong>{ticker}</strong> from watchlist</>}
+        {message ? (
+          message
+        ) : (
+          <>
+            Removed <strong>{ticker}</strong> from watchlist
+          </>
+        )}
       </span>
       <button className="undo-toast-btn" onClick={onUndo} aria-label={`Undo removal of ${ticker}`}>
         <RotateCcw size={12} aria-hidden="true" />
