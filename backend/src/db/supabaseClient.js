@@ -29,7 +29,21 @@ function createScopedClient(userId) {
     throw new Error('User ID is required to create a scoped Supabase client');
   }
 
-  const jwtSecret = process.env.SUPABASE_JWT_SECRET || 'default_fallback_secret_for_dev_myportstock_123';
+  const rawSecret = process.env.SUPABASE_JWT_SECRET || 'default_fallback_secret_for_dev_myportstock_123';
+  
+  // PostgREST expects the JWT secret to be decoded from base64 if it is base64 encoded.
+  // We only decode it if it fits a typical base64 pattern (alphanumeric with optional +/=/ and > 40 chars, no dashes).
+  let jwtSecret = rawSecret;
+  if (process.env.SUPABASE_JWT_SECRET && 
+      /^[a-zA-Z0-9+/=]+$/.test(rawSecret) && 
+      rawSecret.length > 40) {
+    try {
+      jwtSecret = Buffer.from(rawSecret, 'base64');
+    } catch (_) {
+      jwtSecret = rawSecret;
+    }
+  }
+
   const token = jwt.sign(
     {
       sub: userId,
@@ -38,7 +52,8 @@ function createScopedClient(userId) {
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 60 * 60 // 1 hour expiration
     },
-    jwtSecret
+    jwtSecret,
+    { algorithm: 'HS256' }
   );
 
   return createClient(supabaseUrl, supabaseKey, {
