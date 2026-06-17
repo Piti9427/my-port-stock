@@ -1,5 +1,5 @@
 import React from 'react';
-import { SignInButton } from '@clerk/react';
+import { SignInButton } from '../auth/clerkAdapter';
 import { Bot, Crosshair, ShieldAlert, ArrowRight } from 'lucide-react';
 
 export default function LandingPage() {

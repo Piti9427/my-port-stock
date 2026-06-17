@@ -4,10 +4,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import { AgentEventsProvider } from './hooks/useAgentEvents.jsx';
-import { ClerkProvider } from '@clerk/react';
+import { AppAuthProvider } from './auth/clerkAdapter.jsx';
+import { isDevAuthBypassEnabled } from './auth/devAuth';
 import './index.css';
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const devAuthBypass = isDevAuthBypassEnabled();
 const clerkAppearance = {
   variables: {
     colorPrimary: '#10b981',
@@ -41,7 +43,7 @@ const clerkAppearance = {
   },
 };
 
-if (!PUBLISHABLE_KEY) {
+if (!PUBLISHABLE_KEY && !devAuthBypass) {
   createRoot(document.getElementById('root')).render(
     <div
       style={{
@@ -67,11 +69,11 @@ if (!PUBLISHABLE_KEY) {
     onRecoverableError: Sentry.reactErrorHandler(),
   }).render(
     <StrictMode>
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY} appearance={clerkAppearance}>
+      <AppAuthProvider publishableKey={PUBLISHABLE_KEY} appearance={clerkAppearance}>
         <AgentEventsProvider>
           <App />
         </AgentEventsProvider>
-      </ClerkProvider>
+      </AppAuthProvider>
     </StrictMode>
   );
 }

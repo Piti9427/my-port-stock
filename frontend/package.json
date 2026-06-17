@@ -6,6 +6,7 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
+    "dev:ui": "cross-env VITE_DEV_AUTH_BYPASS=true vite",
     "build": "cross-env CI=false vite build",
     "build:prod": "cross-env GENERATE_SOURCEMAP=false CI=false vite build",
     "test": "vitest",

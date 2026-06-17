@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TrendingUp, TrendingDown, Award, Activity, Clock, BarChart3 } from 'lucide-react';
-import { useAuth } from '@clerk/react';
+import { useAuth } from '../auth/clerkAdapter';
 import { useSearchParams } from 'react-router-dom';
 import { fetchWithAuth } from '../lib/api';
 
