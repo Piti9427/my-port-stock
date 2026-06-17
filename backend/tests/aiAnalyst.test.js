@@ -17,3 +17,48 @@ test("AI analyst fails closed when Gemini API key is missing", async () => {
     process.env.GEMINI_API_KEY = previousKey;
   }
 });
+
+test("AI analyst validates structured deep-analysis sections", () => {
+  const { validateAnalysisShape } = require("../src/services/aiAnalyst");
+
+  const result = validateAnalysisShape({
+    decision_snapshot: {
+      verdict: "Wait",
+      score: 6.2,
+      one_line_reason: "ข้อมูลยังไม่ครบ",
+    },
+    sub_agent_scores: {},
+    swot: {
+      strengths: ["Moat"],
+      weaknesses: ["Valuation"],
+      opportunities: ["AI demand"],
+      threats: ["Macro risk"],
+    },
+    trade_plan: {
+      thesis: "Wait for pullback",
+      entry_zone: "W1 EMA20",
+      stop_loss: "Below W1 MA50",
+      target_1: "2R",
+      target_2: "Trail",
+      rr_ratio: ">= 1:2",
+    },
+    analysis: "รายละเอียด",
+  });
+
+  assert.equal(result.swot.strengths[0], "Moat");
+});
+
+test("AI analyst rejects unstructured deep-analysis output", () => {
+  const { validateAnalysisShape } = require("../src/services/aiAnalyst");
+
+  assert.throws(
+    () =>
+      validateAnalysisShape({
+        decision_snapshot: {
+          verdict: "Wait",
+        },
+        analysis: "Only markdown is not enough",
+      }),
+    /swot/,
+  );
+});

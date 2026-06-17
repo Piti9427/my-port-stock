@@ -51,6 +51,30 @@ function runtimeInsufficientData(reason, extras = {}) {
   };
 }
 
+function buildDeepAnalysisPayload(oracleData = {}, geminiData = {}) {
+  return {
+    swot: geminiData.swot || {
+      strengths: [],
+      weaknesses: [],
+      opportunities: [],
+      threats: [],
+    },
+    financials: Array.isArray(oracleData.financials) ? oracleData.financials : [],
+    balance_sheet: oracleData.balance_sheet || {},
+    weekly_technicals: oracleData.weekly_technicals || {},
+    daily_technicals: oracleData.daily_technicals || {},
+    sentiment: oracleData.sentiment || {},
+    trade_plan: geminiData.trade_plan || {
+      thesis: "INSUFFICIENT_DATA",
+      entry_zone: "INSUFFICIENT_DATA",
+      stop_loss: "INSUFFICIENT_DATA",
+      target_1: "INSUFFICIENT_DATA",
+      target_2: "INSUFFICIENT_DATA",
+      rr_ratio: "INSUFFICIENT_DATA",
+    },
+  };
+}
+
 function runMarketOracle(ticker) {
   return new Promise((resolve) => {
     execFile('python3', ['tools/market_oracle.py', ticker], { 
@@ -341,8 +365,34 @@ app.post("/api/analyze", async (req, res) => {
 
     packet.fundamental_packet = { ...packet.fundamental_packet, gemini_scores: geminiData, oracle: oracleData };
 
+    // Format agentResults from Gemini if available
+    let agentResults = null;
+    if (geminiData && geminiData.status !== "INSUFFICIENT_DATA" && geminiData.sub_agent_scores) {
+      agentResults = {
+        fundamental: {
+          status: geminiData.sub_agent_scores.fundamental ? "SUCCESS" : "INSUFFICIENT_DATA",
+          score: geminiData.sub_agent_scores.fundamental?.score ?? null,
+          mode_fit: geminiData.sub_agent_scores.fundamental?.mode_fit ?? "Mixed",
+          reason: geminiData.sub_agent_scores.fundamental?.reason ?? "",
+        },
+        technical: {
+          status: geminiData.sub_agent_scores.technical ? "SUCCESS" : "INSUFFICIENT_DATA",
+          score: geminiData.sub_agent_scores.technical?.score ?? null,
+          mode_fit: geminiData.sub_agent_scores.technical?.mode_fit ?? "Mixed",
+          reason: geminiData.sub_agent_scores.technical?.reason ?? "",
+        },
+        macro_flow: {
+          status: geminiData.sub_agent_scores.macro_flow ? "SUCCESS" : "INSUFFICIENT_DATA",
+          score: geminiData.sub_agent_scores.macro_flow?.score ?? null,
+          mode_fit: geminiData.sub_agent_scores.macro_flow?.mode_fit ?? "Mixed",
+          reason: geminiData.sub_agent_scores.macro_flow?.reason ?? "",
+        }
+      };
+    }
+
     const analysis = evaluateDecision(packet, {
       riskPlan: req.body.risk_plan,
+      agentResults: agentResults || undefined,
     });
 
     if (geminiData.status !== "INSUFFICIENT_DATA" && geminiData.decision_snapshot) {
@@ -354,6 +404,7 @@ app.post("/api/analyze", async (req, res) => {
     } else if (geminiData.status === "INSUFFICIENT_DATA") {
       analysis.adaptive_drilldown.warnings.push(geminiData.error_details || "AI analyst unavailable");
     }
+    analysis.deep_analysis = buildDeepAnalysisPayload(oracleData, geminiData);
 
     agents.forEach((agent, idx) => {
       setTimeout(() => {
@@ -416,6 +467,7 @@ module.exports = {
   buildVerifiedDataPacket,
   buildYahooQuoteSource,
   evaluateDecision,
+  buildDeepAnalysisPayload,
   getNewYorkMarketSession,
   getQuotePacket,
   getVerifiedPacket,
