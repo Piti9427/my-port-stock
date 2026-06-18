@@ -1,8 +1,5 @@
 'use strict';
 const express = require('express');
-const { getLivePrice } = require('../services/marketData');
-const { analyzeTicker } = require('../services/aiAnalyst');
-const { broadcast } = require('../ws/agentEventBus');
 const { z } = require('zod');
 const { getAuth } = require('@clerk/express');
 const { default: YahooFinance } = require('yahoo-finance2');
@@ -23,8 +20,7 @@ function getUserId(req) {
 
 const { getScopedDb } = require('../db');
 const { supabaseConfigured } = require('../db/supabaseClient');
-const { normalizeTicker, insufficientData } = require('../common/format');
-const { bootstrapUserData } = require('../services/migrationService');
+const { normalizeTicker } = require('../common/format');
 
 const yahooFinance = new YahooFinance();
 
@@ -120,16 +116,7 @@ router.get('/holdings', async (req, res) => {
 
   try {
     const userDb = getScopedDb(userId);
-    let holdings = await userDb.getUserHoldings(userId);
-
-    // Auto-migration check: If empty, bootstrap from markdown files
-    if (holdings.length === 0) {
-      const migrationResult = await bootstrapUserData(userId);
-      if (migrationResult.migrated) {
-        holdings = await userDb.getUserHoldings(userId);
-      }
-    }
-
+    const holdings = await userDb.getUserHoldings(userId);
     const enriched = await enrichWithMarketData(holdings);
     res.json(enriched);
   } catch (err) {
@@ -249,16 +236,7 @@ router.get('/journal', async (req, res) => {
 
   try {
     const userDb = getScopedDb(userId);
-    let trades = await userDb.getUserJournal(userId);
-
-    // Auto-migration check: If empty, bootstrap from markdown files
-    if (trades.length === 0) {
-      const migrationResult = await bootstrapUserData(userId);
-      if (migrationResult.migrated) {
-        trades = await userDb.getUserJournal(userId);
-      }
-    }
-
+    const trades = await userDb.getUserJournal(userId);
     res.status(200).json({ trades });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -358,3 +336,4 @@ router.get('/price/:ticker', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.getUserId = getUserId;

@@ -1,5 +1,7 @@
 const { describe, it, beforeEach, afterEach } = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const request = require("supertest");
 
 function loadServerWithoutSupabase() {
@@ -62,5 +64,11 @@ describe("runtime personal data endpoints", () => {
     assert.equal(res.statusCode, 503);
     assert.equal(res.body.status, "INSUFFICIENT_DATA");
     assert.doesNotMatch(JSON.stringify(res.body), /Mock save successful/i);
+  });
+
+  it("runtime routes do not auto-import owner markdown for empty users", () => {
+    const apiSource = fs.readFileSync(path.join(__dirname, "../src/routes/api.js"), "utf8");
+
+    assert.doesNotMatch(apiSource, /bootstrapUserData|importMarkdownSnapshotForOwner|Auto-migration/i);
   });
 });

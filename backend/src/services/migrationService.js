@@ -1,7 +1,12 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 
 const root = path.resolve(__dirname, '../../..');
+
+function sha256(value) {
+  return crypto.createHash('sha256').update(String(value)).digest('hex');
+}
 
 function parseMoney(value) {
   const cleaned = String(value || '').replace(/[^0-9.-]/g, '');
@@ -27,6 +32,17 @@ function parsePortfolioHoldings(markdown, userId) {
   }
 
   return rows;
+}
+
+function withImportMetadata(rows, metadata) {
+  return rows.map((row) => ({
+    ...row,
+    import_batch_id: metadata.importBatchId,
+    source_file: metadata.sourceFile,
+    source_section: metadata.sourceSection,
+    source_hash: sha256(`${metadata.sourceFile}|${metadata.sourceSection}|${row.ticker}|${JSON.stringify(row)}`),
+    imported_at: metadata.importedAt,
+  }));
 }
 
 function parseJournalTrades(markdown, userId) {
@@ -108,36 +124,92 @@ function parseWatchlist(markdown, userId) {
   return rows;
 }
 
-/**
- * Checks if the user has database records. If not, parses stock_portfolio.md
- * and trade_journal.md and populates the database for this user.
- */
-async function bootstrapUserData(userId) {
+function assertMarkdownImportOwner(userId, env = process.env) {
+  const ownerUserId = env.MARKDOWN_IMPORT_OWNER_USER_ID;
+  if (!ownerUserId) {
+    throw new Error('MARKDOWN_IMPORT_OWNER_USER_ID is required for markdown import');
+  }
+  if (userId !== ownerUserId) {
+    throw new Error('refusing markdown import for non-owner user');
+  }
+}
+
+function buildMarkdownImportPayload({
+  userId,
+  portfolioMarkdown,
+  journalMarkdown,
+  importedAt = new Date().toISOString(),
+}) {
+  const portfolioHash = sha256(portfolioMarkdown);
+  const journalHash = sha256(journalMarkdown);
+  const importBatchId = sha256(`${userId}|${portfolioHash}|${journalHash}`);
+  const holdings = parsePortfolioHoldings(portfolioMarkdown, userId);
+  const journalTrades = withImportMetadata(parseJournalTrades(journalMarkdown, userId), {
+    importBatchId,
+    sourceFile: 'trade_journal.md',
+    sourceSection: 'Active Trades',
+    importedAt,
+  });
+  const watchlistItems = withImportMetadata(parseWatchlist(portfolioMarkdown, userId), {
+    importBatchId,
+    sourceFile: 'stock_portfolio.md',
+    sourceSection: 'Tactical Watchlist',
+    importedAt,
+  });
+  const finalJournalEntries = [...journalTrades];
+
+  for (const holding of holdings) {
+    const matchingTrades = journalTrades.filter((trade) => trade.ticker === holding.ticker);
+    const tradeShares = matchingTrades.reduce((sum, trade) => {
+      if (trade.type === 'BUY') return sum + trade.shares;
+      if (trade.type === 'SELL') return sum - trade.shares;
+      return sum;
+    }, 0);
+
+    if (Math.abs(tradeShares - holding.shares) > 0.0001) {
+      finalJournalEntries.push({
+        user_id: userId,
+        date: new Date('2026-05-28T12:00:00Z').toISOString(),
+        ticker: holding.ticker,
+        type: 'ADJUST',
+        shares: holding.shares,
+        price: holding.avg_cost,
+        entry: holding.avg_cost,
+        status: 'OPEN',
+        notes: 'Startup balance import from stock_portfolio.md',
+        source_note: 'startup_balance_import',
+        is_deleted: false,
+        import_batch_id: importBatchId,
+        source_file: 'stock_portfolio.md',
+        source_section: 'Holdings Snapshot',
+        source_hash: sha256(`stock_portfolio.md|Holdings Snapshot|${holding.ticker}|${JSON.stringify(holding)}`),
+        imported_at: importedAt,
+      });
+    }
+  }
+
+  return {
+    batch: {
+      import_batch_id: importBatchId,
+      user_id: userId,
+      source_hash: sha256(`${portfolioHash}|${journalHash}`),
+      source_files: ['stock_portfolio.md', 'trade_journal.md'],
+      imported_at: importedAt,
+      status: 'pending',
+    },
+    journalEntries: finalJournalEntries,
+    watchlistItems,
+  };
+}
+
+async function importMarkdownSnapshotForOwner(userId) {
+  assertMarkdownImportOwner(userId);
   const { createScopedClient } = require('../db/supabaseClient');
   const scopedSupabase = createScopedClient(userId);
   if (!scopedSupabase) {
     return { migrated: false, error: 'Supabase not configured' };
   }
 
-  // 1. Check if user already has data in journal
-  const { data: existingJournal, error: checkErr } = await scopedSupabase
-    .from('journal')
-    .select('id')
-    .eq('user_id', userId)
-    .limit(1);
-
-  if (checkErr) {
-    console.error('Error checking user data existence:', checkErr.message);
-    return { migrated: false, error: checkErr.message };
-  }
-
-  if (existingJournal && existingJournal.length > 0) {
-    return { migrated: false, reason: 'User already has database records' };
-  }
-
-  console.log(`Bootstrapping data for user: ${userId}...`);
-
-  // 2. Read markdown files
   let portfolioMarkdown = '';
   let journalMarkdown = '';
   try {
@@ -148,87 +220,67 @@ async function bootstrapUserData(userId) {
     return { migrated: false, error: 'Markdown source files not found' };
   }
 
-  // 3. Parse data
-  const holdings = parsePortfolioHoldings(portfolioMarkdown, userId);
-  const journalTrades = parseJournalTrades(journalMarkdown, userId);
-  const watchlistItems = parseWatchlist(portfolioMarkdown, userId);
+  const payload = buildMarkdownImportPayload({ userId, portfolioMarkdown, journalMarkdown });
+  const { data: existingBatch, error: checkErr } = await scopedSupabase
+    .from('import_batches')
+    .select('import_batch_id')
+    .eq('user_id', userId)
+    .eq('import_batch_id', payload.batch.import_batch_id)
+    .limit(1);
 
-  // 4. Combine and generate final journal entries
-  // To preserve actual holdings amount, for each holding in stock_portfolio.md,
-  // we check if there are matching trades in journal.
-  // If the shares from the trades don't match the portfolio holdings shares, 
-  // or if there are no trades for that ticker at all (e.g. ASTS, TSM),
-  // we append a synthetic 'BUY' transaction to the journal to make the calculated holdings match.
-  const finalJournalEntries = [...journalTrades];
-
-  for (const holding of holdings) {
-    const matchingTrades = journalTrades.filter(t => t.ticker === holding.ticker);
-    
-    // Sum of shares in parsed trades for this ticker
-    let tradeShares = 0;
-    for (const t of matchingTrades) {
-      if (t.type === 'BUY') tradeShares += t.shares;
-      else if (t.type === 'SELL') tradeShares -= t.shares;
-    }
-
-    // If there's a difference or no trades, insert a synthetic BUY to align shares and avg cost
-    if (Math.abs(tradeShares - holding.shares) > 0.0001) {
-      const neededShares = holding.shares - tradeShares;
-      if (neededShares > 0) {
-        finalJournalEntries.push({
-          user_id: userId,
-          date: new Date('2026-05-28T12:00:00Z').toISOString(), // Last execution update date
-          ticker: holding.ticker,
-          type: 'BUY',
-          shares: neededShares,
-          price: holding.avg_cost,
-          entry: holding.avg_cost,
-          status: 'OPEN',
-          notes: 'Simulated startup balance import from stock_portfolio.md',
-          source_note: 'Imported from stock_portfolio.md snapshot',
-          is_deleted: false
-        });
-      }
-    }
+  if (checkErr) return { migrated: false, error: checkErr.message };
+  if (existingBatch && existingBatch.length > 0) {
+    return { migrated: false, reason: 'Import batch already exists', import_batch_id: payload.batch.import_batch_id };
   }
 
-  // 5. Insert into Supabase
   let insertedJournal = 0;
   let insertedWatchlists = 0;
 
   try {
-    if (finalJournalEntries.length > 0) {
+    const { error: batchErr } = await scopedSupabase
+      .from('import_batches')
+      .insert([{ ...payload.batch, status: 'running' }]);
+    if (batchErr) throw batchErr;
+
+    if (payload.journalEntries.length > 0) {
       const { data, error: insertJournalErr } = await scopedSupabase
         .from('journal')
-        .insert(finalJournalEntries)
+        .insert(payload.journalEntries)
         .select();
       if (insertJournalErr) throw insertJournalErr;
       insertedJournal = data ? data.length : 0;
     }
 
-    if (watchlistItems.length > 0) {
+    if (payload.watchlistItems.length > 0) {
       const { data, error: insertWatchErr } = await scopedSupabase
         .from('watchlists')
-        .insert(watchlistItems)
+        .insert(payload.watchlistItems)
         .select();
       if (insertWatchErr) throw insertWatchErr;
       insertedWatchlists = data ? data.length : 0;
     }
 
-    console.log(`✅ Bootstrapped ${insertedJournal} journal entries and ${insertedWatchlists} watchlists for ${userId}`);
+    const { error: updateBatchErr } = await scopedSupabase
+      .from('import_batches')
+      .update({ status: 'succeeded', inserted_journal: insertedJournal, inserted_watchlists: insertedWatchlists })
+      .eq('import_batch_id', payload.batch.import_batch_id);
+    if (updateBatchErr) throw updateBatchErr;
+
     return {
       migrated: true,
       journal: insertedJournal,
-      watchlist: insertedWatchlists
+      watchlist: insertedWatchlists,
+      import_batch_id: payload.batch.import_batch_id,
     };
   } catch (err) {
-    console.error('Failed to insert bootstrapped rows:', err.message);
     return { migrated: false, error: err.message };
   }
 }
 
 module.exports = {
-  bootstrapUserData,
+  assertMarkdownImportOwner,
+  buildMarkdownImportPayload,
+  importMarkdownSnapshotForOwner,
   parsePortfolioHoldings,
   parseJournalTrades,
   parseWatchlist
