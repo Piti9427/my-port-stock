@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BarChart3, Clock } from 'lucide-react';
-import { useAuth } from '@clerk/react';
+import { useAuth } from '../auth/clerkAdapter';
 import { fetchWithAuth } from '../lib/api';
 
 export default function JournalPage() {

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as PIXI from 'pixi.js';
 import { useAgentEvents } from '../hooks/useAgentEvents';
 import { Clock } from 'lucide-react';
+import DeepAnalysisTabs from '../components/DeepAnalysisTabs';
 
 // Agent configuration
 const AGENT_CONFIG = {
@@ -133,11 +134,6 @@ function AIFloorCanvas({ agentStates }) {
           spritesRef.current[id] = graphics;
         }
       }
-
-      let tick = 0;
-      app.ticker.add(() => {
-        tick += 0.05;
-      });
     };
 
     initPixi();
@@ -189,18 +185,7 @@ function AIFloorCanvas({ agentStates }) {
     };
   }, []);
 
-  return (
-    <div
-      ref={containerRef}
-      className="trading-floor-canvas"
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100%',
-      }}
-    />
-  );
+  return <div ref={containerRef} className="trading-floor-canvas" />;
 }
 
 export default function CommandCenterPage() {
@@ -213,7 +198,7 @@ export default function CommandCenterPage() {
   const [fetchError, setFetchError] = useState('');
   const [analyzeError, setAnalyzeError] = useState('');
 
-  const { agentStates, analysisResult, connected, lastEvent } = useAgentEvents();
+  const { agentStates, analysisResult } = useAgentEvents();
 
   const loadPrice = async () => {
     if (!searchTicker) return;
@@ -274,38 +259,23 @@ export default function CommandCenterPage() {
   };
 
   const analysisComplete = !!analysisResult;
+  const normalizedAnalysis = analysisResult?.analysis?.decision_snapshot ? analysisResult.analysis : analysisResult;
+  const normalizedSnapshot = normalizedAnalysis?.decision_snapshot || normalizedAnalysis || {};
+  const normalizedStatus = normalizedSnapshot.traffic_light_status || analysisResult?.status;
   const statusColor =
-    analysisResult?.status === 'green'
+    normalizedStatus === 'green'
       ? 'var(--fin-success)'
-      : analysisResult?.status === 'yellow'
+      : normalizedStatus === 'yellow'
         ? 'var(--fin-warning)'
-        : analysisResult?.status === 'red'
+        : normalizedStatus === 'red'
           ? 'var(--fin-danger)'
           : 'gray';
 
   return (
-    <div
-      className="command-center-page"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        gap: '16px',
-        padding: '16px',
-      }}
-    >
-      <div style={{ display: 'flex', gap: '16px', flex: 1, minHeight: 0 }}>
+    <div className="command-center-page">
+      <div className="command-center-layout">
         {/* Left Pane: Live Data Feed */}
-        <div
-          className="glass-panel"
-          style={{
-            width: '350px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            overflowY: 'auto',
-          }}
-        >
+        <div className="glass-panel command-center-feed">
           <div>
             <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Live Data Feed</h2>
             <span className="data-stamp" style={{ marginTop: '4px' }}>
@@ -444,26 +414,10 @@ export default function CommandCenterPage() {
         </div>
 
         {/* Right Pane: AI Floor */}
-        <div
-          className="glass-panel"
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-          }}
-        >
+        <div className="glass-panel command-center-main">
           {/* Traffic-Light Dashboard */}
-          <div
-            className="glass-card"
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div className="glass-card ai-floor-summary">
+            <div className="ai-floor-summary-metrics">
               <h2 style={{ margin: 0, fontSize: '1.25rem' }}>AI Floor</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span>Status:</span>
@@ -478,17 +432,10 @@ export default function CommandCenterPage() {
                 />
               </div>
               <div style={{ fontSize: '1.1rem' }}>
-                Score: <strong>{analysisResult?.score || '-'}</strong>
+                Score: <strong>{normalizedSnapshot.score || '-'}</strong>
               </div>
             </div>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-end',
-                gap: '8px',
-              }}
-            >
+            <div className="ai-floor-summary-actions">
               <button
                 className="btn btn-primary"
                 onClick={handleAnalyze}
@@ -551,33 +498,28 @@ export default function CommandCenterPage() {
                 Verdict:{' '}
                 <span
                   style={{
-                    color: analysisResult.verdict?.toLowerCase().includes('buy') ? 'var(--fin-success)' : 'var(--text-primary)',
+                    color: (normalizedSnapshot.verdict || analysisResult.verdict)?.toLowerCase().includes('buy')
+                      ? 'var(--fin-success)'
+                      : 'var(--text-primary)',
                   }}
                 >
-                  {analysisResult.verdict}
+                  {normalizedSnapshot.verdict || analysisResult.verdict}
                 </span>
               </div>
               <div style={{ fontSize: '1rem' }}>
-                <strong>Reason:</strong> {analysisResult.one_line_reason}
+                <strong>Reason:</strong> {normalizedSnapshot.one_line_reason}
               </div>
               <div style={{ fontSize: '1rem' }}>
-                <strong>Next Action:</strong> {analysisResult.immediate_next_action}
+                <strong>Next Action:</strong> {normalizedSnapshot.immediate_next_action}
               </div>
+              <DeepAnalysisTabs deepAnalysis={normalizedAnalysis?.deep_analysis} fallbackAnalysis={normalizedAnalysis?.analysis} />
             </div>
           )}
         </div>
       </div>
 
       {/* Bottom Bar: Action Buttons */}
-      <div
-        className="glass-panel"
-        style={{
-          display: 'flex',
-          gap: '16px',
-          justifyContent: 'flex-end',
-          padding: '16px',
-        }}
-      >
+      <div className="glass-panel command-center-actions">
         <button
           className="btn btn-success"
           disabled={!analysisComplete}

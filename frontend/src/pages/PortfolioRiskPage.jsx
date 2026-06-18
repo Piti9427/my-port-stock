@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Clock, ShieldAlert } from 'lucide-react';
-import { useAuth } from '@clerk/react';
+import { useAuth } from '../auth/clerkAdapter';
 import { fetchWithAuth } from '../lib/api';
 
 const DATA_STAMP = 'Supabase holdings + market data gateway';

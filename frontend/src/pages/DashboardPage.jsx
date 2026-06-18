@@ -2,8 +2,9 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Play, Target, Check, BarChart3, AlertTriangle, RotateCcw, Clock } from 'lucide-react';
 import PixelTradingFloor from '../components/PixelTradingFloor';
-import { useAuth } from '@clerk/react';
+import { useAuth } from '../auth/clerkAdapter';
 import { fetchWithAuth } from '../lib/api';
+import DeepAnalysisTabs from '../components/DeepAnalysisTabs';
 
 /* ─── Sparkline component (pure SVG) ───────────────────────── */
 const Sparkline = React.memo(function Sparkline({ data, positive }) {
@@ -448,7 +449,8 @@ function VerdictCard({ analysis }) {
         {analysis.decision_snapshot?.score ? ` · ${analysis.decision_snapshot.score}/10` : ''}
       </div>
       {analysis.decision_snapshot?.one_line_reason && <div className="verdict-text">{analysis.decision_snapshot.one_line_reason}</div>}
-      {analysis.analysis && !analysis.decision_snapshot && <div className="verdict-text">{analysis.analysis}</div>}
+
+      <DeepAnalysisTabs deepAnalysis={analysis.deep_analysis} fallbackAnalysis={analysis.analysis} />
     </div>
   );
 }

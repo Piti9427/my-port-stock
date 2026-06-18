@@ -27,6 +27,34 @@
 
 ## Durable Entries
 
+### 2026-06-16 - Deep Analysis SOP Skill Gate
+
+- Keywords: `deep-analysis-sop`, `skill-workflow`, `find-skills`, `quant-audit`, `frontend-verification`
+- Decision: The deep 7-dimension SOP implementation should use all relevant tools/skills as an orchestration workflow, not a literal inventory. The Main Orchestrator remains the only current-data owner; sub-agents consume verified packets and fail closed with `INSUFFICIENT_DATA`.
+- Action: Updated `docs/superpowers/specs/2026-06-16-deep-analysis-sop-design.md` with phase-based tool/skill orchestration, Parallel Agent Council contract, optional Skills CLI candidates, explicit do-not-use constraints, and final verification expectations.
+- Source: `docs/superpowers/specs/2026-06-16-deep-analysis-sop-design.md`
+
+### 2026-06-16 - Deep Analysis Runtime Contract
+
+- Keywords: `deep-analysis-runtime`, `market-oracle`, `deep_analysis`, `swot-tabs`, `fail-closed`
+- Decision: Deep analysis runtime now uses a normalized contract from Python oracle fundamentals/technicals/sentiment into Express `deep_analysis`, then shared React tabs for Dashboard and Command Center.
+- Action: Added tests for oracle schema, backend payload mapping, AI shape validation, and frontend production data contract.
+- Source: `tools/market_oracle.py`, `backend/server.js`, `frontend/src/components/DeepAnalysisTabs.jsx`
+
+### 2026-06-16 - Dev UI Auth Bypass
+
+- Keywords: `dev-auth-bypass`, `ui-testing`, `clerk`, `dev:ui`, `frontend-verification`
+- Decision: Local UI implementation can bypass the signed-in Clerk surface only in Vite dev mode with explicit `VITE_DEV_AUTH_BYPASS=true`; production builds keep Clerk auth enforced.
+- Action: Added `frontend/src/auth/devAuth.js`, `frontend/src/auth/clerkAdapter.jsx`, gated `App.jsx` shell rendering, and `frontend` script `dev:ui` for auth-bypassed visual testing without requiring a Clerk publishable key.
+- Source: `frontend/src/App.jsx`, `frontend/src/auth/devAuth.js`, `frontend/src/auth/clerkAdapter.jsx`, `frontend/package.json`
+
+### 2026-06-16 - Responsive Command Center Contract
+
+- Keywords: `responsive-ui`, `command-center`, `mobile-layout`, `canvas-scaling`, `frontend-verification`
+- Decision: Command Center should use class-based responsive grid layout instead of fixed inline pane widths; mobile/tablet must stack panels and keep Pixi canvas/table content within explicit scroll or scale boundaries.
+- Action: Added responsive layout contracts and CSS breakpoints for Command Center feed/main/actions, AI floor summary, Pixi canvas scaling, table overflow, and drawer/form stacking.
+- Source: `frontend/src/pages/CommandCenterPage.jsx`, `frontend/src/index.css`, `frontend/tests/productionDataContract.test.js`
+
 ### 2026-06-15 - Impeccable Critique UI Remediation Plan
 
 - Keywords: `impeccable-critique`, `ui-remediation`, `dark-terminal`, `anti-slop`, `frontend-ux`
@@ -168,3 +196,9 @@
 - Action: Updated `backend/supabase_schema.sql` and `supabase/schema.sql` with the new schema, policies, triggers, and created verification script `backend/tests/verify_schema_rls.sql`. Updated `backend/src/db.js` and tests.
 - Source: `docs/superpowers/plans/2026-06-15-backend-supabase-implementation-plan.md`
 
+### 2026-06-16 - Deep 7-Dimension SOP & SWOT Stock Analysis Design
+
+- Keywords: `deep-analysis`, `sop-audit`, `swot-matrix`, `yfinance-fundamentals`, `tabbed-ui`
+- Decision: Restore real fundamental, technical, and SWOT audits under the 7-dimension SOP. Update Python oracle to pull quarterly financial statements and W1/D1 technical metrics; modify Express backend to map AI sub-agent scores to the decision engine; design a premium tabbed React UI containing SWOT accordions, quarterly tables, W1 checklist badges, and a monospace Trade Ticket.
+- Action: Saved design spec to `docs/superpowers/specs/2026-06-16-deep-analysis-sop-design.md` and created implementation plan.
+- Source: `docs/superpowers/specs/2026-06-16-deep-analysis-sop-design.md`

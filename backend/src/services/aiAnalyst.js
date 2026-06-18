@@ -30,6 +30,21 @@ function validateAnalysisShape(value) {
     throw new Error('Gemini response missing decision_snapshot.verdict');
   }
 
+  const swot = value.swot;
+  if (!swot || typeof swot !== 'object') {
+    throw new Error('Gemini response missing swot structured section');
+  }
+
+  for (const key of ['strengths', 'weaknesses', 'opportunities', 'threats']) {
+    if (!Array.isArray(swot[key])) {
+      throw new Error(`Gemini response missing swot.${key}`);
+    }
+  }
+
+  if (!value.trade_plan || typeof value.trade_plan !== 'object') {
+    throw new Error('Gemini response missing trade_plan structured section');
+  }
+
   return value;
 }
 
@@ -43,13 +58,87 @@ Ticker: ${ticker}
 Oracle Technicals/Fundamentals: ${JSON.stringify(oracleData)}
 Portfolio Context: ${JSON.stringify(portfolioData)}
 
-Provide a concise decision snapshot (Hold/Buy/Sell), Conviction Score, and brief reason based on Elite Investor SOP. 
-Evaluate the data from the 3 dimensions (Fundamental, Technical, Macro) and assign a score out of 10 for each.
+Perform a deep analysis of ${ticker} according to the Elite Investor 7-Dimension Master SOP and SWOT framework from the SOP.
+Analyze the following dimensions in detail:
+1. Megatrend & Global Macro: Megatrend alignment, Fed/inflation macro regime, AI Super Cycle Stage (Stage 1-4), AI Bottleneck Rotation Wave (Wave 1-8).
+2. Fundamental Moat & Industry SWOT (Strengths & Opportunities): Moat strength, pricing power, industry strengths & opportunities.
+3. Financials & Earnings Report Intelligence: PEG ratio (SOP gate: PEG < 1.5), Free Cash Flow Margin (positive/negative), earnings quality.
+4. Sentiment & Whale Intelligence: Institutional flow (13F holdings), dark pool blocks, options flow.
+5. Advanced Technical Analysis: Weekly structural trend (W1 Golden Filter: Price vs W1 200 EMA/50 MA/20 EMA), Daily pullback to dynamic support (EMA 20/MA 50), ATR-based stop-loss.
+6. Devil's Advocate & Industry SWOT (Weaknesses & Threats): Internal weaknesses (high debt, burn rate), external threats (regulation, competition, technological displacement).
+7. Master Trading Plan & Thesis Integrity: Investment thesis, entry zone, stop-loss, Target 1, Target 2, Risk/Reward ratio.
+
+Format the 'analysis' property as a clean, highly readable markdown text breakdown in Thai, structured exactly as follows:
+=========================================
+วิเคราะห์เชิงลึก 7 มิติ (7-Dimension Master SOP Audit)
+=========================================
+[Dimension 1 - Megatrend & Global Macro]
+- AI Cycle Stage / Bottleneck Wave: ...
+- Macro Alignment: ...
+
+[Dimension 2 & 6 - SWOT Analysis]
+- Strengths (จุดแข็ง): ...
+- Opportunities (โอกาส): ...
+- Weaknesses (จุดอ่อน): ...
+- Threats (อุปสรรค): ...
+
+[Dimension 3 - Financials & Earnings Quality]
+- PEG Ratio Gate: ...
+- FCF Margin / Earnings Quality: ...
+
+[Dimension 4 - Sentiment & Whale Flow]
+- Institutional & Option Flow: ...
+
+[Dimension 5 - Technical Setup & W1 Golden Filter]
+- W1 Golden Filter Status: ...
+- D1 Entry & Support Levels: ...
+
+[Dimension 7 - Master Trading Plan]
+- Thesis: ...
+- Entry Zone: ...
+- Stop-Loss: ...
+- Target 1 / Target 2: ...
+- R/R Ratio: ...
+
 Ensure you return a JSON object ONLY, with the following properties:
 {
-  "decision_snapshot": { "verdict": "Hold", "score": 7.5, "one_line_reason": "reason" },
-  "sub_agent_scores": { "fundamental": 7, "technical": 8, "macro": 6 },
-  "analysis": "detailed analysis..."
+  "decision_snapshot": {
+    "verdict": "Buy" | "Hold" | "Wait" | "Avoid",
+    "score": number (0 to 10),
+    "one_line_reason": "concise reason in Thai"
+  },
+  "sub_agent_scores": {
+    "fundamental": {
+      "score": number (0 to 10),
+      "mode_fit": "Good" | "Mixed" | "Poor",
+      "reason": "short fundamental status"
+    },
+    "technical": {
+      "score": number (0 to 10),
+      "mode_fit": "Good" | "Mixed" | "Poor",
+      "reason": "short technical status"
+    },
+    "macro_flow": {
+      "score": number (0 to 10),
+      "mode_fit": "Good" | "Mixed" | "Poor",
+      "reason": "short macro/flow status"
+    }
+  },
+  "swot": {
+    "strengths": ["1-3 concise bullets"],
+    "weaknesses": ["1-3 concise bullets"],
+    "opportunities": ["1-3 concise bullets"],
+    "threats": ["1-3 concise bullets"]
+  },
+  "trade_plan": {
+    "thesis": "short thesis or INSUFFICIENT_DATA",
+    "entry_zone": "entry zone or Wait",
+    "stop_loss": "hard stop or INSUFFICIENT_DATA",
+    "target_1": "target 1 or INSUFFICIENT_DATA",
+    "target_2": "target 2 or INSUFFICIENT_DATA",
+    "rr_ratio": "risk/reward or INSUFFICIENT_DATA"
+  },
+  "analysis": "Thai detailed analysis text..."
 }`;
 
   let timeoutId;

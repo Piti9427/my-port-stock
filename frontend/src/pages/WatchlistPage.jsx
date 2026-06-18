@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { BellOff, Trash2, Plus, TrendingUp, TrendingDown, Minus, RotateCcw, Clock } from 'lucide-react';
-import { useAuth } from '@clerk/react';
+import { useAuth } from '../auth/clerkAdapter';
 import { fetchWithAuth } from '../lib/api';
 
 const SIGNAL_META = {
