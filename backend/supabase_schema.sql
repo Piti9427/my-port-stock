@@ -3,11 +3,15 @@
 -- real portfolio/journal sources or entered through the app.
 
 -- 1. Drop redundant and conflicting tables to ensure clean schema generation
--- Warning: This drops existing tables. Raw data remains safe in markdown files and will auto-migrate.
+-- Warning: This drops existing tables. Personal markdown data must be imported with the owner-only importer.
 DROP TABLE IF EXISTS public.portfolio CASCADE;
 DROP TABLE IF EXISTS public.holdings CASCADE;
 DROP TABLE IF EXISTS public.watchlists CASCADE;
 DROP TABLE IF EXISTS public.journal CASCADE;
+DROP TABLE IF EXISTS public.import_batches CASCADE;
+
+CREATE SCHEMA IF NOT EXISTS private;
+REVOKE ALL ON SCHEMA private FROM PUBLIC;
 
 -- 2. Create a function to extract the Clerk user ID from the JWT
 CREATE OR REPLACE FUNCTION requesting_user_id()
@@ -17,6 +21,9 @@ RETURNS TEXT AS $$
     ''
   )::TEXT;
 $$ LANGUAGE SQL STABLE;
+
+REVOKE ALL ON FUNCTION public.requesting_user_id() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.requesting_user_id() TO authenticated, service_role;
 
 -- 3. Holdings Table
 CREATE TABLE IF NOT EXISTS public.holdings (
@@ -48,10 +55,27 @@ CREATE TABLE IF NOT EXISTS public.watchlists (
     alert_type TEXT DEFAULT 'above',
     ai_signal TEXT DEFAULT 'monitor',
     source_note TEXT,
+    import_batch_id TEXT,
+    source_file TEXT,
+    source_section TEXT,
+    source_hash TEXT,
+    imported_at TIMESTAMPTZ,
     is_deleted BOOLEAN DEFAULT FALSE NOT NULL
 );
 
--- 5. Journal Table
+-- 5. Import Batches Table
+CREATE TABLE IF NOT EXISTS public.import_batches (
+    import_batch_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT requesting_user_id(),
+    source_hash TEXT NOT NULL,
+    source_files TEXT[] NOT NULL DEFAULT '{}',
+    imported_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    inserted_journal INTEGER DEFAULT 0 NOT NULL,
+    inserted_watchlists INTEGER DEFAULT 0 NOT NULL
+);
+
+-- 6. Journal Table
 CREATE TABLE IF NOT EXISTS public.journal (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id TEXT NOT NULL DEFAULT requesting_user_id(),
@@ -71,27 +95,36 @@ CREATE TABLE IF NOT EXISTS public.journal (
     profit NUMERIC,
     notes TEXT,
     source_note TEXT,
+    import_batch_id TEXT REFERENCES public.import_batches(import_batch_id),
+    source_file TEXT,
+    source_section TEXT,
+    source_hash TEXT,
+    imported_at TIMESTAMPTZ,
     is_deleted BOOLEAN DEFAULT FALSE NOT NULL
 );
 
--- 6. Partial Unique Indexes (ensuring soft-deleted rows don't block adding back tickers)
+-- 7. Partial Unique Indexes (ensuring soft-deleted rows don't block adding back tickers)
 DROP INDEX IF EXISTS idx_holdings_user_ticker;
 DROP INDEX IF EXISTS idx_watchlists_user_ticker;
 CREATE UNIQUE INDEX idx_holdings_user_ticker ON public.holdings(user_id, ticker) WHERE is_deleted = false;
 CREATE UNIQUE INDEX idx_watchlists_user_ticker ON public.watchlists(user_id, ticker) WHERE is_deleted = false;
+CREATE UNIQUE INDEX idx_journal_user_source_hash ON public.journal(user_id, source_hash) WHERE source_hash IS NOT NULL;
+CREATE UNIQUE INDEX idx_watchlists_user_source_hash ON public.watchlists(user_id, source_hash) WHERE source_hash IS NOT NULL AND is_deleted = false;
 
--- 7. Indexes for Performance
+-- 8. Indexes for Performance
 CREATE INDEX IF NOT EXISTS idx_holdings_user_id ON public.holdings(user_id);
 CREATE INDEX IF NOT EXISTS idx_watchlists_user_id ON public.watchlists(user_id);
 CREATE INDEX IF NOT EXISTS idx_journal_user_id ON public.journal(user_id);
 CREATE INDEX IF NOT EXISTS idx_journal_user_ticker ON public.journal(user_id, ticker);
+CREATE INDEX IF NOT EXISTS idx_import_batches_user_id ON public.import_batches(user_id);
 
--- 8. Enable Row Level Security (RLS)
+-- 9. Enable Row Level Security (RLS)
 ALTER TABLE public.holdings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.watchlists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.journal ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.import_batches ENABLE ROW LEVEL SECURITY;
 
--- 9. RLS Policies
+-- 10. RLS Policies
 -- Users can SELECT their own holdings (read-only for user, updated via trigger)
 DROP POLICY IF EXISTS "Users can view their own holdings" ON public.holdings;
 CREATE POLICY "Users can view their own holdings"
@@ -112,8 +145,26 @@ ON public.journal FOR ALL
 USING (requesting_user_id() = user_id)
 WITH CHECK (requesting_user_id() = user_id);
 
--- 10. Database Function & Trigger to automatically synchronize holdings from journal entries
-CREATE OR REPLACE FUNCTION public.recalculate_holdings()
+DROP POLICY IF EXISTS "Users can manage their own import batches" ON public.import_batches;
+CREATE POLICY "Users can manage their own import batches"
+ON public.import_batches FOR ALL
+USING (requesting_user_id() = user_id)
+WITH CHECK (requesting_user_id() = user_id);
+
+-- 11. Explicit Data API Grants
+REVOKE ALL ON TABLE public.holdings FROM anon, authenticated;
+REVOKE ALL ON TABLE public.watchlists FROM anon, authenticated;
+REVOKE ALL ON TABLE public.journal FROM anon, authenticated;
+REVOKE ALL ON TABLE public.import_batches FROM anon, authenticated;
+GRANT SELECT ON TABLE public.holdings TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.watchlists TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.journal TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON TABLE public.import_batches TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.holdings, public.watchlists, public.journal, public.import_batches TO service_role;
+
+-- 12. Database Function & Trigger to automatically synchronize holdings from journal entries
+DROP FUNCTION IF EXISTS public.recalculate_holdings();
+CREATE OR REPLACE FUNCTION private.recalculate_holdings()
 RETURNS TRIGGER AS $$
 DECLARE
   r RECORD;
@@ -189,11 +240,13 @@ BEGIN
 
   RETURN NULL;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, private;
+
+REVOKE ALL ON FUNCTION private.recalculate_holdings() FROM PUBLIC;
 
 -- Create Trigger on journal table
 DROP TRIGGER IF EXISTS trg_journal_recalculate_holdings ON public.journal;
 CREATE TRIGGER trg_journal_recalculate_holdings
 AFTER INSERT OR UPDATE OR DELETE ON public.journal
 FOR EACH ROW
-EXECUTE FUNCTION public.recalculate_holdings();
+EXECUTE FUNCTION private.recalculate_holdings();
