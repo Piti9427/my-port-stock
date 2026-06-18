@@ -27,6 +27,27 @@
 
 ## Durable Entries
 
+### 2026-06-17 - Markdown Runtime Redaction
+
+- Keywords: `markdown-redaction`, `supabase-runtime`, `personal-data`, `per-user-data`
+- Decision: Personal runtime numeric data now lives in Supabase per Clerk `user_id`; markdown files keep only historical/context material.
+- Action: Redacted holdings, watchlist alert rows, and active trade transaction rows after live import verification.
+- Source: `stock_portfolio.md`, `trade_journal.md`, `backend/tests/verify_schema_rls.sql`
+
+### 2026-06-17 - Per-User Markdown Runtime Data Task Plan
+
+- Keywords: `supabase-runtime`, `per-user-data`, `task-plan`, `markdown-redaction`, `rls`
+- Decision: Finish Supabase runtime migration through an additive task plan, not direct destructive schema application. Runtime rows must stay per Clerk `user_id`; second user starts empty.
+- Action: Created implementation task plan for additive migration, RLS/user isolation tests, frontend empty states, live verification, and markdown redaction.
+- Source: `docs/superpowers/plans/2026-06-17-per-user-markdown-runtime-data.md`
+
+### 2026-06-17 - Owner-Only Supabase Markdown Import
+
+- Keywords: `supabase-runtime`, `owner-import`, `markdown-redaction`, `per-user-data`, `import-batches`
+- Decision: Personal portfolio markdown must never auto-bootstrap into every empty user account. Runtime numeric data imports are owner-only through `MARKDOWN_IMPORT_OWNER_USER_ID`, with import audit metadata and no ambiguous synthetic BUY rows.
+- Action: Added owner-only dry-run/write importer, `import_batches` audit schema, explicit Data API grants, private trigger function, and regression tests blocking normal API auto-import. Redact `stock_portfolio.md` and `trade_journal.md` only after live Supabase import verification succeeds.
+- Source: `backend/src/services/migrationService.js`, `backend/scripts/import-markdown-snapshot.js`, `backend/supabase_schema.sql`
+
 ### 2026-06-16 - Deep Analysis SOP Skill Gate
 
 - Keywords: `deep-analysis-sop`, `skill-workflow`, `find-skills`, `quant-audit`, `frontend-verification`
