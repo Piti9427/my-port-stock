@@ -62,8 +62,8 @@ export default function KeyboardShortcuts() {
       });
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    globalThis.addEventListener('keydown', handleKeyDown);
+    return () => globalThis.removeEventListener('keydown', handleKeyDown);
   }, [navigate, showHelp]);
 
   // Clear sequence automatically after 1.5 seconds to prevent stuck states

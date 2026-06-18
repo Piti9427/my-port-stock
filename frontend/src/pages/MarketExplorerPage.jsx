@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { Search, TrendingUp, TrendingDown, Zap, ChevronRight, X, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -244,6 +245,20 @@ function TickerRow({ ticker, isActive, onClick }) {
 }
 
 /* ─── Market Explorer Page ────────────────────────────────── */
+TradingViewChart.propTypes = {
+  symbol: PropTypes.string.isRequired,
+};
+
+TickerRow.propTypes = {
+  ticker: PropTypes.shape({
+    symbol: PropTypes.string.isRequired,
+    name: PropTypes.string,
+    market: PropTypes.string,
+  }).isRequired,
+  isActive: PropTypes.bool.isRequired,
+  onClick: PropTypes.func.isRequired,
+};
+
 export default function MarketExplorerPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
@@ -297,8 +312,8 @@ export default function MarketExplorerPage() {
         searchRef.current?.focus();
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    globalThis.addEventListener('keydown', handler);
+    return () => globalThis.removeEventListener('keydown', handler);
   }, []);
 
   const handleSendToAI = () => {

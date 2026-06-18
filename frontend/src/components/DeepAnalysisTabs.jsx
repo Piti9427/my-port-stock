@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 
 const TABS = [
   { id: 'swot', label: 'สรุป & SWOT' },
@@ -212,3 +213,24 @@ export default function DeepAnalysisTabs({ deepAnalysis, fallbackAnalysis }) {
     </section>
   );
 }
+
+SwotAccordion.propTypes = {
+  swot: PropTypes.object,
+};
+
+FundamentalsTab.propTypes = {
+  deepAnalysis: PropTypes.object,
+};
+
+TechnicalsTab.propTypes = {
+  deepAnalysis: PropTypes.object,
+};
+
+TradePlanTab.propTypes = {
+  deepAnalysis: PropTypes.object,
+};
+
+DeepAnalysisTabs.propTypes = {
+  deepAnalysis: PropTypes.object,
+  fallbackAnalysis: PropTypes.string,
+};

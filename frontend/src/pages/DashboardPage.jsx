@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { useLocation } from 'react-router-dom';
 import { Play, Target, Check, BarChart3, AlertTriangle, RotateCcw, Clock } from 'lucide-react';
 import PixelTradingFloor from '../components/PixelTradingFloor';
@@ -32,6 +33,158 @@ const Sparkline = React.memo(function Sparkline({ data, positive }) {
   );
 });
 
+Sparkline.propTypes = {
+  data: PropTypes.arrayOf(PropTypes.number),
+  positive: PropTypes.bool,
+};
+
+function verdictCardClass(verdict) {
+  const lower = verdict.toLowerCase();
+  if (lower.includes('buy')) return 'buy';
+  if (lower.includes('sell') || lower.includes('trim')) return 'sell';
+  if (lower.includes('wait') || lower.includes('hold')) return 'warn';
+  return 'buy';
+}
+
+function verdictTextColor(cardClass) {
+  if (cardClass === 'buy') return 'var(--fin-profit)';
+  if (cardClass === 'sell') return 'var(--fin-loss)';
+  return 'var(--fin-warning)';
+}
+
+function formatSignedDayPl(value, formatThb) {
+  if (!Number.isFinite(value)) return '—';
+  const prefix = value >= 0 ? '+' : '';
+  return `${prefix}${formatThb(Math.abs(value))}`;
+}
+
+function formatSignedPct(value) {
+  if (value == null) return '—';
+  const prefix = value >= 0 ? '+' : '';
+  return `${prefix}${value.toFixed(2)}%`;
+}
+
+function formatSignedTotalPl(value, formatThb) {
+  if (value == null) return '—';
+  const prefix = value >= 0 ? '+' : '-';
+  return `${prefix}${formatThb(Math.abs(value))}`;
+}
+
+function DashboardWatchlistBody({ loadingWatchlist, holdingsUnavailable, watchlist, activeRow, onRowClick, onPlanClick }) {
+  if (loadingWatchlist) {
+    return ['skel-a', 'skel-b', 'skel-c'].map((skelKey) => (
+      <tr key={skelKey}>
+        <td>
+          <div className="skeleton" style={{ width: '100px', height: '24px', borderRadius: '4px' }} />
+        </td>
+        <td>
+          <div className="skeleton" style={{ width: '60px', height: '20px', borderRadius: '4px' }} />
+        </td>
+        <td>
+          <div className="skeleton" style={{ width: '50px', height: '20px', borderRadius: '4px' }} />
+        </td>
+        <td>
+          <div className="skeleton" style={{ width: '80px', height: '32px', borderRadius: '4px' }} />
+        </td>
+        <td>
+          <div className="skeleton" style={{ width: '60px', height: '24px', borderRadius: '4px' }} />
+        </td>
+      </tr>
+    ));
+  }
+  if (holdingsUnavailable) {
+    return (
+      <tr>
+        <td colSpan="5" style={{ padding: 0 }}>
+          <div className="empty-state empty-state-warning">
+            <div className="empty-state-title">Portfolio data unavailable</div>
+            <div className="empty-state-copy">Supabase is not configured or the current account has no accessible rows.</div>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+  if (watchlist.length === 0) {
+    return (
+      <tr>
+        <td colSpan="5" style={{ padding: 0 }}>
+          <div className="empty-state">
+            <div className="empty-state-title">No portfolio data yet</div>
+            <div className="empty-state-copy">Add a journal entry or run the owner import for this account.</div>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+  return watchlist.map((row) => (
+    <tr key={row.ticker} className={`watchlist-row${activeRow === row.ticker ? ' active-row' : ''}`} onClick={() => onRowClick(row.ticker)}>
+      <td>
+        <div className="ticker-cell">
+          <div
+            className="ticker-icon"
+            style={{
+              background: row.bg,
+              fontWeight: 'bold',
+              fontSize: '12px',
+              color: 'var(--text-muted)',
+            }}
+          >
+            {row.ticker.charAt(0)}
+          </div>
+          <div>
+            <div className="ticker-symbol">{row.ticker}</div>
+            <div className="ticker-name">{row.name}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <span className="price-mono">{Number.isFinite(Number(row.price)) ? `฿${Number(row.price).toFixed(2)}` : '—'}</span>
+      </td>
+      <td>
+        {Number.isFinite(Number(row.changePct)) ? (
+          <span className={`change-pill ${row.change >= 0 ? 'up' : 'down'}`}>
+            {row.change >= 0 ? '▲' : '▼'} {Math.abs(Number(row.changePct)).toFixed(2)}%
+          </span>
+        ) : (
+          <span className="price-mono" style={{ color: 'var(--text-muted)' }}>
+            —
+          </span>
+        )}
+      </td>
+      <td>
+        <Sparkline data={row.spark} positive={row.change >= 0} />
+      </td>
+      <td>
+        <button
+          className="btn-secondary"
+          style={{
+            width: 'auto',
+            padding: '5px 12px',
+            fontSize: '0.75rem',
+            marginTop: 0,
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPlanClick(row.ticker);
+          }}
+          aria-label={`วางแผนเทรด ${row.ticker}`}
+        >
+          วางแผน
+        </button>
+      </td>
+    </tr>
+  ));
+}
+
+DashboardWatchlistBody.propTypes = {
+  loadingWatchlist: PropTypes.bool.isRequired,
+  holdingsUnavailable: PropTypes.bool.isRequired,
+  watchlist: PropTypes.arrayOf(PropTypes.object).isRequired,
+  activeRow: PropTypes.string,
+  onRowClick: PropTypes.func.isRequired,
+  onPlanClick: PropTypes.func.isRequired,
+};
+
 /* ─── Scenario Planner Drawer ─────────────────────────────── */
 function ScenarioPlannerDrawer({ ticker, onClose, getToken }) {
   const [supports, setSupports] = useState({ s1: '', s2: '', s3: '' });
@@ -55,19 +208,19 @@ function ScenarioPlannerDrawer({ ticker, onClose, getToken }) {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    globalThis.addEventListener('keydown', handleKeyDown);
+    return () => globalThis.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
   const rows = useMemo(() => {
     const levels = [
-      { label: 'S1', price: parseFloat(supports.s1) },
-      { label: 'S2', price: parseFloat(supports.s2) },
-      { label: 'S3', price: parseFloat(supports.s3) },
+      { label: 'S1', price: Number.parseFloat(supports.s1) },
+      { label: 'S2', price: Number.parseFloat(supports.s2) },
+      { label: 'S3', price: Number.parseFloat(supports.s3) },
     ].filter((l) => l.price > 0);
 
-    const sl = parseFloat(stopLoss);
-    const tgt = parseFloat(target);
+    const sl = Number.parseFloat(stopLoss);
+    const tgt = Number.parseFloat(target);
 
     return levels.map(({ label, price }) => {
       const sharesAdded = addAmt > 0 ? Math.floor(addAmt / price) : 0;
@@ -92,11 +245,11 @@ function ScenarioPlannerDrawer({ ticker, onClose, getToken }) {
   }, [supports, stopLoss, target, held, avgCost, addAmt]);
 
   const validation = useMemo(() => {
-    const s1 = parseFloat(supports.s1);
-    const s2 = parseFloat(supports.s2);
-    const s3 = parseFloat(supports.s3);
-    const sl = parseFloat(stopLoss);
-    const tgt = parseFloat(target);
+    const s1 = Number.parseFloat(supports.s1);
+    const s2 = Number.parseFloat(supports.s2);
+    const s3 = Number.parseFloat(supports.s3);
+    const sl = Number.parseFloat(stopLoss);
+    const tgt = Number.parseFloat(target);
 
     const supportOrderInvalid = (Number.isFinite(s1) && Number.isFinite(s2) && s1 < s2) || (Number.isFinite(s2) && Number.isFinite(s3) && s2 < s3);
     const targetStopInvalid = Number.isFinite(tgt) && Number.isFinite(sl) && tgt <= sl;
@@ -131,13 +284,16 @@ function ScenarioPlannerDrawer({ ticker, onClose, getToken }) {
         body: JSON.stringify({
           ticker,
           entry: firstRow.price,
-          target: parseFloat(target),
-          stop_loss: parseFloat(stopLoss),
+          target: Number.parseFloat(target),
+          stop_loss: Number.parseFloat(stopLoss),
           risk_reward: firstRow.rr,
           shares: firstRow.sharesAdded,
         }),
       });
-      const payload = await response.json().catch(() => ({}));
+      const payload = await response.json().catch((err) => {
+        console.error('Failed to parse journal save response:', err);
+        return {};
+      });
       if (!response.ok || payload.status === 'INSUFFICIENT_DATA') {
         throw new Error(payload.error_details || payload.error || 'Journal persistence unavailable');
       }
@@ -150,7 +306,7 @@ function ScenarioPlannerDrawer({ ticker, onClose, getToken }) {
   return (
     <>
       <div className="scenario-backdrop" onClick={onClose} aria-hidden="true" />
-      <div className="scenario-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <dialog className="scenario-drawer" open aria-labelledby="drawer-title">
         <div className="drawer-header">
           <div>
             <div id="drawer-title" className="drawer-title">
@@ -318,7 +474,9 @@ function ScenarioPlannerDrawer({ ticker, onClose, getToken }) {
                         <td>{r.sharesAdded}</td>
                         <td>฿{r.newAvg.toFixed(2)}</td>
                         <td>
-                          {r.profitPct != null ? (
+                          {r.profitPct === null ? (
+                            <span style={{ color: 'var(--text-muted)' }}>—</span>
+                          ) : (
                             <span
                               style={{
                                 color: r.profitPct >= 0 ? 'var(--fin-profit)' : 'var(--fin-loss)',
@@ -328,22 +486,20 @@ function ScenarioPlannerDrawer({ ticker, onClose, getToken }) {
                               {r.profitPct >= 0 ? '+' : ''}
                               {r.profitPct.toFixed(1)}%
                             </span>
-                          ) : (
-                            <span style={{ color: 'var(--text-muted)' }}>—</span>
                           )}
                         </td>
                         <td>
-                          {r.maxLoss != null ? (
+                          {r.maxLoss === null ? (
+                            <span style={{ color: 'var(--text-muted)' }}>—</span>
+                          ) : (
                             <span style={{ color: 'var(--fin-loss)' }}>-฿{r.maxLoss.toFixed(0)}</span>
-                          ) : (
-                            <span style={{ color: 'var(--text-muted)' }}>—</span>
                           )}
                         </td>
                         <td>
-                          {r.rr != null ? (
-                            <span className={`rr-badge ${rrClass(r.rr)}`}>1:{r.rr.toFixed(1)}</span>
-                          ) : (
+                          {r.rr === null ? (
                             <span style={{ color: 'var(--text-muted)' }}>—</span>
+                          ) : (
+                            <span className={`rr-badge ${rrClass(r.rr)}`}>1:{r.rr.toFixed(1)}</span>
                           )}
                         </td>
                       </tr>
@@ -415,34 +571,34 @@ function ScenarioPlannerDrawer({ ticker, onClose, getToken }) {
             </div>
           )}
         </div>
-      </div>
+      </dialog>
     </>
   );
 }
+
+ScenarioPlannerDrawer.propTypes = {
+  ticker: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
+  getToken: PropTypes.func.isRequired,
+};
 
 /* ─── Verdict Card ────────────────────────────────────────── */
 function VerdictCard({ analysis }) {
   if (!analysis) return null;
   const verdict = analysis.decision_snapshot?.verdict || 'Analysis';
-  const cardClass = verdict.toLowerCase().includes('buy')
-    ? 'buy'
-    : verdict.toLowerCase().includes('sell') || verdict.toLowerCase().includes('trim')
-      ? 'sell'
-      : verdict.toLowerCase().includes('wait') || verdict.toLowerCase().includes('hold')
-        ? 'warn'
-        : 'buy';
+  const cardClass = verdictCardClass(verdict);
 
   return (
     <div className={`glass-card verdict-card ${cardClass}`}>
       <div className="verdict-ticker">{analysis.packet?.ticker || analysis.ticker}</div>
       {analysis.packet?.current_price_source?.price && (
-        <div className="verdict-price">฿{parseFloat(analysis.packet.current_price_source.price).toFixed(2)}</div>
+        <div className="verdict-price">฿{Number.parseFloat(analysis.packet.current_price_source.price).toFixed(2)}</div>
       )}
       <div className="verdict-verdict-label">คำตัดสิน AI</div>
       <div
         className="verdict-verdict-value"
         style={{
-          color: cardClass === 'buy' ? 'var(--fin-profit)' : cardClass === 'sell' ? 'var(--fin-loss)' : 'var(--fin-warning)',
+          color: verdictTextColor(cardClass),
         }}
       >
         {verdict}
@@ -455,12 +611,32 @@ function VerdictCard({ analysis }) {
   );
 }
 
+VerdictCard.propTypes = {
+  analysis: PropTypes.shape({
+    ticker: PropTypes.string,
+    decision_snapshot: PropTypes.shape({
+      verdict: PropTypes.string,
+      score: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      one_line_reason: PropTypes.string,
+    }),
+    packet: PropTypes.shape({
+      ticker: PropTypes.string,
+      current_price_source: PropTypes.shape({
+        price: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      }),
+    }),
+    deep_analysis: PropTypes.object,
+    analysis: PropTypes.object,
+  }),
+};
+
 /* ─── Dashboard Page ─────────────────────────────────────── */
 export default function DashboardPage() {
   const location = useLocation();
-  const incomingTicker = location.state?.ticker;
+  const navTicker = location.state?.ticker;
 
-  const [selectedTicker, setSelectedTicker] = useState(incomingTicker || 'NVDA');
+  const [selectedTicker, setSelectedTicker] = useState('NVDA');
+  const activeTicker = navTicker || selectedTicker;
   const [decisionMode, setDecisionMode] = useState('Swing Trade');
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -469,21 +645,26 @@ export default function DashboardPage() {
 
   // New states for API Binding & Hardening
   const [watchlist, setWatchlist] = useState([]);
+  const [holdingsUnavailable, setHoldingsUnavailable] = useState(false);
   const [loadingWatchlist, setLoadingWatchlist] = useState(true);
   const [manualQuote, setManualQuote] = useState('');
   const [showQuoteInput, setShowQuoteInput] = useState(false);
   const [analyzeError, setAnalyzeError] = useState(null);
-
-  useEffect(() => {
-    if (incomingTicker) setSelectedTicker(incomingTicker);
-  }, [incomingTicker]);
 
   const { getToken } = useAuth();
 
   // Fetch Watchlist
   useEffect(() => {
     fetchWithAuth('/api/holdings', getToken)
-      .then((data) => setWatchlist(data))
+      .then((data) => {
+        if (data?.status === 'INSUFFICIENT_DATA') {
+          setHoldingsUnavailable(true);
+          setWatchlist([]);
+          return;
+        }
+        setHoldingsUnavailable(false);
+        setWatchlist(Array.isArray(data) ? data : []);
+      })
       .catch((err) => console.error(err))
       .finally(() => setLoadingWatchlist(false));
   }, [getToken]);
@@ -507,7 +688,7 @@ export default function DashboardPage() {
 
   const handleAnalyze = useCallback(
     async (manualPrice = null) => {
-      if (!selectedTicker || loading) return;
+      if (!activeTicker || loading) return;
       setLoading(true);
       setAnalysis(null);
       setAnalyzeError(null);
@@ -515,7 +696,7 @@ export default function DashboardPage() {
 
       try {
         const payload = {
-          ticker: selectedTicker.toUpperCase(),
+          ticker: activeTicker.toUpperCase(),
           decision_mode: decisionMode,
         };
         if (manualPrice && typeof manualPrice === 'string') payload.manual_price = manualPrice;
@@ -537,10 +718,10 @@ export default function DashboardPage() {
         if (data.status === 'INSUFFICIENT_DATA') {
           setAnalysis(data);
           setShowQuoteInput(true);
-        } else if (!res.ok) {
-          setAnalyzeError(data.error || 'API Error: Failed to analyze ticker.');
-        } else {
+        } else if (res.ok) {
           setAnalysis(data);
+        } else {
+          setAnalyzeError(data.error || 'API Error: Failed to analyze ticker.');
         }
       } catch (err) {
         if (err.name === 'AbortError') {
@@ -551,12 +732,17 @@ export default function DashboardPage() {
       }
       setLoading(false);
     },
-    [selectedTicker, loading, decisionMode]
+    [activeTicker, loading, decisionMode]
   );
 
   const handleRowClick = (ticker) => {
     setSelectedTicker(ticker);
     setActiveRow(ticker);
+  };
+
+  const handlePlanClick = (ticker) => {
+    handleRowClick(ticker);
+    setShowScenario(true);
   };
 
   return (
@@ -571,20 +757,16 @@ export default function DashboardPage() {
           <div className="metric-item">
             <span className="metric-label">กำไร/ขาดทุนรายวัน</span>
             <span className={`metric-value ${portfolioMetrics.dayPl >= 0 ? 'profit' : 'loss'}`}>
-              {Number.isFinite(portfolioMetrics.dayPl)
-                ? `${portfolioMetrics.dayPl >= 0 ? '+' : ''}${formatThb(Math.abs(portfolioMetrics.dayPl))}`
-                : '—'}
+              {formatSignedDayPl(portfolioMetrics.dayPl, formatThb)}
             </span>
             <span className="metric-change" style={{ color: portfolioMetrics.dayPl >= 0 ? 'var(--fin-profit)' : 'var(--fin-loss)' }}>
-              {portfolioMetrics.dayPlPct == null ? '—' : `${portfolioMetrics.dayPlPct >= 0 ? '+' : ''}${portfolioMetrics.dayPlPct.toFixed(2)}%`}
+              {formatSignedPct(portfolioMetrics.dayPlPct)}
             </span>
           </div>
           <div className="metric-item">
             <span className="metric-label">กำไร/ขาดทุนรวม</span>
             <span className={`metric-value ${portfolioMetrics.totalPl >= 0 ? 'profit' : 'loss'}`}>
-              {portfolioMetrics.totalPl == null
-                ? '—'
-                : `${portfolioMetrics.totalPl >= 0 ? '+' : '-'}${formatThb(Math.abs(portfolioMetrics.totalPl))}`}
+              {formatSignedTotalPl(portfolioMetrics.totalPl, formatThb)}
             </span>
           </div>
           <div className="metric-item">
@@ -619,137 +801,14 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {loadingWatchlist ? (
-                Array(3)
-                  .fill(0)
-                  .map((_, i) => (
-                    <tr key={`skel-${i}`}>
-                      <td>
-                        <div
-                          className="skeleton"
-                          style={{
-                            width: '100px',
-                            height: '24px',
-                            borderRadius: '4px',
-                          }}
-                        />
-                      </td>
-                      <td>
-                        <div
-                          className="skeleton"
-                          style={{
-                            width: '60px',
-                            height: '20px',
-                            borderRadius: '4px',
-                          }}
-                        />
-                      </td>
-                      <td>
-                        <div
-                          className="skeleton"
-                          style={{
-                            width: '50px',
-                            height: '20px',
-                            borderRadius: '4px',
-                          }}
-                        />
-                      </td>
-                      <td>
-                        <div
-                          className="skeleton"
-                          style={{
-                            width: '80px',
-                            height: '32px',
-                            borderRadius: '4px',
-                          }}
-                        />
-                      </td>
-                      <td>
-                        <div
-                          className="skeleton"
-                          style={{
-                            width: '60px',
-                            height: '24px',
-                            borderRadius: '4px',
-                          }}
-                        />
-                      </td>
-                    </tr>
-                  ))
-              ) : watchlist.length === 0 ? (
-                <tr>
-                  <td colSpan="5" style={{ padding: 0 }}>
-                    <div className="empty-state" role="status">
-                      <div className="empty-title">Insufficient data</div>
-                      <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                watchlist.map((row) => (
-                  <tr
-                    key={row.ticker}
-                    className={`watchlist-row${activeRow === row.ticker ? ' active-row' : ''}`}
-                    onClick={() => handleRowClick(row.ticker)}
-                  >
-                    <td>
-                      <div className="ticker-cell">
-                        <div
-                          className="ticker-icon"
-                          style={{
-                            background: row.bg,
-                            fontWeight: 'bold',
-                            fontSize: '12px',
-                            color: 'var(--text-muted)',
-                          }}
-                        >
-                          {row.ticker.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="ticker-symbol">{row.ticker}</div>
-                          <div className="ticker-name">{row.name}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="price-mono">{Number.isFinite(Number(row.price)) ? `฿${Number(row.price).toFixed(2)}` : '—'}</span>
-                    </td>
-                    <td>
-                      {Number.isFinite(Number(row.changePct)) ? (
-                        <span className={`change-pill ${row.change >= 0 ? 'up' : 'down'}`}>
-                          {row.change >= 0 ? '▲' : '▼'} {Math.abs(Number(row.changePct)).toFixed(2)}%
-                        </span>
-                      ) : (
-                        <span className="price-mono" style={{ color: 'var(--text-muted)' }}>
-                          —
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <Sparkline data={row.spark} positive={row.change >= 0} />
-                    </td>
-                    <td>
-                      <button
-                        className="btn-secondary"
-                        style={{
-                          width: 'auto',
-                          padding: '5px 12px',
-                          fontSize: '0.75rem',
-                          marginTop: 0,
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRowClick(row.ticker);
-                          setShowScenario(true);
-                        }}
-                        aria-label={`วางแผนเทรด ${row.ticker}`}
-                      >
-                        วางแผน
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
+              <DashboardWatchlistBody
+                loadingWatchlist={loadingWatchlist}
+                holdingsUnavailable={holdingsUnavailable}
+                watchlist={watchlist}
+                activeRow={activeRow}
+                onRowClick={handleRowClick}
+                onPlanClick={handlePlanClick}
+              />
             </tbody>
           </table>
         </div>
@@ -892,7 +951,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {analysis && analysis.error && !analyzeError && (
+        {analysis?.error && !analyzeError && (
           <div
             className="glass-card verdict-card error"
             style={{
@@ -931,7 +990,7 @@ export default function DashboardPage() {
       </aside>
 
       {/* ── Scenario Planner ── */}
-      {showScenario && <ScenarioPlannerDrawer ticker={selectedTicker} onClose={() => setShowScenario(false)} getToken={getToken} />}
+      {showScenario && <ScenarioPlannerDrawer ticker={activeTicker} onClose={() => setShowScenario(false)} getToken={getToken} />}
     </div>
   );
 }

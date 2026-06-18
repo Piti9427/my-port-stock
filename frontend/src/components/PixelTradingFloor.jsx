@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import PropTypes from 'prop-types';
 import { User, Cpu, Activity, Briefcase, FileSearch, ShieldAlert } from 'lucide-react';
 
 const DESK_COORDINATES = {
@@ -11,6 +12,19 @@ const DESK_COORDINATES = {
 };
 
 const SPAWN_POINT = { top: 95, left: 50 };
+
+function scheduleAgentExit(setAgents, agent) {
+  setTimeout(() => {
+    setAgents((prev) => {
+      const next = { ...prev };
+      delete next[agent];
+      if (agent === 'cio') {
+        next.cio = { id: 'cio', state: 'IDLE', ...DESK_COORDINATES.cio };
+      }
+      return next;
+    });
+  }, 1500);
+}
 
 const AGENT_COLORS = {
   cio: '#3b82f6', // blue
@@ -79,17 +93,8 @@ export default function PixelTradingFloor() {
       } else if (state === 'WALKING' || state === 'SITTING' || state === 'TYPING' || state === 'DONE' || state === 'PRESENTING') {
         newCoords = DESK_COORDINATES[agent] || SPAWN_POINT;
       } else if (state === 'EXITED') {
-        // Walk back to door, then remove after delay
         newCoords = { ...SPAWN_POINT };
-        setTimeout(() => {
-          setAgents((p) => {
-            const next = { ...p };
-            delete next[agent];
-            // Ensure CIO is always there
-            if (agent === 'cio') next.cio = { id: 'cio', state: 'IDLE', ...DESK_COORDINATES.cio };
-            return next;
-          });
-        }, 1500);
+        scheduleAgentExit(setAgents, agent);
       }
 
       return {
@@ -257,7 +262,7 @@ function AgentSprite({ agent }) {
           boxShadow: 'none',
         }}
       >
-        {agent.id.replace(/-/g, ' ')}
+        {agent.id.replaceAll('-', ' ')}
       </div>
 
       <style>{`
@@ -277,3 +282,13 @@ function AgentSprite({ agent }) {
     </div>
   );
 }
+
+AgentSprite.propTypes = {
+  agent: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    top: PropTypes.number,
+    left: PropTypes.number,
+    state: PropTypes.string,
+    message: PropTypes.string,
+  }).isRequired,
+};

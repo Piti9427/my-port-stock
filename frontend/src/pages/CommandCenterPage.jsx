@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import PropTypes from 'prop-types';
 import * as PIXI from 'pixi.js';
 import { useAgentEvents } from '../hooks/useAgentEvents';
 import { Clock } from 'lucide-react';
@@ -84,7 +85,7 @@ function AIFloorCanvas({ agentStates }) {
         width: 640,
         height: 480,
         backgroundColor: 0x0f172a,
-        resolution: window.devicePixelRatio || 1,
+        resolution: globalThis.devicePixelRatio || 1,
         autoDensity: true,
       });
       if (isMounted && containerRef.current) {
@@ -188,6 +189,10 @@ function AIFloorCanvas({ agentStates }) {
   return <div ref={containerRef} className="trading-floor-canvas" />;
 }
 
+AIFloorCanvas.propTypes = {
+  agentStates: PropTypes.object.isRequired,
+};
+
 export default function CommandCenterPage() {
   const [ticker, setTicker] = useState('');
   const [searchTicker, setSearchTicker] = useState('');
@@ -226,7 +231,7 @@ export default function CommandCenterPage() {
 
     if (manualPrice) {
       const priceVal = Number(manualPrice);
-      if (isNaN(priceVal) || priceVal <= 0) {
+      if (Number.isNaN(priceVal) || priceVal <= 0) {
         setAnalyzeError('Manual price must be a positive number');
         return;
       }

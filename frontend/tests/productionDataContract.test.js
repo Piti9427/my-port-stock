@@ -5,6 +5,13 @@ import { expect, test } from 'vitest';
 const root = resolve(__dirname, '..');
 const read = (file) => readFileSync(resolve(root, file), 'utf8');
 
+test('Dashboard uses real empty portfolio copy instead of sample data copy', () => {
+  const source = read('src/pages/DashboardPage.jsx');
+
+  expect(source).toContain('No portfolio data yet');
+  expect(source).not.toMatch(/sample|mock|demo portfolio/i);
+});
+
 test('Dashboard sends canonical decision mode values', () => {
   const source = read('src/pages/DashboardPage.jsx');
 

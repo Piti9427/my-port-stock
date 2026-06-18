@@ -1,10 +1,11 @@
-import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import PropTypes from 'prop-types';
 
 const AgentEventsContext = createContext(null);
 
 const WS_URL = (() => {
-  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = import.meta.env.VITE_WS_HOST || window.location.host;
+  const proto = globalThis.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = import.meta.env.VITE_WS_HOST || globalThis.location.host;
   return `${proto}//${host}/ws/agent-events`;
 })();
 
@@ -55,8 +56,8 @@ export function AgentEventsProvider({ children }) {
           if (event.type === 'ANALYSIS_COMPLETE') {
             setAnalysisResult(event.payload);
           }
-        } catch (_) {
-          /* ignore parse errors */
+        } catch (parseError) {
+          console.debug('Ignored malformed agent event payload:', parseError);
         }
       };
 
@@ -66,7 +67,8 @@ export function AgentEventsProvider({ children }) {
       };
 
       ws.onerror = () => ws.close();
-    } catch (_) {
+    } catch (connectError) {
+      console.debug('WebSocket connect failed, retrying:', connectError);
       reconnectTimer.current = setTimeout(connect, 3000);
     }
   }, []);
@@ -84,20 +86,23 @@ export function AgentEventsProvider({ children }) {
     setAgentStates((prev) => Object.fromEntries(Object.keys(prev).map((k) => [k, { state: 'IDLE', message: null }])));
   }, []);
 
-  return (
-    <AgentEventsContext.Provider
-      value={{
-        agentStates,
-        lastEvent,
-        analysisResult,
-        connected,
-        resetAnalysis,
-      }}
-    >
-      {children}
-    </AgentEventsContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      agentStates,
+      lastEvent,
+      analysisResult,
+      connected,
+      resetAnalysis,
+    }),
+    [agentStates, lastEvent, analysisResult, connected, resetAnalysis]
   );
+
+  return <AgentEventsContext.Provider value={contextValue}>{children}</AgentEventsContext.Provider>;
 }
+
+AgentEventsProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 export function useAgentEvents() {
   return useContext(AgentEventsContext);

@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import PropTypes from 'prop-types';
 import { Save, RotateCcw, ShieldCheck, AlertCircle } from 'lucide-react';
 
 const STORAGE_KEY = 'myportstock_config_v1';
@@ -9,19 +10,37 @@ const DEFAULT_CONFIG = {
   maxSpeculativePct: 20,
   hardRiskPerTradeTHB: 25000,
   maxPortfolioDrawdownPct: 15,
-  minRR: 2.0,
-  minConvictionScore: 5.0,
+  minRR: 2,
+  minConvictionScore: 5,
   alertOnBreachPct: 85,
   preferredModes: ['Swing Trade', 'Core'],
   apiKey: '',
   geminiModel: 'gemini-2.5-pro',
 };
 
+function sliderTrackColor(isDanger, isWarn) {
+  if (isDanger) return 'var(--fin-loss)';
+  if (isWarn) return 'var(--fin-warning)';
+  return 'var(--brand-primary)';
+}
+
+function fieldValueColor(isDanger, isWarn) {
+  if (isDanger) return 'var(--fin-loss)';
+  if (isWarn) return 'var(--fin-warning)';
+  return 'var(--text-primary)';
+}
+
+function saveButtonLabel(saved, hasChanges) {
+  if (saved) return 'บันทึกแล้ว!';
+  if (hasChanges) return 'บันทึกการเปลี่ยนแปลง';
+  return 'บันทึกแล้ว';
+}
+
 function SliderField({ id, label, description, value, min, max, step = 1, unit = '%', onChange, warn, danger }) {
   const pct = ((value - min) / (max - min)) * 100;
   const isWarn = warn !== undefined && value >= warn;
   const isDanger = danger !== undefined && value >= danger;
-  const trackColor = isDanger ? 'var(--fin-loss)' : isWarn ? 'var(--fin-warning)' : 'var(--brand-primary)';
+  const trackColor = sliderTrackColor(isDanger, isWarn);
   return (
     <div className="config-field">
       <div className="config-field-header">
@@ -31,7 +50,7 @@ function SliderField({ id, label, description, value, min, max, step = 1, unit =
         <span
           className="config-field-value"
           style={{
-            color: isDanger ? 'var(--fin-loss)' : isWarn ? 'var(--fin-warning)' : 'var(--text-primary)',
+            color: fieldValueColor(isDanger, isWarn),
           }}
         >
           {typeof value === 'number' && !Number.isInteger(value) ? value.toFixed(1) : value}
@@ -68,6 +87,20 @@ function SliderField({ id, label, description, value, min, max, step = 1, unit =
   );
 }
 
+SliderField.propTypes = {
+  id: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  value: PropTypes.number.isRequired,
+  min: PropTypes.number.isRequired,
+  max: PropTypes.number.isRequired,
+  step: PropTypes.number,
+  unit: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+  warn: PropTypes.number,
+  danger: PropTypes.number,
+};
+
 function NumberField({ id, label, description, value, onChange, prefix = '', suffix = '' }) {
   return (
     <div className="config-field">
@@ -94,6 +127,16 @@ function NumberField({ id, label, description, value, onChange, prefix = '', suf
     </div>
   );
 }
+
+NumberField.propTypes = {
+  id: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  onChange: PropTypes.func.isRequired,
+  prefix: PropTypes.string,
+  suffix: PropTypes.string,
+};
 
 export default function ConfigPage() {
   const [config, setConfig] = useState(() => {
@@ -136,7 +179,7 @@ export default function ConfigPage() {
 
   const handleReset = () => {
     if (!hasChanges && JSON.stringify(config) === JSON.stringify(DEFAULT_CONFIG)) return;
-    if (!window.confirm('ต้องการคืนค่าการตั้งค่าเริ่มต้นทั้งหมดหรือไม่? (ไม่สามารถย้อนกลับได้)')) return;
+    if (!globalThis.confirm('ต้องการคืนค่าการตั้งค่าเริ่มต้นทั้งหมดหรือไม่? (ไม่สามารถย้อนกลับได้)')) return;
     setConfig(DEFAULT_CONFIG);
     setSavedConfig(DEFAULT_CONFIG);
     localStorage.removeItem(STORAGE_KEY);
@@ -157,9 +200,9 @@ export default function ConfigPage() {
           <ShieldCheck size={18} aria-hidden="true" style={{ color: 'var(--brand-primary)' }} />
           <span>กฎของระบบ</span>
           {hasChanges && (
-            <span className="unsaved-badge" role="status" aria-label="Unsaved changes">
+            <output className="unsaved-badge" aria-label="Unsaved changes">
               <AlertCircle size={12} aria-hidden="true" /> ยังไม่ได้บันทึก
-            </span>
+            </output>
           )}
         </div>
         <p className="config-sidenav-desc">ขีดจำกัดสูงสุดที่ควบคุมโดย AI ระบบจะเริ่มใช้ค่าใหม่ในการวิเคราะห์ครั้งถัดไป</p>
@@ -173,7 +216,7 @@ export default function ConfigPage() {
         <div className="config-sidenav-actions">
           <button className="btn-analyze" onClick={handleSave} aria-live="polite">
             <Save size={15} aria-hidden="true" />
-            {saved ? 'บันทึกแล้ว!' : hasChanges ? 'บันทึกการเปลี่ยนแปลง' : 'บันทึกแล้ว'}
+            {saveButtonLabel(saved, hasChanges)}
           </button>
           <button
             className="btn-secondary"
@@ -268,8 +311,8 @@ export default function ConfigPage() {
                 label="อัตราผลตอบแทนต่อความเสี่ยงขั้นต่ำ (Risk/Reward)"
                 description="การเทรดที่มี R/R ต่ำกว่านี้จะถูกแนะนำให้ 'รอ' (Wait) โดยไม่สนใจคะแนนความมั่นใจ"
                 value={config.minRR}
-                min={1.0}
-                max={5.0}
+                min={1}
+                max={5}
                 step={0.1}
                 unit=":1"
                 onChange={update('minRR')}
@@ -281,8 +324,8 @@ export default function ConfigPage() {
                 label="คะแนนความมั่นใจขั้นต่ำ (Buy gate)"
                 description="คะแนนจาก AI ที่ต่ำกว่าค่านี้จะได้รับคำแนะนำให้ 'รอ' หรือ 'หลีกเลี่ยง' และจะไม่มีวันแนะนำให้ 'ซื้อ' หรือ 'ซื้อเพิ่ม'"
                 value={config.minConvictionScore}
-                min={4.0}
-                max={8.0}
+                min={4}
+                max={8}
                 step={0.1}
                 unit="/10"
                 onChange={update('minConvictionScore')}
@@ -381,7 +424,7 @@ export default function ConfigPage() {
               <div className="config-status-title">สถานะระบบ</div>
               <div className="config-status-grid">
                 <div className="config-status-item">
-                  <span className="status-indicator active" />
+                  <span className="config-status-dot active" />
                   <span>AI Council</span>
                   <span
                     style={{
@@ -394,7 +437,7 @@ export default function ConfigPage() {
                   </span>
                 </div>
                 <div className="config-status-item">
-                  <span className="status-indicator done" />
+                  <span className="config-status-dot done" />
                   <span>Risk Engine</span>
                   <span
                     style={{
@@ -407,7 +450,7 @@ export default function ConfigPage() {
                   </span>
                 </div>
                 <div className="config-status-item">
-                  <span className="status-indicator idle" />
+                  <span className="config-status-dot idle" />
                   <span>ข้อมูลตลาด</span>
                   <span
                     style={{

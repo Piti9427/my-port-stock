@@ -5,6 +5,7 @@ import {
   UserButton as RealUserButton,
   useAuth as useRealAuth,
 } from '@clerk/react';
+import PropTypes from 'prop-types';
 import { isDevAuthBypassEnabled, shouldUseClerkProvider } from './devAuth';
 
 export function AppAuthProvider({ children, publishableKey, appearance }) {
@@ -19,6 +20,12 @@ export function AppAuthProvider({ children, publishableKey, appearance }) {
   );
 }
 
+AppAuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+  publishableKey: PropTypes.string,
+  appearance: PropTypes.object,
+};
+
 export function Show({ when, children }) {
   if (!isDevAuthBypassEnabled()) {
     return <RealShow when={when}>{children}</RealShow>;
@@ -26,6 +33,11 @@ export function Show({ when, children }) {
 
   return when === 'signed-in' ? children : null;
 }
+
+Show.propTypes = {
+  when: PropTypes.string.isRequired,
+  children: PropTypes.node,
+};
 
 export function UserButton() {
   if (isDevAuthBypassEnabled()) {
@@ -42,6 +54,10 @@ export function SignInButton({ children, ...props }) {
 
   return <RealSignInButton {...props}>{children}</RealSignInButton>;
 }
+
+SignInButton.propTypes = {
+  children: PropTypes.node,
+};
 
 export function useAuth() {
   if (isDevAuthBypassEnabled()) {
