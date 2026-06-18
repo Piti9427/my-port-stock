@@ -212,3 +212,31 @@ Use a `Full Investment Dashboard` only when the user asks for a full memo, pre-t
 8. `Options with Pros / Cons and Recommendation`
 9. `Observability / Verification Steps`
 10. `Actionable Next Steps`
+
+## Cursor Cloud specific instructions
+
+These notes describe how to develop/run the actual web application in this repo (separate from the investment-persona behavior above). The startup update script already runs `npm install` at the root and in `frontend/`.
+
+### Services
+
+- Backend: Express API in `backend/server.js` (entry; also mounts `backend/src/routes/api.js`). It serves `frontend/dist` statically and exposes a WebSocket bus at `/ws/agent-events`.
+- Frontend: Vite + React app in `frontend/` (multi-page dashboard, Thai UI).
+- Run both together with `npm run dev` (root) — uses `concurrently` to start the backend on `PORT=8080` (`HOST` defaults to `127.0.0.1`) and Vite on `5173`. Vite proxies `/api` and `/ws` to `127.0.0.1:8080` (see `frontend/vite.config.js`), so always drive the app through the Vite origin in dev.
+- Open the dev UI at `http://localhost:5173` (Vite binds IPv6 `::1` + `127.0.0.1`; use the `localhost` hostname rather than a bare `127.0.0.1` to avoid intermittent connect issues).
+- Standard scripts live in `package.json` (root: `start`, `start:backend`, `start:frontend`, `dev`, `test`) and `frontend/package.json` (`dev`, `build`, `lint`, `preview`). Reference those instead of memorizing commands.
+
+### Secrets / external data (non-obvious)
+
+- No secrets are required to boot. `SUPABASE_URL`/`SUPABASE_ANON_KEY` and `GEMINI_API_KEY` all have built-in mock fallbacks (`backend/src/db/supabaseClient.js`, `backend/src/services/aiAnalyst.js`); without a real `GEMINI_API_KEY` the analyst returns deterministic mock verdicts.
+- Live prices come from Yahoo Finance via `yahoo-finance2` and need outbound internet. `/api/price/:ticker` (used by the Market Explorer) and `/api/analyze` work here.
+- `/api/quote/:ticker` and `/api/packet/:ticker` require two agreeing Tier‑2 sources (Nasdaq + Stooq). Those endpoints often return `{"status":"INSUFFICIENT_DATA"}` in this sandbox because Nasdaq/Stooq are network-restricted; this is expected, not a regression.
+
+### Build / test / lint caveats (pre-existing, not environment issues)
+
+- `frontend/dist` is only needed for the backend's static serving and for `tests/server.test.js`. Dev mode does not need it; build with `npm run build --prefix frontend` when you need the production bundle.
+- `npm test` (root) currently has pre-existing failures unrelated to environment setup: `tests/aiAnalyst.test.js`, `tests/api.test.js`, `tests/marketData.test.js`, and `tests/supabaseClient.test.js` have a quote typo in their `require("...')` lines, and `tests/Dashboard.smoke.test.js` uses `describe` without importing it. `tests/server.test.js` only passes after `frontend/dist` exists. `tests/priceGate.test.js` and `tests/decisionEngine.test.js` pass.
+- `npm run lint --prefix frontend` runs but reports pre-existing lint errors in several pages/components.
+
+### Known application bug (do not assume you broke it)
+
+- Clicking "สั่งวิเคราะห์ด้วย AI" (Analyze) on the Dashboard crashes the React tree with "Objects are not valid as a React child". Root cause: two `/api/analyze` handlers exist; the router in `backend/src/routes/api.js` is mounted first and returns a nested `{ ticker, price, analysis: { decision_snapshot, analysis } }` shape, but `VerdictCard` in `frontend/src/pages/DashboardPage.jsx` expects the flatter shape from `backend/server.js` and renders the nested `analysis` object directly. The Market Explorer live-quote flow (`/api/price/:ticker`) is unaffected and is the reliable end-to-end smoke check.
