@@ -16,6 +16,7 @@ artifacts/playwright-mcp/
 .codegraph/
 .playwright-cli/
 .sonarlint/
+.sonar-analyze-temp/
 .vscode/
 
 # Supabase
