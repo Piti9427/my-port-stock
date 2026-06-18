@@ -28,7 +28,7 @@ function parseMoney(value) {
     return null;
   }
 
-  const normalized = value.replace(/[$,%\s,]/g, "");
+  const normalized = value.replace(/[$%\s,]/g, "");
   if (!normalized || normalized.toUpperCase() === "N/A") {
     return null;
   }
@@ -204,8 +204,8 @@ function buildNasdaqQuoteSource(ticker, payload) {
     return insufficientData("Nasdaq cross-check supports US equity symbols only");
   }
 
-  const quoteData = payload && payload.data;
-  const primaryData = quoteData && quoteData.primaryData;
+  const quoteData = payload?.data;
+  const primaryData = quoteData?.primaryData;
 
   if (!primaryData || typeof primaryData !== "object") {
     return insufficientData("Nasdaq returned no quote data");

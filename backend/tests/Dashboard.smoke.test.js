@@ -1,8 +1,8 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 describe('Dashboard Component Check', () => {
   it('should exist and export default', () => {
