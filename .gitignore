@@ -17,3 +17,8 @@ artifacts/playwright-mcp/
 .playwright-cli/
 .sonarlint/
 .vscode/
+
+# Supabase
+supabase/.temp/
+supabase/.env
+.temp/
