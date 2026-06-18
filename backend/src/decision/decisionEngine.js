@@ -28,7 +28,7 @@ function capPoorModeFit(agentResult) {
     return agentResult;
   }
 
-  const modeFit = String(agentResult.mode_fit || agentResult["Mode Fit"] || "").toLowerCase();
+  const modeFit = String(agentResult?.mode_fit ?? agentResult?.["Mode Fit"] ?? "").toLowerCase();
   const score = Number(agentResult.score);
 
   if (modeFit === "poor" && Number.isFinite(score) && score > 5) {
@@ -43,8 +43,8 @@ function capPoorModeFit(agentResult) {
 }
 
 function hasInsufficientSubAgent(agentResults) {
-  return Object.values(agentResults || {}).some(
-    (result) => result && result.status === "INSUFFICIENT_DATA",
+  return Object.values(agentResults ?? {}).some(
+    (result) => result?.status === "INSUFFICIENT_DATA",
   );
 }
 
@@ -60,10 +60,10 @@ function calculateConvictionScore(decisionMode, agentResults = {}) {
   let totalWeight = 0;
 
   for (const [key, weight] of Object.entries(weights)) {
-    const rawScore = normalized[key] && normalized[key].score;
+    const rawScore = normalized[key]?.score;
     const score =
       rawScore === null || rawScore === undefined || rawScore === ""
-        ? NaN
+        ? Number.NaN
         : Number(rawScore);
     if (Number.isFinite(score)) {
       weightedScore += score * weight;
@@ -104,78 +104,158 @@ function buildDefaultAgentResults(packet) {
   };
 }
 
-function evaluateDecision(packet, options = {}) {
-  const decisionMode = normalizeDecisionMode(packet.decision_mode || options.decisionMode);
-  const agentResults = options.agentResults || buildDefaultAgentResults(packet);
-  const scoreResult = calculateConvictionScore(decisionMode, agentResults);
+function isHeldOrRepeatTicker(packet) {
+  const portfolio = packet.portfolio_context;
+  const journal = packet.journal_context;
+  return Boolean(portfolio?.is_held || (portfolio && journal?.is_repeat_ticker));
+}
+
+function collectDecisionBlockers(packet, isHeldOrRepeat) {
   const blockers = [];
-  const warnings = [];
 
   if (packet.current_price_acceptance_gate !== "pass") {
     blockers.push("Current Price Acceptance Gate failed");
   }
 
-  const isHeldOrRepeat =
-    packet.portfolio_context &&
-    (packet.portfolio_context.is_held ||
-      (packet.journal_context && packet.journal_context.is_repeat_ticker));
-
-  if (isHeldOrRepeat && !packet.journal_context.journal_checked) {
+  if (isHeldOrRepeat && packet.journal_context?.journal_checked !== true) {
     blockers.push("Held/repeat ticker requires journal check");
   }
 
-  if (packet.journal_context && packet.journal_context.unresolved_issues.length > 0) {
+  if ((packet.journal_context?.unresolved_issues?.length ?? 0) > 0) {
     blockers.push("Journal has unresolved risk plan or thesis verification items");
   }
+
+  return blockers;
+}
+
+function hasExecutableRiskPlan(riskPlan) {
+  return Boolean(
+    riskPlan &&
+      Number.isFinite(Number(riskPlan.stop_loss)) &&
+      Number.isFinite(Number(riskPlan.hard_risk_thb)) &&
+      Number(riskPlan.rr_ratio) >= 2,
+  );
+}
+
+function thesisBlockerVerdict(decisionMode, blockers) {
+  if (!blockers.some((blocker) => /thesis/i.test(blocker))) {
+    return null;
+  }
+
+  const verdict = decisionMode === "Existing Position / Exit Review" ? "Exit Review" : "Wait";
+  return { verdict, trafficLight: verdict === "Exit Review" ? "red" : "yellow" };
+}
+
+function lowScoreVerdict(decisionMode, score) {
+  if (score === null || score >= 5) {
+    return null;
+  }
+
+  return {
+    verdict: decisionMode === "Existing Position / Exit Review" ? "Trim" : "Avoid",
+    trafficLight: "red",
+  };
+}
+
+function highScoreVerdict(isHeldOrRepeat, blockers, warnings, score, hasRiskPlan) {
+  if (score === null || score < 7 || blockers.length > 0 || warnings.length > 0 || !hasRiskPlan) {
+    return null;
+  }
+
+  return { verdict: isHeldOrRepeat ? "Hold" : "Buy", trafficLight: "green" };
+}
+
+function exitReviewVerdict(decisionMode, isHeldOrRepeat, blockers) {
+  if (decisionMode !== "Existing Position / Exit Review" || !isHeldOrRepeat) {
+    return null;
+  }
+
+  return {
+    verdict: blockers.length > 0 ? "Exit Review" : "Hold",
+    trafficLight: blockers.length > 0 ? "red" : "yellow",
+  };
+}
+
+function holdWaitTraffic(verdict) {
+  if (verdict === "Hold" || verdict === "Wait" || verdict === "Exit Review") {
+    return verdict === "Exit Review" ? "red" : "yellow";
+  }
+
+  return null;
+}
+
+function resolveVerdict({
+  decisionMode,
+  isHeldOrRepeat,
+  blockers,
+  warnings,
+  score,
+  hasRiskPlan,
+}) {
+  let verdict = "Wait";
+  let trafficLight = "yellow";
+
+  const exitVerdict = exitReviewVerdict(decisionMode, isHeldOrRepeat, blockers);
+  if (exitVerdict) {
+    ({ verdict, trafficLight } = exitVerdict);
+  }
+
+  const thesisVerdict = thesisBlockerVerdict(decisionMode, blockers);
+  if (thesisVerdict) {
+    ({ verdict, trafficLight } = thesisVerdict);
+  }
+
+  const weakScoreVerdict = lowScoreVerdict(decisionMode, score);
+  if (weakScoreVerdict) {
+    ({ verdict, trafficLight } = weakScoreVerdict);
+  }
+
+  const trafficOverride = holdWaitTraffic(verdict);
+  if (trafficOverride) {
+    trafficLight = trafficOverride;
+  }
+
+  const strongScoreVerdict = highScoreVerdict(
+    isHeldOrRepeat,
+    blockers,
+    warnings,
+    score,
+    hasRiskPlan,
+  );
+  if (strongScoreVerdict) {
+    ({ verdict, trafficLight } = strongScoreVerdict);
+  }
+
+  return { verdict, trafficLight };
+}
+
+function evaluateDecision(packet, options = {}) {
+  const decisionMode = normalizeDecisionMode(packet.decision_mode || options.decisionMode);
+  const agentResults = options.agentResults || buildDefaultAgentResults(packet);
+  const scoreResult = calculateConvictionScore(decisionMode, agentResults);
+  const isHeldOrRepeat = isHeldOrRepeatTicker(packet);
+  const blockers = collectDecisionBlockers(packet, isHeldOrRepeat);
+  const warnings = [];
 
   if (hasInsufficientSubAgent(agentResults)) {
     warnings.push("At least one sub-agent returned INSUFFICIENT_DATA");
   }
 
-  const hasExecutableRiskPlan =
-    options.riskPlan &&
-    Number.isFinite(Number(options.riskPlan.stop_loss)) &&
-    Number.isFinite(Number(options.riskPlan.hard_risk_thb)) &&
-    Number(options.riskPlan.rr_ratio) >= 2;
-
-  if (!hasExecutableRiskPlan) {
+  const riskPlanReady = hasExecutableRiskPlan(options.riskPlan);
+  if (!riskPlanReady) {
     warnings.push("No executable stop-loss, R/R >= 1:2, and hard THB risk plan supplied");
   }
 
-  let verdict = "Wait";
-  let trafficLight = "yellow";
-
-  if (decisionMode === "Existing Position / Exit Review" && isHeldOrRepeat) {
-    verdict = blockers.length > 0 ? "Exit Review" : "Hold";
-  }
-
-  if (blockers.some((blocker) => /thesis/i.test(blocker))) {
-    verdict = decisionMode === "Existing Position / Exit Review" ? "Exit Review" : "Wait";
-  }
-
-  if (packet.current_price_acceptance_gate !== "pass") {
-    verdict = "Wait";
-  }
-
-  if (scoreResult.score !== null && scoreResult.score < 5) {
-    verdict = decisionMode === "Existing Position / Exit Review" ? "Trim" : "Avoid";
-    trafficLight = "red";
-  }
-
-  if (verdict === "Hold" || verdict === "Wait" || verdict === "Exit Review") {
-    trafficLight = verdict === "Exit Review" ? "red" : "yellow";
-  }
-
-  if (
-    scoreResult.score !== null &&
-    scoreResult.score >= 7 &&
-    blockers.length === 0 &&
-    warnings.length === 0 &&
-    hasExecutableRiskPlan
-  ) {
-    verdict = isHeldOrRepeat ? "Hold" : "Buy";
-    trafficLight = "green";
-  }
+  const { verdict: initialVerdict, trafficLight } = resolveVerdict({
+    decisionMode,
+    isHeldOrRepeat,
+    blockers,
+    warnings,
+    score: scoreResult.score,
+    hasRiskPlan: riskPlanReady,
+  });
+  const verdict =
+    packet.current_price_acceptance_gate === "pass" ? initialVerdict : "Wait";
 
   const gateStatus = blockers.length === 0 ? "pass" : "fail";
   const immediateNextAction =

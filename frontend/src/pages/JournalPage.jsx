@@ -176,7 +176,7 @@ export default function JournalPage() {
                     <td style={{ color: 'var(--text-secondary)' }}>
                       {t.date
                         ? t.date
-                        : t.created_at && !isNaN(Date.parse(t.created_at))
+                        : t.created_at && !Number.isNaN(Date.parse(t.created_at))
                           ? new Date(t.created_at).toLocaleString('th-TH', {
                               dateStyle: 'short',
                               timeStyle: 'short',
@@ -198,10 +198,10 @@ export default function JournalPage() {
                     <td>{t.shares || '-'}</td>
                     <td className="price-mono">
                       ฿
-                      {Number.isFinite(parseFloat(t.price))
-                        ? parseFloat(t.price).toFixed(2)
-                        : Number.isFinite(parseFloat(t.entry))
-                          ? parseFloat(t.entry).toFixed(2)
+                      {Number.isFinite(Number.parseFloat(t.price))
+                        ? Number.parseFloat(t.price).toFixed(2)
+                        : Number.isFinite(Number.parseFloat(t.entry))
+                          ? Number.parseFloat(t.entry).toFixed(2)
                           : '0.00'}
                     </td>
                     <td>

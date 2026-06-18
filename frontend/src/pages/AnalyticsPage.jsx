@@ -57,6 +57,63 @@ export default function AnalyticsPage() {
     return { total, winners, losers, totalPl, winRate, avgWin, avgLoss };
   }, [filteredClosedTrades]);
 
+  const analyticsBody = (() => {
+    if (loading) {
+      return <div className="empty-state">Loading analytics...</div>;
+    }
+    if (error) {
+      return (
+        <div className="empty-state" role="status" style={{ marginTop: '24px' }}>
+          <div className="empty-title">Insufficient data</div>
+          <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
+          <button className="btn-secondary" onClick={loadData}>
+            Retry
+          </button>
+        </div>
+      );
+    }
+    if (filteredClosedTrades.length === 0) {
+      return (
+        <div className="empty-state" role="status" style={{ marginTop: '24px' }}>
+          <div className="empty-title">Insufficient data</div>
+          <div className="empty-copy">{closedTrades.length === 0 ? 'ไม่มี trade ที่ปิดแล้วใน Supabase' : 'ไม่มี trade ที่ตรงกับ filter นี้'}</div>
+        </div>
+      );
+    }
+    return (
+      <div className="analytics-stats-row" style={{ marginTop: '24px' }}>
+        <div className="glass-panel analytics-stat">
+          <TrendingUp size={18} style={{ color: 'var(--fin-profit)', marginBottom: 10 }} />
+          <div className="kpi-label">อัตราการชนะ</div>
+          <div className="kpi-value kpi-profit">{stats.winRate == null ? '—' : `${stats.winRate}%`}</div>
+          <div className="kpi-sub">
+            {stats.winners}/{stats.total} ไม้ที่ปิดแล้ว
+          </div>
+        </div>
+        <div className="glass-panel analytics-stat">
+          <Award size={18} style={{ color: 'var(--brand-primary)', marginBottom: 10 }} />
+          <div className="kpi-label">กำไร/ขาดทุนที่รับรู้แล้ว</div>
+          <div className={`kpi-value ${stats.totalPl >= 0 ? 'kpi-profit' : 'kpi-loss'}`}>
+            {stats.total === 0 ? '—' : `${stats.totalPl >= 0 ? '+' : ''}฿${stats.totalPl.toLocaleString()}`}
+          </div>
+          <div className="kpi-sub">เฉพาะไม้ที่ปิดสถานะแล้ว</div>
+        </div>
+        <div className="glass-panel analytics-stat">
+          <Activity size={18} aria-hidden="true" style={{ color: 'var(--fin-warning)', marginBottom: 10 }} />
+          <div className="kpi-label">กำไรเฉลี่ย / ขาดทุนเฉลี่ย</div>
+          <div className="kpi-value kpi-neutral">{stats.total === 0 ? '—' : `฿${stats.avgWin.toFixed(0)} / ฿${stats.avgLoss.toFixed(0)}`}</div>
+          <div className="kpi-sub">คำนวณจาก journal ที่ปิดแล้ว</div>
+        </div>
+        <div className="glass-panel analytics-stat">
+          <TrendingDown size={18} aria-hidden="true" style={{ color: 'var(--fin-loss)', marginBottom: 10 }} />
+          <div className="kpi-label">ขาดทุนสะสมสูงสุด (Max Drawdown)</div>
+          <div className="kpi-value kpi-neutral">—</div>
+          <div className="kpi-sub">ต้องมี equity snapshots ก่อนคำนวณ</div>
+        </div>
+      </div>
+    );
+  })();
+
   return (
     <div className="analytics-page">
       <header className="glass-panel analytics-header">
@@ -125,53 +182,7 @@ export default function AnalyticsPage() {
         )}
       </header>
 
-      {loading ? (
-        <div className="empty-state">Loading analytics...</div>
-      ) : error ? (
-        <div className="empty-state" role="status" style={{ marginTop: '24px' }}>
-          <div className="empty-title">Insufficient data</div>
-          <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
-          <button className="btn-secondary" onClick={loadData}>
-            Retry
-          </button>
-        </div>
-      ) : filteredClosedTrades.length === 0 ? (
-        <div className="empty-state" role="status" style={{ marginTop: '24px' }}>
-          <div className="empty-title">Insufficient data</div>
-          <div className="empty-copy">{closedTrades.length === 0 ? 'ไม่มี trade ที่ปิดแล้วใน Supabase' : 'ไม่มี trade ที่ตรงกับ filter นี้'}</div>
-        </div>
-      ) : (
-        <div className="analytics-stats-row" style={{ marginTop: '24px' }}>
-          <div className="glass-panel analytics-stat">
-            <TrendingUp size={18} style={{ color: 'var(--fin-profit)', marginBottom: 10 }} />
-            <div className="kpi-label">อัตราการชนะ</div>
-            <div className="kpi-value kpi-profit">{stats.winRate == null ? '—' : `${stats.winRate}%`}</div>
-            <div className="kpi-sub">
-              {stats.winners}/{stats.total} ไม้ที่ปิดแล้ว
-            </div>
-          </div>
-          <div className="glass-panel analytics-stat">
-            <Award size={18} style={{ color: 'var(--brand-primary)', marginBottom: 10 }} />
-            <div className="kpi-label">กำไร/ขาดทุนที่รับรู้แล้ว</div>
-            <div className={`kpi-value ${stats.totalPl >= 0 ? 'kpi-profit' : 'kpi-loss'}`}>
-              {stats.total === 0 ? '—' : `${stats.totalPl >= 0 ? '+' : ''}฿${stats.totalPl.toLocaleString()}`}
-            </div>
-            <div className="kpi-sub">เฉพาะไม้ที่ปิดสถานะแล้ว</div>
-          </div>
-          <div className="glass-panel analytics-stat">
-            <Activity size={18} aria-hidden="true" style={{ color: 'var(--fin-warning)', marginBottom: 10 }} />
-            <div className="kpi-label">กำไรเฉลี่ย / ขาดทุนเฉลี่ย</div>
-            <div className="kpi-value kpi-neutral">{stats.total === 0 ? '—' : `฿${stats.avgWin.toFixed(0)} / ฿${stats.avgLoss.toFixed(0)}`}</div>
-            <div className="kpi-sub">คำนวณจาก journal ที่ปิดแล้ว</div>
-          </div>
-          <div className="glass-panel analytics-stat">
-            <TrendingDown size={18} aria-hidden="true" style={{ color: 'var(--fin-loss)', marginBottom: 10 }} />
-            <div className="kpi-label">ขาดทุนสะสมสูงสุด (Max Drawdown)</div>
-            <div className="kpi-value kpi-neutral">—</div>
-            <div className="kpi-sub">ต้องมี equity snapshots ก่อนคำนวณ</div>
-          </div>
-        </div>
-      )}
+      {analyticsBody}
 
       {!loading && !error && filteredClosedTrades.length > 0 && (
         <>

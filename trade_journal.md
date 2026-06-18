@@ -13,10 +13,9 @@ Track every trade thesis, execution rule, invalidation point, and post-exit less
 
 ## Active Trades
 
-| Entry Date | Ticker | Action | Entry | Stop-Loss | Target | R/R | Thesis Summary | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026-05-28 | $NFLX | BUY/Add | $85.75 | $79.90 | $95.00 | 1:1.6 | Added $61.50 / 0.7172012 shares; Drop below 50MA, target $95 gap fill. Risk ~500 THB. | Active |
-| 2026-05-28 | $NVDA | BUY | $212.65 | $198.00 | $298.00 | 1:5.8 | New $307.50 / 1.4460381 share AI core starter; Retest 50MA, target fair value. Risk ~760 THB. | Active |
+> Runtime trade journal rows migrated to Supabase on 2026-06-17.
+> Do not store active personal entries, share counts, entry prices, stops, targets, or transaction-sized rows in this markdown.
+> Use Supabase `journal` as the event source. This file keeps templates, SOP notes, and post-mortem context only.
 
 ## Active Thesis Backlog
 

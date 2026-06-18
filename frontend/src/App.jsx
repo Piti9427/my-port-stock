@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import * as Sentry from '@sentry/react';
 import { LayoutDashboard, Bot, BookOpen, ShieldAlert, BarChart2, Crosshair, Settings2 } from 'lucide-react';
 import { Show, UserButton } from './auth/clerkAdapter';
@@ -69,7 +70,7 @@ function AuthenticatedShell({ showUserButton = true }) {
           ))}
         </div>
         <div className="side-nav-status">
-          <div className="status-indicator">
+          <div className="side-nav-live">
             <span className="status-dot" aria-hidden="true" />
             <span className="status-text">Live Systems</span>
           </div>
@@ -96,6 +97,10 @@ function AuthenticatedShell({ showUserButton = true }) {
     </div>
   );
 }
+
+AuthenticatedShell.propTypes = {
+  showUserButton: PropTypes.bool,
+};
 
 function App() {
   const devAuthBypass = isDevAuthBypassEnabled();

@@ -64,7 +64,7 @@ function AIFloorCanvas() {
         width: 640,
         height: 480,
         backgroundColor: 0x0f172a,
-        resolution: window.devicePixelRatio || 1,
+        resolution: globalThis.devicePixelRatio || 1,
         autoDensity: true,
       });
       if (containerRef.current) {
@@ -188,7 +188,7 @@ function AIFloorCanvas() {
       appRef.current.ticker.add(animateSprites);
     }
     return () => {
-      if (appRef.current && appRef.current.ticker) appRef.current.ticker.remove(animateSprites);
+      appRef.current?.ticker?.remove(animateSprites);
     };
   }, [agentStates]);
 
@@ -213,12 +213,11 @@ export default function AIFloorPage() {
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
-    if (lastEvent && lastEvent.message) {
-      setLogs((prev) => {
-        const newLogs = [...prev, { time: new Date().toLocaleTimeString(), msg: lastEvent.message }];
-        return newLogs.slice(-20); // Keep last 20 logs
-      });
-    }
+    if (!lastEvent?.message) return;
+    setLogs((prev) => {
+      const newLogs = [...prev, { time: new Date().toLocaleTimeString(), msg: lastEvent.message }];
+      return newLogs.slice(-20);
+    });
   }, [lastEvent]);
 
   // Helper to count active agents
@@ -310,8 +309,8 @@ export default function AIFloorPage() {
 
                     return (
                       <div key={id} className="status-agent-item">
-                        <div className={`status-indicator ${indicatorClass}`} />
-                        <span className={`status-agent-name ${indicatorClass !== 'idle' ? 'active' : ''}`}>{cfg.name}</span>
+                        <div className={`config-status-dot ${indicatorClass}`} />
+                        <span className={`status-agent-name ${indicatorClass === 'idle' ? '' : 'active'}`}>{cfg.name}</span>
                       </div>
                     );
                   })}
@@ -348,8 +347,8 @@ export default function AIFloorPage() {
               gap: '8px',
             }}
           >
-            {logs.map((log, i) => (
-              <div key={i} style={{ fontSize: '0.85rem' }}>
+            {logs.map((log) => (
+              <div key={`${log.time}-${log.msg}`} style={{ fontSize: '0.85rem' }}>
                 <span style={{ color: 'var(--text-secondary)', marginRight: '8px' }}>[{log.time}]</span>
                 <span>{log.msg}</span>
               </div>

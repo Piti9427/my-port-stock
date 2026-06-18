@@ -23,19 +23,18 @@ function getPriceDifferencePct(primaryPrice, secondaryPrice) {
 
 function isValidQuoteSource(source) {
   return (
-    source &&
-    source.status !== "INSUFFICIENT_DATA" &&
-    typeof source.source === "string" &&
-    source.tier === "Tier 2" &&
-    isFiniteNumber(source.last_price) &&
-    Boolean(source.quote_timestamp)
+    source?.status !== "INSUFFICIENT_DATA" &&
+    typeof source?.source === "string" &&
+    source?.tier === "Tier 2" &&
+    isFiniteNumber(source?.last_price) &&
+    Boolean(source?.quote_timestamp)
   );
 }
 
 function buildTwoSourceQuotePacket(ticker, sources, asOf = new Date()) {
   const validSources = sources.filter(isValidQuoteSource);
   const unavailableSources = sources
-    .filter((source) => source && source.status === "INSUFFICIENT_DATA")
+    .filter((source) => source?.status === "INSUFFICIENT_DATA")
     .map((source) => source.error_details);
 
   if (validSources.length < 2) {

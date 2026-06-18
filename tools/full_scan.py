@@ -7,7 +7,7 @@ warnings.filterwarnings('ignore')
 with open('/Users/nopparuj/my-agents/MyPortStock/stock_portfolio.md', 'r') as f:
     text = f.read()
 
-tickers = list(set([m.group(1) for m in re.finditer(r'\$([A-Z]+)', text)]))
+tickers = list({m.group(1) for m in re.finditer(r'\$([A-Z]+)', text)})
 print(f"Found {len(tickers)} unique tickers. Scanning...")
 
 results = []

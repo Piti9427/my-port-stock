@@ -36,7 +36,8 @@ function getRequestUserId(req) {
   if (typeof req.auth === "function") {
     try {
       return req.auth()?.userId || null;
-    } catch (_) {
+    } catch (err) {
+      console.error('Error resolving request auth userId:', err);
       return null;
     }
   }
@@ -299,6 +300,117 @@ app.get("/api/packet/:ticker", async (req, res) => {
   return res.status(200).json(packet);
 });
 
+function broadcastAnalyzeKickoff(ticker, agents, totalAgents) {
+  broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'TYPING', ticker, message: `Dispatching ${totalAgents} sub-agents for ${ticker}...` });
+  agents.forEach((agent) => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SPAWNED', ticker }));
+  agents.forEach((agent, idx) => {
+    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'WALKING', ticker }), idx * 400);
+    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SITTING', ticker }), idx * 400 + 600);
+    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'TYPING', ticker, message: getAgentWorkingMessage(agent, ticker) }), idx * 400 + 900);
+  });
+}
+
+function buildManualVerifiedPacket(ticker, manualPrice, decisionMode) {
+  const quotePacket = {
+    as_of: new Date().toISOString(),
+    ticker,
+    last_price: manualPrice,
+    price_sources: ["Manual User Input (Tier 1)"],
+    price_source_tiers: ["Tier 1"],
+    quote_timestamp: new Date().toISOString(),
+    market_session: "Regular",
+    current_price_acceptance_gate: "pass",
+  };
+  return buildVerifiedDataPacket(ticker, quotePacket, {
+    decisionMode,
+    journalContext: readJournalContext(ticker),
+    portfolioContext: readTickerPortfolioContext(ticker),
+  });
+}
+
+function buildAgentResultsFromGemini(geminiData) {
+  if (geminiData?.status === "INSUFFICIENT_DATA" || !geminiData?.sub_agent_scores) {
+    return null;
+  }
+
+  const scores = geminiData.sub_agent_scores;
+  return {
+    fundamental: {
+      status: scores.fundamental ? "SUCCESS" : "INSUFFICIENT_DATA",
+      score: scores.fundamental?.score ?? null,
+      mode_fit: scores.fundamental?.mode_fit ?? "Mixed",
+      reason: scores.fundamental?.reason ?? "",
+    },
+    technical: {
+      status: scores.technical ? "SUCCESS" : "INSUFFICIENT_DATA",
+      score: scores.technical?.score ?? null,
+      mode_fit: scores.technical?.mode_fit ?? "Mixed",
+      reason: scores.technical?.reason ?? "",
+    },
+    macro_flow: {
+      status: scores.macro_flow ? "SUCCESS" : "INSUFFICIENT_DATA",
+      score: scores.macro_flow?.score ?? null,
+      mode_fit: scores.macro_flow?.mode_fit ?? "Mixed",
+      reason: scores.macro_flow?.reason ?? "",
+    },
+  };
+}
+
+function mergeGeminiAnalysis(analysis, geminiData) {
+  if (geminiData.status !== "INSUFFICIENT_DATA" && geminiData.decision_snapshot) {
+    analysis.decision_snapshot.score = geminiData.decision_snapshot.score || analysis.decision_snapshot.score;
+    if (geminiData.decision_snapshot.one_line_reason && !analysis.decision_snapshot.one_line_reason) {
+      analysis.decision_snapshot.one_line_reason = geminiData.decision_snapshot.one_line_reason;
+    }
+    analysis.analysis = geminiData.analysis;
+    return;
+  }
+
+  if (geminiData.status === "INSUFFICIENT_DATA") {
+    analysis.adaptive_drilldown.warnings.push(geminiData.error_details || "AI analyst unavailable");
+  }
+}
+
+function broadcastAnalyzeCompletion(ticker, agents, totalAgents, analysis) {
+  let completed = 0;
+  agents.forEach((agent, idx) => {
+    setTimeout(() => {
+      completed++;
+      broadcast({ type: 'ANALYSIS_PROGRESS', agent, ticker, payload: { progress: completed, total: totalAgents } });
+      broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'PRESENTING', ticker });
+      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'DONE', ticker }), 800);
+      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'EXITED', ticker }), 1500);
+    }, (totalAgents - idx) * 600 + 1000);
+  });
+
+  setTimeout(() => {
+    broadcast({
+      type: 'ANALYSIS_COMPLETE',
+      agent: 'cio',
+      ticker,
+      payload: { verdict: analysis.decision_snapshot?.verdict || 'Complete', analysis },
+    });
+    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'PRESENTING', ticker, message: `Analysis complete for ${ticker}` });
+    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }), 2000);
+  }, totalAgents * 600 + 2500);
+}
+
+function buildInsufficientAnalyzeResponse(packet, ticker, decisionMode) {
+  return {
+    ...packet,
+    decision_snapshot: {
+      traffic_light_status: "yellow",
+      verdict: "Wait",
+      ticker,
+      decision_mode: decisionMode,
+      score: null,
+      gate_status: "fail",
+      one_line_reason: packet.error_details,
+      immediate_next_action: "Provide broker/user-visible quote or wait for two accepted Tier 2 sources",
+    },
+  };
+}
+
 app.post("/api/analyze", async (req, res) => {
   const ticker = normalizeTicker(req.body?.ticker);
   if (!ticker) {
@@ -308,56 +420,19 @@ app.post("/api/analyze", async (req, res) => {
   const decisionMode = normalizeDecisionMode(req.body.decision_mode);
   const agents = getAgentsForMode(decisionMode);
   const totalAgents = agents.length;
-  let completed = 0;
 
   try {
-    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'TYPING', ticker, message: `Dispatching ${totalAgents} sub-agents for ${ticker}...` });
-    agents.forEach(agent => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SPAWNED', ticker }));
-    agents.forEach((agent, idx) => {
-      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'WALKING', ticker }), idx * 400);
-      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SITTING', ticker }), idx * 400 + 600);
-      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'TYPING', ticker, message: getAgentWorkingMessage(agent, ticker) }), idx * 400 + 900);
-    });
+    broadcastAnalyzeKickoff(ticker, agents, totalAgents);
 
-    let packet;
     const manualPrice = req.body.manual_price ? Number.parseFloat(req.body.manual_price) : null;
-    
-    if (manualPrice && !Number.isNaN(manualPrice) && manualPrice > 0 && manualPrice < 1000000) {
-       const quotePacket = {
-          as_of: new Date().toISOString(),
-          ticker,
-          last_price: manualPrice,
-          price_sources: ["Manual User Input (Tier 1)"],
-          price_source_tiers: ["Tier 1"],
-          quote_timestamp: new Date().toISOString(),
-          market_session: "Regular",
-          current_price_acceptance_gate: "pass",
-       };
-       packet = buildVerifiedDataPacket(ticker, quotePacket, {
-          decisionMode,
-          journalContext: readJournalContext(ticker),
-          portfolioContext: readTickerPortfolioContext(ticker),
-       });
-    } else {
-       packet = await getVerifiedPacket(ticker, decisionMode);
-    }
+    const packet =
+      manualPrice && !Number.isNaN(manualPrice) && manualPrice > 0 && manualPrice < 1000000
+        ? buildManualVerifiedPacket(ticker, manualPrice, decisionMode)
+        : await getVerifiedPacket(ticker, decisionMode);
 
     if (packet.status === "INSUFFICIENT_DATA") {
       broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker });
-      return res.status(200).json({
-        ...packet,
-        decision_snapshot: {
-          traffic_light_status: "yellow",
-          verdict: "Wait",
-          ticker,
-          decision_mode: decisionMode,
-          score: null,
-          gate_status: "fail",
-          one_line_reason: packet.error_details,
-          immediate_next_action:
-            "Provide broker/user-visible quote or wait for two accepted Tier 2 sources",
-        },
-      });
+      return res.status(200).json(buildInsufficientAnalyzeResponse(packet, ticker, decisionMode));
     }
 
     const oracleData = await runMarketOracle(ticker);
@@ -365,67 +440,16 @@ app.post("/api/analyze", async (req, res) => {
 
     packet.fundamental_packet = { ...packet.fundamental_packet, gemini_scores: geminiData, oracle: oracleData };
 
-    // Format agentResults from Gemini if available
-    let agentResults = null;
-    if (geminiData && geminiData.status !== "INSUFFICIENT_DATA" && geminiData.sub_agent_scores) {
-      agentResults = {
-        fundamental: {
-          status: geminiData.sub_agent_scores.fundamental ? "SUCCESS" : "INSUFFICIENT_DATA",
-          score: geminiData.sub_agent_scores.fundamental?.score ?? null,
-          mode_fit: geminiData.sub_agent_scores.fundamental?.mode_fit ?? "Mixed",
-          reason: geminiData.sub_agent_scores.fundamental?.reason ?? "",
-        },
-        technical: {
-          status: geminiData.sub_agent_scores.technical ? "SUCCESS" : "INSUFFICIENT_DATA",
-          score: geminiData.sub_agent_scores.technical?.score ?? null,
-          mode_fit: geminiData.sub_agent_scores.technical?.mode_fit ?? "Mixed",
-          reason: geminiData.sub_agent_scores.technical?.reason ?? "",
-        },
-        macro_flow: {
-          status: geminiData.sub_agent_scores.macro_flow ? "SUCCESS" : "INSUFFICIENT_DATA",
-          score: geminiData.sub_agent_scores.macro_flow?.score ?? null,
-          mode_fit: geminiData.sub_agent_scores.macro_flow?.mode_fit ?? "Mixed",
-          reason: geminiData.sub_agent_scores.macro_flow?.reason ?? "",
-        }
-      };
-    }
-
+    const agentResults = buildAgentResultsFromGemini(geminiData);
     const analysis = evaluateDecision(packet, {
       riskPlan: req.body.risk_plan,
       agentResults: agentResults || undefined,
     });
 
-    if (geminiData.status !== "INSUFFICIENT_DATA" && geminiData.decision_snapshot) {
-       analysis.decision_snapshot.score = geminiData.decision_snapshot.score || analysis.decision_snapshot.score;
-       if (geminiData.decision_snapshot.one_line_reason && !analysis.decision_snapshot.one_line_reason) {
-         analysis.decision_snapshot.one_line_reason = geminiData.decision_snapshot.one_line_reason;
-       }
-       analysis.analysis = geminiData.analysis;
-    } else if (geminiData.status === "INSUFFICIENT_DATA") {
-      analysis.adaptive_drilldown.warnings.push(geminiData.error_details || "AI analyst unavailable");
-    }
+    mergeGeminiAnalysis(analysis, geminiData);
     analysis.deep_analysis = buildDeepAnalysisPayload(oracleData, geminiData);
 
-    agents.forEach((agent, idx) => {
-      setTimeout(() => {
-        completed++;
-        broadcast({ type: 'ANALYSIS_PROGRESS', agent, ticker, payload: { progress: completed, total: totalAgents } });
-        broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'PRESENTING', ticker });
-        setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'DONE', ticker }), 800);
-        setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'EXITED', ticker }), 1500);
-      }, (totalAgents - idx) * 600 + 1000);
-    });
-
-    setTimeout(() => {
-      broadcast({
-        type: 'ANALYSIS_COMPLETE',
-        agent: 'cio',
-        ticker,
-        payload: { verdict: analysis.decision_snapshot?.verdict || 'Complete', analysis },
-      });
-      broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'PRESENTING', ticker, message: `Analysis complete for ${ticker}` });
-      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }), 2000);
-    }, totalAgents * 600 + 2500);
+    broadcastAnalyzeCompletion(ticker, agents, totalAgents, analysis);
 
     return res.status(200).json({
       as_of: new Date().toISOString(),

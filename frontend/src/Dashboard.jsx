@@ -62,6 +62,7 @@ export default function Dashboard() {
         return [{ ticker, ...snapshot }, ...filtered];
       });
     } catch (err) {
+      console.error(`Analysis fetch failed for ${ticker}:`, err);
       setErrors((prev) => ({ ...prev, [ticker]: 'Failed to fetch data' }));
       setResults((prev) => {
         const filtered = prev.filter((r) => r.ticker !== ticker);
@@ -82,6 +83,16 @@ export default function Dashboard() {
     if (s.includes('BUY') || s.includes('ADD')) return 'success';
     if (s.includes('SELL') || s.includes('AVOID')) return 'destructive';
     return 'warning';
+  };
+
+  const signalBadgeClasses = (signalClass) => {
+    if (signalClass === 'success') {
+      return 'bg-status-success-bg text-status-success border border-status-success/20';
+    }
+    if (signalClass === 'destructive') {
+      return 'bg-status-danger-bg text-status-danger border border-status-danger/20';
+    }
+    return 'bg-status-warning-bg text-status-warning border border-status-warning/20';
   };
 
   return (
@@ -185,22 +196,14 @@ export default function Dashboard() {
 
                 <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-xl font-bold tracking-tight">{res.ticker}</CardTitle>
-                  <div
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
-                      signalClass === 'success'
-                        ? 'bg-status-success-bg text-status-success border border-status-success/20'
-                        : signalClass === 'destructive'
-                          ? 'bg-status-danger-bg text-status-danger border border-status-danger/20'
-                          : 'bg-status-warning-bg text-status-warning border border-status-warning/20'
-                    }`}
-                  >
+                  <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${signalBadgeClasses(signalClass)}`}>
                     {res.signal || 'WAIT'}
                   </div>
                 </CardHeader>
 
                 <CardContent className="pb-4">
                   <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-3xl font-light font-mono">${res.last_price || res.price || '---'}</span>
+                    <span className="text-3xl font-light font-mono">${res.last_price ?? res.price ?? '---'}</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3 mb-4">

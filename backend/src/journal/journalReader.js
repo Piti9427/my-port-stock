@@ -1,13 +1,21 @@
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const DEFAULT_JOURNAL_PATH = path.join(process.cwd(), "trade_journal.md");
 const DEFAULT_PORTFOLIO_PATH = path.join(process.cwd(), "stock_portfolio.md");
+const REGEX_SPECIAL = /[.*+?^${}()|[\]\\]/g;
+
+function escapeRegex(value) {
+  return value.replace(REGEX_SPECIAL, String.raw`\$&`);
+}
 
 function readTextFile(filePath) {
   try {
     return fs.readFileSync(filePath, "utf8");
   } catch (error) {
+    if (error?.code !== "ENOENT") {
+      console.warn(`Failed to read ${filePath}:`, error.message);
+    }
     return null;
   }
 }
@@ -22,7 +30,7 @@ function containsTicker(text, ticker) {
   }
 
   const normalizedTicker = stripTickerPrefix(ticker);
-  const pattern = new RegExp(`\\$?${normalizedTicker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+  const pattern = new RegExp(String.raw`\$?${escapeRegex(normalizedTicker)}\b`, "i");
   return pattern.test(text);
 }
 
@@ -54,9 +62,9 @@ function getSection(markdown, heading) {
     return "";
   }
 
-  const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedHeading = escapeRegex(heading);
   const match = markdown.match(
-    new RegExp(`(^|\\n)## ${escapedHeading}[^\\n]*\\n([\\s\\S]*?)(?=\\n## |$)`, "i"),
+    new RegExp(String.raw`(^|\n)## ${escapedHeading}[^\n]*\n([\s\S]*?)(?=\n## |$)`, "i"),
   );
 
   return match ? match[2] : "";

@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Clock, ShieldAlert } from 'lucide-react';
+import { Clock, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../auth/clerkAdapter';
 import { fetchWithAuth } from '../lib/api';
 
 const DATA_STAMP = 'Supabase holdings + market data gateway';
 const DEFAULT_SECTOR_LIMIT = 35;
+
+function sectorDrilldownSubtitle(sector) {
+  if (sector.weight > sector.limit) return 'Highest breach risk';
+  return 'Highest current allocation';
+}
 
 export default function PortfolioRiskPage() {
   const { getToken } = useAuth();
@@ -65,6 +70,70 @@ export default function PortfolioRiskPage() {
     return risk.overLimit[0] || risk.sectors[0] || null;
   }, [risk.sectors, risk.overLimit, selectedSector]);
 
+  const sectorTreemapContent = (() => {
+    if (loading) {
+      return (
+        <div className="empty-state" style={{ padding: '48px 24px' }}>
+          Loading portfolio risk...
+        </div>
+      );
+    }
+    if (error) {
+      return (
+        <div className="empty-state">
+          <div className="empty-title">Insufficient data</div>
+          <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
+          <button className="btn-secondary" onClick={loadData}>
+            Retry
+          </button>
+        </div>
+      );
+    }
+    if (risk.sectors.length === 0) {
+      return (
+        <div className="empty-state">
+          <div className="empty-title">Insufficient data</div>
+          <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
+        </div>
+      );
+    }
+    return (
+      <div className="sector-bars">
+        {risk.sectors.map((sector) => {
+          const pct = Math.min((sector.weight / sector.limit) * 100, 100);
+          const isOver = sector.weight > sector.limit;
+          const barColor = isOver ? 'var(--fin-loss)' : 'var(--fin-profit)';
+          return (
+            <button
+              key={sector.sector}
+              type="button"
+              className="sector-bar-row"
+              onClick={() => setSelectedSector(sector.sector)}
+              aria-pressed={activeSector?.sector === sector.sector}
+              aria-label={`${sector.sector}: ${sector.weight.toFixed(1)} percent of portfolio, limit ${sector.limit} percent`}
+              style={{ textAlign: 'left', width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              <div className="sector-bar-name">{sector.sector}</div>
+              <div className="sector-bar-track">
+                <div className="sector-bar-fill" style={{ transform: `scaleX(${pct / 100})`, background: barColor }} />
+                <div className="sector-bar-limit-marker" style={{ left: '100%' }} />
+              </div>
+              <div className="sector-bar-meta">
+                <span style={{ color: barColor }} className="sector-weight-val">
+                  {sector.weight.toFixed(1)}%
+                </span>
+                <span className="sector-limit-val">/ เพดาน {sector.limit}%</span>
+                <span className="sector-risk-label sr-only" style={{ marginLeft: 8 }}>
+                  {isOver ? 'Over limit' : 'Within limit'}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    );
+  })();
+
   return (
     <div className="risk-page">
       {risk.overLimit.length > 0 && (
@@ -79,7 +148,7 @@ export default function PortfolioRiskPage() {
       <div className="risk-kpi-row">
         <div className="glass-panel risk-kpi-card" style={{ position: 'relative' }}>
           <div className="kpi-label">
-            มูลค่าพอร์ต
+            {'มูลค่าพอร์ต '}
             <span className="data-stamp" style={{ position: 'absolute', top: 24, right: 24 }}>
               <Clock size={10} aria-hidden="true" />
               {DATA_STAMP}
@@ -110,63 +179,12 @@ export default function PortfolioRiskPage() {
           </div>
         </div>
 
-        {loading ? (
-          <div className="empty-state" style={{ padding: '48px 24px' }}>
-            Loading portfolio risk...
-          </div>
-        ) : error ? (
-          <div className="empty-state" role="status">
-            <div className="empty-title">Insufficient data</div>
-            <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
-            <button className="btn-secondary" onClick={loadData}>
-              Retry
-            </button>
-          </div>
-        ) : risk.sectors.length === 0 ? (
-          <div className="empty-state" role="status">
-            <div className="empty-title">Insufficient data</div>
-            <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
-          </div>
-        ) : (
-          <div className="sector-bars">
-            {risk.sectors.map((sector) => {
-              const pct = Math.min((sector.weight / sector.limit) * 100, 100);
-              const isOver = sector.weight > sector.limit;
-              const barColor = isOver ? 'var(--fin-loss)' : 'var(--fin-profit)';
-              return (
-                <button
-                  key={sector.sector}
-                  type="button"
-                  className="sector-bar-row"
-                  onClick={() => setSelectedSector(sector.sector)}
-                  aria-pressed={activeSector?.sector === sector.sector}
-                  aria-label={`${sector.sector}: ${sector.weight.toFixed(1)} percent of portfolio, limit ${sector.limit} percent`}
-                  style={{ textAlign: 'left', width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
-                >
-                  <div className="sector-bar-name">{sector.sector}</div>
-                  <div className="sector-bar-track">
-                    <div className="sector-bar-fill" style={{ transform: `scaleX(${pct / 100})`, background: barColor }} />
-                    <div className="sector-bar-limit-marker" style={{ left: '100%' }} />
-                  </div>
-                  <div className="sector-bar-meta">
-                    <span style={{ color: barColor }} className="sector-weight-val">
-                      {sector.weight.toFixed(1)}%
-                    </span>
-                    <span className="sector-limit-val">/ เพดาน {sector.limit}%</span>
-                    <span className="sector-risk-label sr-only" style={{ marginLeft: 8 }}>
-                      {isOver ? 'Over limit' : 'Within limit'}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {sectorTreemapContent}
 
         {activeSector && (
           <section className="risk-drilldown" aria-label={`${activeSector.sector} holdings`} style={{ marginTop: '24px' }}>
             <div className="panel-heading">Showing: {activeSector.sector}</div>
-            <div className="panel-subtext">{activeSector.weight > activeSector.limit ? 'Highest breach risk' : 'Highest current allocation'}</div>
+            <div className="panel-subtext">{sectorDrilldownSubtitle(activeSector)}</div>
             <table className="risk-holdings-table" style={{ width: '100%', marginTop: '16px', textAlign: 'left' }}>
               <thead>
                 <tr>

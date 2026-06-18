@@ -13,11 +13,11 @@ function buildVerifiedDataPacket(ticker, quotePacket, options = {}) {
     knownConflicts.push(quotePacket ? quotePacket.error_details : "Missing quote packet");
   }
 
-  if (portfolioContext && portfolioContext.stale_hypothesis) {
+  if (portfolioContext?.stale_hypothesis) {
     stalenessWarnings.push("Portfolio/watchlist data is historical context only");
   }
 
-  if (journalContext && journalContext.unresolved_issues.length > 0) {
+  if ((journalContext?.unresolved_issues?.length ?? 0) > 0) {
     knownConflicts.push("Journal contains unresolved risk/thesis items");
   }
 

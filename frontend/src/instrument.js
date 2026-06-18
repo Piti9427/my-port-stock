@@ -15,7 +15,7 @@ Sentry.init({
     }),
   ],
 
-  tracesSampleRate: 1.0,
+  tracesSampleRate: 1,
 
   tracePropagationTargets: [/^\//, /^https:\/\/.*\.supabase\.co/],
 });

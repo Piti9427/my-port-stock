@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 import { BellOff, Trash2, Plus, TrendingUp, TrendingDown, Minus, RotateCcw, Clock } from 'lucide-react';
 import { useAuth } from '../auth/clerkAdapter';
 import { fetchWithAuth } from '../lib/api';
@@ -41,12 +42,10 @@ function UndoToast({ ticker, message, onUndo, onDismiss }) {
   }, [onDismiss]);
 
   return (
-    <div className="undo-toast" role="status" aria-live="polite">
+    <output className="undo-toast" aria-live="polite">
       <span className="undo-toast-msg">
         <Trash2 size={13} aria-hidden="true" />
-        {message ? (
-          message
-        ) : (
+        {message || (
           <>
             Removed <strong>{ticker}</strong> from watchlist
           </>
@@ -59,9 +58,16 @@ function UndoToast({ ticker, message, onUndo, onDismiss }) {
       <button className="undo-toast-close" onClick={onDismiss} aria-label="Dismiss notification">
         <Minus size={11} aria-hidden="true" />
       </button>
-    </div>
+    </output>
   );
 }
+
+UndoToast.propTypes = {
+  ticker: PropTypes.string.isRequired,
+  message: PropTypes.string,
+  onUndo: PropTypes.func.isRequired,
+  onDismiss: PropTypes.func.isRequired,
+};
 
 export default function WatchlistPage() {
   const { getToken } = useAuth();
@@ -72,7 +78,7 @@ export default function WatchlistPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTicker, setNewTicker] = useState('');
   const [addError, setAddError] = useState('');
-  const [toast, setToast] = useState(null); // { ticker, item }
+  const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
 
   const [error, setError] = useState(false);
@@ -119,9 +125,7 @@ export default function WatchlistPage() {
   const handleUndo = () => {
     if (!toast) return;
     setWatchlist((w) => {
-      // Re-insert at its original position (end if not found)
-      const exists = w.find((s) => s.ticker === toast.ticker);
-      if (exists) return w;
+      if (w.some((s) => s.ticker === toast.ticker)) return w;
       return [...w, toast.item];
     });
     setToast(null);
@@ -142,7 +146,7 @@ export default function WatchlistPage() {
       setAddError('Use 1-10 ticker characters: A-Z, 0-9, dot, or dash.');
       return;
     }
-    if (watchlist.find((s) => s.ticker === normalizedTicker)) {
+    if (watchlist.some((s) => s.ticker === normalizedTicker)) {
       setAddError(`${normalizedTicker} is already in your watchlist.`);
       return;
     }
@@ -176,6 +180,186 @@ export default function WatchlistPage() {
     if (e.key === 'Enter') handleAddTicker();
   };
 
+  useEffect(() => {
+    if (!showAddModal) return undefined;
+    const onKeyDown = (e) => handleModalKeyDown(e);
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [showAddModal, newTicker]);
+
+  const closeAddModal = () => {
+    setShowAddModal(false);
+    setNewTicker('');
+    setAddError('');
+  };
+
+  function renderWatchlistRows() {
+    if (loading) {
+      return (
+        <tr>
+          <td
+            colSpan={8}
+            style={{
+              textAlign: 'center',
+              padding: '40px 0',
+              color: 'var(--text-muted)',
+            }}
+          >
+            Loading watchlists...
+          </td>
+        </tr>
+      );
+    }
+    if (error) {
+      return (
+        <tr>
+          <td colSpan={8} style={{ padding: 0 }}>
+            <div className="empty-state">
+              <div className="empty-title">Insufficient data</div>
+              <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
+              <button className="btn-secondary" onClick={loadData}>
+                Retry
+              </button>
+            </div>
+          </td>
+        </tr>
+      );
+    }
+    if (filtered.length === 0) {
+      return (
+        <tr>
+          <td colSpan={8}>
+            <div className="empty-state">
+              <BellOff size={28} aria-hidden="true" style={{ opacity: 0.3 }} />
+              <div>No tickers match this filter.</div>
+              <button className="btn-secondary" style={{ width: 'auto', marginTop: 4 }} onClick={() => setSignalFilter('All')}>
+                Show all
+              </button>
+            </div>
+          </td>
+        </tr>
+      );
+    }
+    return filtered.map((s) => {
+      const sig = SIGNAL_META[s.aiSignal];
+      const isUp = s.changePct >= 0;
+      return (
+        <tr key={s.ticker} className="watchlist-row">
+          <td>
+            <div className="ticker-cell">
+              <div
+                className="ticker-icon"
+                style={{
+                  background: 'rgba(var(--accent-rgb),0.15)',
+                  color: 'var(--brand-primary)',
+                }}
+                aria-hidden="true"
+              >
+                {s.ticker.slice(0, 2)}
+              </div>
+              <div>
+                <div className="ticker-symbol">{s.ticker}</div>
+                <div className="ticker-name">{s.sector}</div>
+              </div>
+            </div>
+          </td>
+          <td className="price-mono">{s.last > 0 ? `$${s.last.toFixed(2)}` : '—'}</td>
+          <td>
+            {s.last > 0 ? (
+              <span className={`change-pill ${isUp ? 'up' : 'down'}`}>
+                {isUp ? <TrendingUp size={11} aria-hidden="true" /> : <TrendingDown size={11} aria-hidden="true" />}
+                <span aria-label={`${isUp ? 'up' : 'down'} ${Math.abs(s.changePct).toFixed(2)} percent`}>
+                  {isUp ? '+' : ''}
+                  {s.changePct.toFixed(2)}%
+                </span>
+              </span>
+            ) : (
+              <span className="price-mono" style={{ color: 'var(--text-muted)' }}>
+                —
+              </span>
+            )}
+          </td>
+          <td
+            className="price-mono"
+            style={{
+              color: 'var(--text-secondary)',
+              fontSize: '0.82rem',
+            }}
+          >
+            {s.volume}
+          </td>
+          <td>
+            <span
+              className="panel-badge"
+              style={{
+                background: sig.bg,
+                color: sig.color,
+                fontWeight: 600,
+              }}
+            >
+              {sig.label}
+            </span>
+          </td>
+          <td
+            style={{
+              color: 'var(--text-secondary)',
+              fontSize: '0.8rem',
+              maxWidth: '200px',
+            }}
+          >
+            {s.setup}
+          </td>
+          <td>
+            {s.alertPrice > 0 ? (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                {s.alertType === 'above' ? (
+                  <TrendingUp size={12} aria-hidden="true" style={{ color: 'var(--fin-profit)' }} />
+                ) : (
+                  <TrendingDown size={12} aria-hidden="true" style={{ color: 'var(--fin-loss)' }} />
+                )}
+                <span
+                  className="price-mono"
+                  style={{
+                    fontSize: '0.8rem',
+                    color: 'var(--text-secondary)',
+                  }}
+                  aria-label={`Alert ${s.alertType} $${s.alertPrice.toFixed(2)}`}
+                >
+                  ${s.alertPrice.toFixed(2)}
+                </span>
+              </div>
+            ) : (
+              <span
+                style={{
+                  color: 'var(--text-muted)',
+                  fontSize: '0.78rem',
+                }}
+              >
+                —
+              </span>
+            )}
+          </td>
+          <td style={{ textAlign: 'right' }}>
+            <button
+              className="btn-icon"
+              onClick={() => removeFromWatchlist(s.ticker)}
+              aria-label={`Remove ${s.ticker} from watchlist`}
+              title={`Remove ${s.ticker}`}
+            >
+              <Trash2 size={13} aria-hidden="true" />
+            </button>
+          </td>
+        </tr>
+      );
+    });
+  }
+
   return (
     <div className="watchlist-page">
       {/* Left: Watchlist Table */}
@@ -208,11 +392,11 @@ export default function WatchlistPage() {
                     data-active={signalFilter === s}
                     onClick={() => setSignalFilter(s)}
                     style={
-                      s !== 'All'
-                        ? {
+                      s === 'All'
+                        ? {}
+                        : {
                             color: signalFilter === s ? SIGNAL_META[s]?.color : undefined,
                           }
-                        : {}
                     }
                     aria-pressed={signalFilter === s}
                   >
@@ -252,165 +436,7 @@ export default function WatchlistPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      style={{
-                        textAlign: 'center',
-                        padding: '40px 0',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      Loading watchlists...
-                    </td>
-                  </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan={8} style={{ padding: 0 }}>
-                      <div className="empty-state" role="status">
-                        <div className="empty-title">Insufficient data</div>
-                        <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
-                        <button className="btn-secondary" onClick={loadData}>
-                          Retry
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ) : filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={8}>
-                      <div className="empty-state">
-                        <BellOff size={28} aria-hidden="true" style={{ opacity: 0.3 }} />
-                        <div>No tickers match this filter.</div>
-                        <button className="btn-secondary" style={{ width: 'auto', marginTop: 4 }} onClick={() => setSignalFilter('All')}>
-                          Show all
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((s) => {
-                    const sig = SIGNAL_META[s.aiSignal];
-                    const isUp = s.changePct >= 0;
-                    return (
-                      <tr key={s.ticker} className="watchlist-row">
-                        <td>
-                          <div className="ticker-cell">
-                            <div
-                              className="ticker-icon"
-                              style={{
-                                background: 'rgba(var(--accent-rgb),0.15)',
-                                color: 'var(--brand-primary)',
-                              }}
-                              aria-hidden="true"
-                            >
-                              {s.ticker.slice(0, 2)}
-                            </div>
-                            <div>
-                              <div className="ticker-symbol">{s.ticker}</div>
-                              <div className="ticker-name">{s.sector}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="price-mono">{s.last > 0 ? `$${s.last.toFixed(2)}` : '—'}</td>
-                        <td>
-                          {s.last > 0 ? (
-                            <span className={`change-pill ${isUp ? 'up' : 'down'}`}>
-                              {isUp ? <TrendingUp size={11} aria-hidden="true" /> : <TrendingDown size={11} aria-hidden="true" />}
-                              <span aria-label={`${isUp ? 'up' : 'down'} ${Math.abs(s.changePct).toFixed(2)} percent`}>
-                                {isUp ? '+' : ''}
-                                {s.changePct.toFixed(2)}%
-                              </span>
-                            </span>
-                          ) : (
-                            <span className="price-mono" style={{ color: 'var(--text-muted)' }}>
-                              —
-                            </span>
-                          )}
-                        </td>
-                        <td
-                          className="price-mono"
-                          style={{
-                            color: 'var(--text-secondary)',
-                            fontSize: '0.82rem',
-                          }}
-                        >
-                          {s.volume}
-                        </td>
-                        <td>
-                          <span
-                            className="panel-badge"
-                            style={{
-                              background: sig.bg,
-                              color: sig.color,
-                              fontWeight: 600,
-                            }}
-                          >
-                            {sig.label}
-                          </span>
-                        </td>
-                        <td
-                          style={{
-                            color: 'var(--text-secondary)',
-                            fontSize: '0.8rem',
-                            maxWidth: '200px',
-                          }}
-                        >
-                          {s.setup}
-                        </td>
-                        <td>
-                          {s.alertPrice > 0 ? (
-                            <div
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                              }}
-                            >
-                              {s.alertType === 'above' ? (
-                                <TrendingUp size={12} aria-hidden="true" style={{ color: 'var(--fin-profit)' }} />
-                              ) : (
-                                <TrendingDown size={12} aria-hidden="true" style={{ color: 'var(--fin-loss)' }} />
-                              )}
-                              <span
-                                className="price-mono"
-                                style={{
-                                  fontSize: '0.8rem',
-                                  color: 'var(--text-secondary)',
-                                }}
-                                aria-label={`Alert ${s.alertType} $${s.alertPrice.toFixed(2)}`}
-                              >
-                                ${s.alertPrice.toFixed(2)}
-                              </span>
-                            </div>
-                          ) : (
-                            <span
-                              style={{
-                                color: 'var(--text-muted)',
-                                fontSize: '0.78rem',
-                              }}
-                            >
-                              —
-                            </span>
-                          )}
-                        </td>
-                        <td style={{ textAlign: 'right' }}>
-                          <button
-                            className="btn-icon"
-                            onClick={() => removeFromWatchlist(s.ticker)}
-                            aria-label={`Remove ${s.ticker} from watchlist`}
-                            title={`Remove ${s.ticker}`}
-                          >
-                            <Trash2 size={13} aria-hidden="true" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
+              <tbody>{renderWatchlistRows()}</tbody>
             </table>
 
             {/* Watchlist fully empty state */}
@@ -457,9 +483,9 @@ export default function WatchlistPage() {
               <div>No active alerts</div>
             </div>
           ) : (
-            <div className="alerts-list" role="list">
+            <ul className="alerts-list">
               {alerts.map((al) => (
-                <div key={al.id} className={`alert-item alert-${al.severity}`} role="listitem">
+                <li key={al.id} className={`alert-item alert-${al.severity}`}>
                   <div className="alert-header">
                     <span className="alert-ticker">{al.ticker}</span>
                     <span className="alert-type">{al.type}</span>
@@ -474,9 +500,9 @@ export default function WatchlistPage() {
                     </button>
                   </div>
                   <p className="alert-msg">{al.msg}</p>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </div>
 
@@ -509,29 +535,14 @@ export default function WatchlistPage() {
       {/* Add Ticker Modal */}
       {showAddModal && (
         <>
-          <div
-            className="scenario-backdrop"
-            onClick={() => {
-              setShowAddModal(false);
-              setNewTicker('');
-              setAddError('');
-            }}
-          />
-          <dialog open className="add-ticker-modal" aria-modal="true" aria-label="Add ticker to watchlist" onKeyDown={handleModalKeyDown}>
+          <button type="button" className="scenario-backdrop" aria-label="Close add ticker dialog" onClick={closeAddModal} />
+          <dialog open className="add-ticker-modal" aria-modal="true" aria-label="Add ticker to watchlist">
             <div className="drawer-header">
               <div>
                 <div className="drawer-title">Add to Watchlist</div>
                 <div className="drawer-subtitle">Enter a ticker symbol to track</div>
               </div>
-              <button
-                className="btn-icon"
-                onClick={() => {
-                  setShowAddModal(false);
-                  setNewTicker('');
-                  setAddError('');
-                }}
-                aria-label="Close dialog"
-              >
+              <button className="btn-icon" onClick={closeAddModal} aria-label="Close dialog">
                 <Minus size={14} aria-hidden="true" />
               </button>
             </div>
