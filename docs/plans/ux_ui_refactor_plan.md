@@ -1,14 +1,14 @@
 # MyPortStock UX/UI Refactor Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task. Before code changes, use `superpowers:test-driven-development` or `tdd` for each vertical slice. Steps use checkbox (`- [ ]`) syntax for tracking.
 > 
-> **Skill References Used:** `impeccable` (shape → craft → polish → harden), `using-superpowers`, `build-web-apps:react-best-practices`, `design-taste-frontend`
+> **Skill References Used:** `impeccable` (shape → craft → polish → harden), `using-superpowers`, `superpowers:writing-plans`, `grill-with-docs`, `find-skills`, `build-web-apps:react-best-practices`, `design-taste-frontend`
 
-**Goal:** ปรับปรุง UX/UI ของ MyPortStock ให้ใช้งานได้จริงแบบ end-to-end สำหรับ personal trading assistant — ไม่ redesign theme ใหม่ แต่ปรับโครงสร้าง component, user flow, information architecture, และ interaction patterns ให้เป็นระดับ production-grade
+**Goal:** ปรับปรุง UX/UI และ harden runtime data contract ของ MyPortStock ให้ใช้งานได้จริงแบบ end-to-end สำหรับ personal trading assistant — ไม่ redesign theme ใหม่ แต่ปรับโครงสร้าง component, user flow, information architecture, interaction patterns, auth/per-user analysis context, และ API shape ที่จำเป็นให้เป็นระดับ production-grade
 
-**Architecture Principle:** คง Dark Terminal Product UI (theme, colors, typography) ตาม `docs/DESIGN.md` ทุกประการ แต่ refactor component structure, data flow, shared primitives, และ page composition ให้ใกล้เคียงกับ reference apps ระดับ Linear/Vercel/Robinhood/thinkorswim
+**Architecture Principle:** คง Dark Terminal Product UI (theme, colors, typography) ตาม `docs/DESIGN.md` ทุกประการ แต่ refactor component structure, data flow, shared primitives, และ page composition ให้ใกล้เคียงกับ reference apps ระดับ Linear/Vercel/Robinhood/thinkorswim. Backend changes are allowed only where required for auth, per-user analysis context, and stable API response shape; do not redesign schema, rebuild the backend, or change investment rules.
 
-**Tech Stack:** React 18, Vite, Tailwind CSS + CSS Custom Properties, Clerk Auth, Supabase, Vitest, React Testing Library
+**Tech Stack:** React 19, Vite, Tailwind CSS + CSS Custom Properties, Clerk Auth, Supabase, Vitest, React Testing Library, Node.js/Express
 
 ---
 
@@ -16,19 +16,21 @@
 
 1. [Current State Assessment](#current-state-assessment)
 2. [Design References & Inspiration](#design-references--inspiration)
-3. [Phase 1: Foundation — Shared Primitives & Design System](#phase-1-foundation--shared-primitives--design-system)
-4. [Phase 2: Information Architecture & Navigation](#phase-2-information-architecture--navigation)
-5. [Phase 3: Dashboard — North Star Page](#phase-3-dashboard--north-star-page)
-6. [Phase 4: Command Center — AI Analysis Flow](#phase-4-command-center--ai-analysis-flow)
-7. [Phase 5: Trade Journal & Analytics — Decision Loop](#phase-5-trade-journal--analytics--decision-loop)
-8. [Phase 6: Risk & Market Explorer](#phase-6-risk--market-explorer)
-9. [Phase 7: Config & Onboarding](#phase-7-config--onboarding)
-10. [Phase 8: Ticker Drilldown — Missing Critical Flow](#phase-8-ticker-drilldown--missing-critical-flow)
-11. [Phase 9: Anti-Slop Polish & Impeccable Hardening](#phase-9-anti-slop-polish--impeccable-hardening)
-12. [Phase 10: Mobile Responsiveness & Accessibility](#phase-10-mobile-responsiveness--accessibility)
-13. [Phase 11: Motion & Micro-Interactions](#phase-11-motion--micro-interactions)
-14. [Phase 12: Final Verification & Acceptance](#phase-12-final-verification--acceptance)
-15. [Rollback Strategy](#rollback-strategy)
+3. [Production Scope Boundary](#production-scope-boundary)
+4. [Phase 0: Runtime Data Contract Hardening](#phase-0-runtime-data-contract-hardening)
+5. [Phase 1: Foundation — Shared Primitives & Design System](#phase-1-foundation--shared-primitives--design-system)
+6. [Phase 2: Information Architecture & Navigation](#phase-2-information-architecture--navigation)
+7. [Phase 3: Dashboard — North Star Page](#phase-3-dashboard--north-star-page)
+8. [Phase 4: Command Center — AI Analysis Flow](#phase-4-command-center--ai-analysis-flow)
+9. [Phase 5: Trade Journal & Analytics — Decision Loop](#phase-5-trade-journal--analytics--decision-loop)
+10. [Phase 6: Risk & Market Explorer](#phase-6-risk--market-explorer)
+11. [Phase 7: Config & Onboarding](#phase-7-config--onboarding)
+12. [Phase 8: Ticker Drilldown — Missing Critical Flow](#phase-8-ticker-drilldown--missing-critical-flow)
+13. [Phase 9: Anti-Slop Polish & Impeccable Hardening](#phase-9-anti-slop-polish--impeccable-hardening)
+14. [Phase 10: Mobile Responsiveness & Accessibility](#phase-10-mobile-responsiveness--accessibility)
+15. [Phase 11: Motion & Micro-Interactions](#phase-11-motion--micro-interactions)
+16. [Phase 12: Final Verification & Acceptance](#phase-12-final-verification--acceptance)
+17. [Rollback Strategy](#rollback-strategy)
 
 ---
 
@@ -50,6 +52,8 @@
 | Monolithic pages (10-38KB per file) | Unmaintainable, slow cognitive scan | P0 |
 | No shared component library (4 UI primitives only) | Inconsistent UX across pages | P0 |
 | Missing Ticker Drilldown flow (PRD requirement) | Core user flow broken | P0 |
+| Analysis context still mixes runtime UI with markdown-derived context | Can show stale portfolio/journal evidence inside production analysis | P0 |
+| API response shapes are inconsistent across runtime routes | Hooks and pages duplicate parsing, error, and insufficient-data handling | P0 |
 | No global state / data layer | Duplicated API calls, no caching | P1 |
 | Inconsistent loading/error/empty states | Low trust, confusion | P1 |
 | No progressive disclosure | Information overload on Dashboard | P1 |
@@ -104,6 +108,276 @@
 5. **Context Preservation** — ใช้ drawer/slide-over แทน page navigation เพื่อ keep context
 6. **Semantic Color Only** — สีมีความหมาย ไม่ใช่ decoration
 7. **Data Freshness** — ทุก data point ต้องมี source label + timestamp
+
+---
+
+## Production Scope Boundary
+
+### Allowed Scope
+
+- Frontend UX/UI refactor for logged-in product screens under `frontend/src/`.
+- Runtime data contract hardening only where it supports the UX flow:
+  - Auth propagation from React to API calls.
+  - Per-user analysis context for `POST /api/analyze` and `GET /api/packet/:ticker`.
+  - Stable response normalization for holdings, watchlists, journal, quote, packet, and analysis calls.
+  - Fail-closed rendering for `INSUFFICIENT_DATA`, auth failure, network failure, stale data, and partial data.
+- Backend edits may touch only:
+  - `backend/server.js`
+  - `backend/src/routes/api.js`
+  - `backend/src/db.js`
+  - `backend/src/packets/verifiedDataPacket.js`
+  - narrowly-scoped tests under `backend/tests/`
+
+### Explicit Non-Goals
+
+- No visual redesign away from Dark Terminal Product UI.
+- No Supabase schema redesign, destructive migrations, or table renames.
+- No paid market-data dependency.
+- No broker execution integration.
+- No rewrite of the Express server, routing model, auth provider, or investment decision rules.
+- No frontend state library dependency unless the current hooks approach fails a concrete acceptance test.
+
+### Current Baseline To Preserve
+
+- `docs/DESIGN.md` is the product-level design source of truth.
+- Supabase remains the runtime source of truth for user-owned `holdings`, `journal`, and `watchlists`.
+- Markdown portfolio/journal files are historical context only and must not silently populate production user runtime state.
+- Local `dev:ui` may use the existing dev auth bypass for visual testing, but production behavior must require Clerk-backed user identity.
+- Current Impeccable detector baseline on 2026-06-20:
+
+```bash
+node /Users/nopparuj/.agents/skills/impeccable/scripts/detect.mjs --json frontend/src
+```
+
+Expected current result:
+
+```json
+[]
+```
+
+Treat older detector findings as backlog evidence. Re-verify current source before implementing cleanup work.
+
+---
+
+## Phase 0: Runtime Data Contract Hardening
+
+> **Goal:** Lock production data/auth behavior before visual refactors create polished screens on top of stale or inconsistent data.
+> **TDD Rule:** Every task in this phase starts with a failing backend/frontend contract test.
+
+### Task 0.1: Define Authenticated Analysis Context Contract
+
+**Files:**
+- Modify: `backend/server.js`
+- Modify: `backend/src/packets/verifiedDataPacket.js`
+- Test: `backend/tests/runtimeData.test.js`
+- Test: `backend/tests/deepAnalysisPayload.test.js`
+
+- [ ] **Step 1: Add failing tests for authenticated analysis context**
+
+Add backend tests that prove:
+
+```text
+POST /api/analyze with an authenticated user:
+- uses Clerk `user_id` / dev scoped user for portfolio and journal context
+- does not treat `stock_portfolio.md` holdings as current runtime holdings
+- returns `portfolio_context.source = "supabase"` or `status = "INSUFFICIENT_DATA"`
+- returns `journal_context.source = "supabase"` or `status = "INSUFFICIENT_DATA"`
+- preserves markdown only as `historical_context_warning`, not as runtime data
+```
+
+Run:
+
+```bash
+cd backend && npm run test
+```
+
+Expected before implementation: fail because `getVerifiedPacket()` still builds portfolio/journal context from markdown readers.
+
+- [ ] **Step 2: Implement minimal per-user context lookup**
+
+Use existing Supabase helpers where possible. Do not add tables or migrations.
+
+```text
+Authenticated analysis context source order:
+1. Supabase scoped by Clerk `user_id`
+2. If Supabase unavailable: `INSUFFICIENT_DATA`
+3. Markdown: historical warning only, never runtime holdings/trades
+```
+
+- [ ] **Step 3: Keep fail-closed behavior**
+
+If Supabase is not configured, disconnected, or auth is missing for a personalized flow:
+
+```json
+{
+  "status": "INSUFFICIENT_DATA",
+  "error_details": "Supabase runtime data unavailable for authenticated analysis context",
+  "decision_snapshot": {
+    "verdict": "Wait",
+    "gate_status": "fail"
+  }
+}
+```
+
+- [ ] **Step 4: Re-run backend tests**
+
+Run:
+
+```bash
+cd backend && npm run test
+```
+
+Expected: pass.
+
+### Task 0.2: Normalize Frontend API Contract
+
+**Files:**
+- Modify: `frontend/src/lib/api.js`
+- Create: `frontend/src/hooks/useApi.js`
+- Test: `frontend/tests/productionDataContract.test.js`
+
+- [ ] **Step 1: Add failing frontend contract tests**
+
+Tests must cover:
+
+```text
+fetchWithAuth:
+- includes Authorization header when getToken is available
+- supports GET and mutation requests
+- normalizes non-2xx responses into Error objects with status and message
+- preserves `INSUFFICIENT_DATA` payloads instead of throwing generic "API Error"
+
+useApi:
+- exposes { data, loading, error, status, refetch, isStale }
+- aborts stale in-flight requests on unmount or key change
+- reports source/timestamp metadata when payload contains it
+```
+
+Run:
+
+```bash
+cd frontend && npm run test -- --run frontend/tests/productionDataContract.test.js
+```
+
+Expected before implementation: fail because `frontend/src/lib/api.js` is only a thin GET helper.
+
+- [ ] **Step 2: Implement smallest shared API helper**
+
+The helper must support current endpoints without forcing a backend rewrite:
+
+```js
+fetchWithAuth('/api/holdings', getToken);
+fetchWithAuth('/api/journal', getToken);
+fetchWithAuth('/api/analyze', getToken, {
+  method: 'POST',
+  body: { ticker, decision_mode: decisionMode, manual_price: manualPrice },
+});
+```
+
+- [ ] **Step 3: Normalize runtime states**
+
+Every API-backed screen must be able to distinguish:
+
+```text
+loading
+success with data
+success but empty
+INSUFFICIENT_DATA
+unauthorized
+network error
+stale/partial data
+```
+
+- [ ] **Step 4: Re-run frontend contract tests**
+
+Run:
+
+```bash
+cd frontend && npm run test -- --run frontend/tests/productionDataContract.test.js
+```
+
+Expected: pass.
+
+### Task 0.3: Lock No-Schema-Change Constraint
+
+**Files:**
+- Read: `supabase/schema.sql`
+- Read: `supabase/migrations/20260617120000_per_user_markdown_runtime_data.sql`
+- Test: `backend/tests/schemaContract.test.js`
+
+- [ ] **Step 1: Confirm local and live Supabase schema satisfy this plan**
+
+Use only:
+
+```text
+holdings
+watchlists
+journal
+import_batches
+```
+
+Current live schema review on 2026-06-20 confirmed:
+
+```text
+public.holdings
+- RLS enabled
+- SELECT only for authenticated users
+- scoped by user_id through requesting_user_id()
+- unique active ticker index: (user_id, ticker) where is_deleted = false
+
+public.watchlists
+- RLS enabled
+- authenticated users can manage only their rows
+- import metadata columns exist
+- unique active ticker index: (user_id, ticker) where is_deleted = false
+
+public.journal
+- RLS enabled
+- authenticated users can manage only their rows
+- import metadata columns exist
+- FK to import_batches(import_batch_id)
+- trigger trg_journal_recalculate_holdings fires after INSERT/UPDATE/DELETE
+
+public.import_batches
+- RLS enabled
+- authenticated users can manage only their rows
+- used for owner-only markdown import audit metadata
+```
+
+If ticker drilldown or analytics requires data not present in those tables, stop and record the gap in this plan instead of adding a migration.
+
+- [ ] **Step 2: Treat full schema files as documentation, not executable production migration**
+
+`supabase/schema.sql` and `backend/supabase_schema.sql` include destructive `DROP TABLE` statements for full clean-room generation. Do not apply them directly to the live project as part of this plan.
+
+Use only additive migrations for live changes. This plan currently expects no new schema migration.
+
+- [ ] **Step 3: Track Supabase advisor findings without expanding this plan**
+
+Current advisor findings to keep out of UX implementation unless the user approves a separate schema-hardening task:
+
+```text
+Security:
+- public.requesting_user_id has mutable search_path.
+- public.rls_auto_enable() is SECURITY DEFINER and callable by anon/authenticated.
+
+Performance:
+- public.journal journal_import_batch_id_fkey has no covering index.
+- idx_journal_user_id is currently reported unused.
+```
+
+Do not fix these inside the UX/UI refactor unless they block Phase 0 tests or the user explicitly expands scope to schema hardening.
+
+- [ ] **Step 4: Add/extend schema contract tests only if needed**
+
+Required assertions:
+
+```text
+holdings, watchlists, and journal remain scoped by user_id
+RLS remains enabled
+No production screen depends on markdown runtime rows
+No UX implementation applies destructive full-schema SQL
+```
 
 ---
 
@@ -300,22 +574,44 @@ Reference: Vercel tooltips — minimal, precise
 ### Task 1.3: Data Layer Foundation
 
 **Files:**
+- Modify: `frontend/src/lib/api.js`
 - Create: `frontend/src/hooks/useApi.js`
 - Create: `frontend/src/hooks/usePortfolio.js`
 - Create: `frontend/src/hooks/useJournal.js`
 - Create: `frontend/src/hooks/useWatchlist.js`
+- Test: `frontend/tests/productionDataContract.test.js`
 
-- [ ] **Step 1: Create shared API hook with caching, loading, error states**
+- [ ] **Step 1: Extend shared API helper from Phase 0**
+
+`fetchWithAuth` must be the only helper for authenticated runtime reads and mutations.
+
+Required behavior:
+
+```text
+Input:
+- url
+- getToken
+- method
+- body
+- signal
+
+Output:
+- parsed JSON payload
+- preserved `status: "INSUFFICIENT_DATA"` payloads
+- Error with status/message for unauthorized, non-2xx, and network failure
+```
+
+- [ ] **Step 2: Create shared API hook with caching, loading, stale, abort, and error states**
 
 ```jsx
 // frontend/src/hooks/useApi.js
-const { data, loading, error, refetch } = useApi('/api/holdings', {
+const { data, loading, error, status, isStale, refetch } = useApi('/api/holdings', {
   cacheKey: 'holdings',
   staleTime: 30000,  // 30s
 });
 ```
 
-- [ ] **Step 2: Create domain-specific hooks**
+- [ ] **Step 3: Create domain-specific hooks**
 
 ```jsx
 // frontend/src/hooks/usePortfolio.js
@@ -328,7 +624,29 @@ const { trades, closedTrades, stats, loading, error, refetch } = useJournal();
 const { items, alerts, add, remove, loading, error, refetch } = useWatchlist();
 ```
 
-- [ ] **Step 3: Ensure all hooks return consistent `{ data, loading, error, refetch }` shape**
+- [ ] **Step 4: Ensure all hooks return consistent runtime state shape**
+
+```jsx
+{
+  data,
+  loading,
+  error,
+  status,       // OK | EMPTY | INSUFFICIENT_DATA | UNAUTHORIZED | ERROR
+  meta,         // source, timestamp, gate status when available
+  isStale,
+  refetch,
+}
+```
+
+- [ ] **Step 5: Run frontend contract tests**
+
+Run:
+
+```bash
+cd frontend && npm run test -- --run frontend/tests/productionDataContract.test.js
+```
+
+Expected: pass.
 
 ---
 
@@ -548,6 +866,8 @@ Pre-filled with selected ticker data
 **Files:**
 - Refactor: `frontend/src/pages/CommandCenterPage.jsx` (18,907 bytes → target <6KB)
 - Create: Extracted sub-components
+- Modify: `frontend/src/lib/api.js`
+- Test: `frontend/tests/productionDataContract.test.js`
 
 - [ ] **Step 1: Decompose into clear panels**
 
@@ -592,6 +912,15 @@ Add loading skeletons per tab
 Quote Panel: "Display quote · Yahoo Finance · delayed 15min"
 Gate Panel:  "⚠️ Price gate: FAIL — ต้องยืนยัน Tier 1 ก่อน execution"
 or           "✅ Price gate: PASS — dual-source confirmed"
+```
+
+- [ ] **Step 5: Route all personalized analysis through authenticated API helper**
+
+```
+Command Center analysis calls must use `fetchWithAuth('/api/analyze', getToken, { method: 'POST', body })`.
+
+Public/display quote lookup may remain unauthenticated only if it is clearly labeled display-only.
+Any result that affects portfolio/journal context must include authenticated user context from Phase 0.
 ```
 
 ### Task 4.2: Chat Interface Improvement
@@ -827,15 +1156,48 @@ Each page should have a meaningful empty state:
 
 > **Impeccable Flow:** `shape` → `craft`
 > **Reference:** Robinhood stock detail + Schwab stock overview
-> **Priority:** P0 — This is described in PRD but not implemented
+> **Priority:** P0 — This is described in PRD but not implemented. Execute this as the first vertical slice after Phase 0 and the minimum shared primitives from Phase 1, even though the detailed section lives here.
 
 ### Task 8.1: Ticker Detail Page
 
 **Files:**
 - Create: `frontend/src/pages/TickerDetailPage.jsx`
 - Modify: `frontend/src/App.jsx` (add route)
+- Modify: `frontend/src/lib/api.js`
+- Test: `frontend/tests/productionDataContract.test.js`
+- Test: `backend/tests/runtimeData.test.js`
 
-- [ ] **Step 1: Create `/ticker/:symbol` route**
+- [ ] **Step 1: Write route and data contract tests first**
+
+Required frontend test assertions:
+
+```text
+App exposes `/ticker/:symbol`
+Dashboard holdings rows navigate to `/ticker/:symbol`
+Watchlist rows navigate to `/ticker/:symbol`
+Journal ticker links navigate to `/ticker/:symbol`
+Ticker detail shows loading, empty, insufficient-data, and unauthorized states
+Ticker detail labels every price/source field as display-only unless price gate passed
+```
+
+Required backend test assertions:
+
+```text
+GET /api/journal/:ticker is scoped to authenticated user
+GET /api/holdings never returns another user's rows
+POST /api/analyze uses authenticated per-user context when called from ticker detail
+```
+
+Run:
+
+```bash
+cd frontend && npm run test -- --run frontend/tests/productionDataContract.test.js
+cd backend && npm run test
+```
+
+Expected before implementation: fail for missing route and incomplete per-user analysis context.
+
+- [ ] **Step 2: Create `/ticker/:symbol` route**
 
 ```
 Reference: Robinhood stock detail page
@@ -844,7 +1206,7 @@ This is the CORE user flow described in PRD:
 "เมื่อกดที่หุ้นแต่ละตัว จะเข้าสู่หน้ารายละเอียดหุ้นนั้นๆ"
 ```
 
-- [ ] **Step 2: Design ticker detail layout**
+- [ ] **Step 3: Design ticker detail layout**
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -866,7 +1228,7 @@ This is the CORE user flow described in PRD:
 └─────────────────────────────────────────────────┘
 ```
 
-- [ ] **Step 3: Wire up all entry points**
+- [ ] **Step 4: Wire up all entry points**
 
 ```
 Entry points to /ticker/:symbol:
@@ -878,7 +1240,38 @@ Entry points to /ticker/:symbol:
 - Command Palette search result
 ```
 
-- [ ] **Step 4: Pre-fill data from portfolio/journal context**
+- [ ] **Step 5: Pre-fill data from authenticated runtime context**
+
+Data rules:
+
+```text
+Position Summary:
+- Use Supabase `holdings` for the signed-in user only.
+- If no holding exists, show "not held" and keep analysis/watchlist actions available.
+
+Trade History:
+- Use Supabase `journal` filtered by ticker for the signed-in user only.
+- If no rows exist, show a no-history empty state.
+
+Quote/Price:
+- Use quote/packet fields only with source, timestamp/session, and gate status.
+- Never present Yahoo-only enrichment from `/api/price/:ticker` as execution-ready.
+
+Analysis:
+- Call `POST /api/analyze` through `fetchWithAuth`.
+- If per-user context is unavailable, show `Wait` / `INSUFFICIENT_DATA`, not a generic error.
+```
+
+- [ ] **Step 6: Re-run route/data contract tests**
+
+Run:
+
+```bash
+cd frontend && npm run test -- --run frontend/tests/productionDataContract.test.js
+cd backend && npm run test
+```
+
+Expected: pass.
 
 ---
 
@@ -912,7 +1305,7 @@ Checklist (from DESIGN.md + Impeccable):
 - [ ] **Step 2: Run Impeccable detector**
 
 ```bash
-node .gemini/skills/impeccable/scripts/detect.mjs --json frontend/src
+node /Users/nopparuj/.agents/skills/impeccable/scripts/detect.mjs --json frontend/src
 ```
 
 - [ ] **Step 3: Fix all P0/P1 detector hits**
@@ -1022,28 +1415,40 @@ Content reveal: 200ms fade-in replacing skeleton
 
 ### Task 12.1: Automated Gates
 
-- [ ] **Step 1: All tests pass**
+- [ ] **Step 1: Backend contract tests pass**
+
+```bash
+cd backend && npm run test
+```
+
+- [ ] **Step 2: Frontend tests pass**
 
 ```bash
 cd frontend && npm run test -- --run
 ```
 
-- [ ] **Step 2: Lint passes**
+- [ ] **Step 3: Lint passes**
 
 ```bash
 cd frontend && npm run lint
 ```
 
-- [ ] **Step 3: Build passes**
+- [ ] **Step 4: Typecheck and architecture checks pass**
+
+```bash
+cd frontend && npm run typecheck && npm run verify:architecture
+```
+
+- [ ] **Step 5: Build passes**
 
 ```bash
 cd frontend && npm run build
 ```
 
-- [ ] **Step 4: Impeccable detector clean**
+- [ ] **Step 6: Impeccable detector clean**
 
 ```bash
-node .gemini/skills/impeccable/scripts/detect.mjs --json frontend/src
+node /Users/nopparuj/.agents/skills/impeccable/scripts/detect.mjs --json frontend/src
 ```
 
 ### Task 12.2: Visual Route Verification
@@ -1100,14 +1505,17 @@ g j → Journal → g r → Risk
 
 ```text
 [ ] Design critique score ≥ 36/40 (from 26/40 baseline)
-[ ] All 10 pages decomposed into <8KB per file
+[ ] Large pages are decomposed so route files own composition/orchestration only; extracted components have focused tests
 [ ] Shared component library has ≥ 10 reusable primitives
 [ ] Ticker drilldown flow works end-to-end
 [ ] Command palette (Cmd+K) works
 [ ] Every page has proper loading, error, empty states
 [ ] Every data display has source label
+[ ] Personalized analysis uses authenticated per-user Supabase context or fails closed
+[ ] Markdown portfolio/journal data is never shown as production runtime data
 [ ] No Impeccable detector hard hits
-[ ] All automated tests pass
+[ ] Backend contract tests pass
+[ ] Frontend tests, lint, typecheck, architecture check, and build pass
 [ ] Mobile layout works at 390px
 [ ] WCAG 2.1 AA compliance on all interactive elements
 [ ] Reduced motion support for all animations
@@ -1118,14 +1526,20 @@ g j → Journal → g r → Risk
 
 ## Rollback Strategy
 
-All changes are frontend-only. Rollback by reverting:
+Rollback by reverting only the scoped files changed by this plan:
 
 - `frontend/src/` — all modified and new files
 - `frontend/src/styles/` — new directory
 - `frontend/src/components/` — new shared components
 - `frontend/src/pages/` — refactored pages + new TickerDetailPage
+- `frontend/tests/productionDataContract.test.js` — updated frontend contract tests
+- `backend/server.js` — only if Phase 0 authenticated analysis context changed it
+- `backend/src/routes/api.js` — only if API shape/auth propagation changed it
+- `backend/src/db.js` — only if shared per-user runtime lookup helpers changed it
+- `backend/src/packets/verifiedDataPacket.js` — only if context metadata changed it
+- `backend/tests/` — Phase 0 backend contract tests
 
-No database schema changes. No backend changes. no design token changes.
+No database schema changes. No destructive migrations. No design token changes unless `docs/DESIGN.md` is explicitly updated first.
 
 Git strategy: Use feature branch `feat/ux-refactor` with per-phase commits for granular rollback.
 
@@ -1135,6 +1549,7 @@ Git strategy: Use feature branch `feat/ux-refactor` with per-phase commits for g
 
 ```mermaid
 graph TD
+    P0["Phase 0: Runtime Contract<br/>Auth + Per-User Context"]
     P1["Phase 1: Foundation<br/>Shared Primitives"]
     P2["Phase 2: IA & Navigation"]
     P3["Phase 3: Dashboard"]
@@ -1148,15 +1563,17 @@ graph TD
     P11["Phase 11: Motion"]
     P12["Phase 12: Verification"]
 
+    P0 --> P1
+    P1 --> P8
+    P8 --> P3
+    P8 --> P4
     P1 --> P2
-    P1 --> P3
     P2 --> P3
     P3 --> P4
-    P3 --> P8
     P4 --> P5
     P5 --> P6
     P6 --> P7
-    P8 --> P9
+    P4 --> P9
     P7 --> P9
     P9 --> P10
     P10 --> P11
@@ -1167,6 +1584,7 @@ graph TD
 
 | Phase | Scope | Est. Time |
 |:------|:------|:----------|
+| Phase 0 | Runtime contract / auth / per-user analysis context | 1-2 days |
 | Phase 1 | Foundation | 2-3 days |
 | Phase 2 | IA & Nav | 1 day |
 | Phase 3 | Dashboard | 2-3 days |
@@ -1179,4 +1597,4 @@ graph TD
 | Phase 10 | Mobile & A11y | 2 days |
 | Phase 11 | Motion | 1 day |
 | Phase 12 | Verification | 1 day |
-| **Total** | | **~18-22 days** |
+| **Total** | | **~19-24 days** |

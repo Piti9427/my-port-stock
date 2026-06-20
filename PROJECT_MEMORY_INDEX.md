@@ -223,3 +223,17 @@
 - Decision: Restore real fundamental, technical, and SWOT audits under the 7-dimension SOP. Update Python oracle to pull quarterly financial statements and W1/D1 technical metrics; modify Express backend to map AI sub-agent scores to the decision engine; design a premium tabbed React UI containing SWOT accordions, quarterly tables, W1 checklist badges, and a monospace Trade Ticket.
 - Action: Saved design spec to `docs/superpowers/specs/2026-06-16-deep-analysis-sop-design.md` and created implementation plan.
 - Source: `docs/superpowers/specs/2026-06-16-deep-analysis-sop-design.md`
+
+### 2026-06-19 - Dynamic Scoping and Ticker Discovery
+
+- Keywords: `dynamic-scoping`, `ticker-discovery`, `grill-me`, `rule-update`, `interactive-flow`
+- Decision: Replaced the static watchlist scan behavior for broad queries with an interactive scoping flow. The agent must now ask clarifying questions (using the `ask_question` tool) to narrow down target timeframes, sectors, and risk profiles before scanning or discovering new tickers.
+- Action: Updated `AGENTS.md` and `GEMINI.md` mandatory behaviors with the new Dynamic Scoping & Discovery rules.
+- Source: User feedback on broad recommendation queries.
+
+### 2026-06-20 - UX/UI Runtime Contract Scope
+
+- Keywords: `ux-ui-refactor`, `runtime-contract`, `per-user-analysis`, `ticker-drilldown`, `production-hardening`
+- Decision: Expand `docs/plans/ux_ui_refactor_plan.md` from frontend-only UX/UI work into UX/UI plus runtime data contract hardening, limited to auth, per-user analysis context, and API response shape. No schema redesign or theme redesign.
+- Action: Added Phase 0 contract hardening, moved ticker drilldown to early execution priority, corrected tool/version assumptions, verified live Supabase schema/advisors, and updated verification/rollback gates.
+- Source: `docs/plans/ux_ui_refactor_plan.md`
