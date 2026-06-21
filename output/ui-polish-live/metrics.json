@@ -1,0 +1,106 @@
+[
+  {
+    "file": "output/ui-polish-live/command-1440.png",
+    "route": "/",
+    "innerWidth": 1440,
+    "scrollWidth": 1440,
+    "bodyOverflow": 0,
+    "headings": [
+      "This site can’t be reached"
+    ],
+    "off": [],
+    "small": [
+      {
+        "label": "Checking the proxy and the firewall",
+        "cls": "",
+        "w": 241,
+        "h": 18
+      },
+      {
+        "label": "Reload",
+        "cls": "blue-button text-button",
+        "w": 74,
+        "h": 31
+      },
+      {
+        "label": "Details",
+        "cls": "secondary-button text-button\n              small-l",
+        "w": 74,
+        "h": 33
+      }
+    ],
+    "bodyText": "This site can’t be reached\n\n127.0.0.1 refused to connect.\n\nTry:\n\nChecking the connection\nChecking the proxy and the firewall\nERR_CONNECTION_REFUSED\nReload\nDetails"
+  },
+  {
+    "file": "output/ui-polish-live/command-390.png",
+    "route": "/",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "bodyOverflow": 0,
+    "headings": [
+      "This site can’t be reached"
+    ],
+    "off": [],
+    "small": [
+      {
+        "label": "Checking the proxy and the firewall",
+        "cls": "",
+        "w": 241,
+        "h": 18
+      }
+    ],
+    "bodyText": "This site can’t be reached\n\n127.0.0.1 refused to connect.\n\nTry:\n\nChecking the connection\nChecking the proxy and the firewall\nERR_CONNECTION_REFUSED\nReload\nDetails"
+  },
+  {
+    "file": "output/ui-polish-live/journal-1440.png",
+    "route": "/",
+    "innerWidth": 1440,
+    "scrollWidth": 1440,
+    "bodyOverflow": 0,
+    "headings": [
+      "This site can’t be reached"
+    ],
+    "off": [],
+    "small": [
+      {
+        "label": "Checking the proxy and the firewall",
+        "cls": "",
+        "w": 241,
+        "h": 18
+      },
+      {
+        "label": "Reload",
+        "cls": "blue-button text-button",
+        "w": 74,
+        "h": 31
+      },
+      {
+        "label": "Details",
+        "cls": "secondary-button text-button\n              small-l",
+        "w": 74,
+        "h": 33
+      }
+    ],
+    "bodyText": "This site can’t be reached\n\n127.0.0.1 refused to connect.\n\nTry:\n\nChecking the connection\nChecking the proxy and the firewall\nERR_CONNECTION_REFUSED\nReload\nDetails"
+  },
+  {
+    "file": "output/ui-polish-live/journal-390.png",
+    "route": "/",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "bodyOverflow": 0,
+    "headings": [
+      "This site can’t be reached"
+    ],
+    "off": [],
+    "small": [
+      {
+        "label": "Checking the proxy and the firewall",
+        "cls": "",
+        "w": 241,
+        "h": 18
+      }
+    ],
+    "bodyText": "This site can’t be reached\n\n127.0.0.1 refused to connect.\n\nTry:\n\nChecking the connection\nChecking the proxy and the firewall\nERR_CONNECTION_REFUSED\nReload\nDetails"
+  }
+]

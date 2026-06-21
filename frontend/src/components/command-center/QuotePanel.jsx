@@ -67,7 +67,7 @@ export function QuotePanel({ quote, loading = false, error = '', onRetry }) {
           <dt>Session</dt>
           <dd>{quote.market_session || 'Unknown'}</dd>
         </div>
-        <div>
+        <div className="quote-delay">
           <dt>Delay</dt>
           <dd>{formatDelayStatus(quote.quote_delay_status)}</dd>
         </div>

@@ -440,7 +440,7 @@
   position: absolute;
   inset: 0;
   border: 0;
-  background: rgba(var(--black-rgb), 0.7);
+  background: rgba(var(--black-rgb), 0.56);
   cursor: pointer;
   animation: fadeIn 0.15s var(--ease-out-quart);
 }

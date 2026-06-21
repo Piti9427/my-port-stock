@@ -95,6 +95,18 @@ test('mobile route CSS stacks dense workspaces without clipping and enforces 44p
   expect(styles).toMatch(/\.ticker-row__quick-analyze,\s*\.search-clear\s*{[^}]*min-width:\s*44px[^}]*min-height:\s*44px/s);
 });
 
+test('command center and journal have mobile-specific product UI adaptations', () => {
+  const styles = read('src/styles/pages.css');
+
+  expect(styles).toMatch(/\.command-results-column\s*{[^}]*align-content:\s*start/s);
+  expect(styles).toMatch(/\.command-agent-panel\s*{[^}]*min-height:\s*240px/s);
+  expect(styles).toMatch(/@media \(max-width: 560px\)[\s\S]*\.command-quote-metrics\s*{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  expect(styles).toMatch(/@media \(max-width: 560px\)[\s\S]*\.command-quote-metrics \.quote-delay\s*{[^}]*grid-column:\s*1 \/ -1/s);
+  expect(styles).toMatch(/@media \(max-width: 640px\)[\s\S]*\.journal-table thead\s*{[^}]*display:\s*none/s);
+  expect(styles).toMatch(/@media \(max-width: 640px\)[\s\S]*\.journal-row\s*{[^}]*display:\s*grid/s);
+  expect(styles).toMatch(/@media \(max-width: 640px\)[\s\S]*\.journal-row td::before\s*{[^}]*content:\s*attr\(data-label\)/s);
+});
+
 test('viewport-height workspaces flex below the dynamic shell header', () => {
   const layout = read('src/styles/layout.css');
   const pages = read('src/styles/pages.css');

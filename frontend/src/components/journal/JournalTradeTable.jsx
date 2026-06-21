@@ -69,24 +69,26 @@ export function JournalTradeTable({ emptyAction, emptyDescription, expandedTrade
                     }
                   }}
                 >
-                  <td>{formatDate(trade.date || trade.created_at)}</td>
-                  <td>
+                  <td data-label="Date">{formatDate(trade.date || trade.created_at)}</td>
+                  <td data-label="Ticker">
                     <Link className="ticker-detail-inline-link" to={`/ticker/${trade.ticker}`} onClick={(event) => event.stopPropagation()}>
                       {trade.ticker}
                     </Link>
                   </td>
-                  <td>
+                  <td data-label="Type">
                     <span className={`journal-type ${String(trade.type).toLowerCase()}`}>{trade.type || 'TRADE'}</span>
                   </td>
-                  <td>{trade.shares ?? '—'}</td>
-                  <td className="price-mono">{formatCurrency(trade.price ?? trade.entry)}</td>
-                  <td>
+                  <td data-label="Shares">{trade.shares ?? '—'}</td>
+                  <td className="price-mono" data-label="Price">
+                    {formatCurrency(trade.price ?? trade.entry)}
+                  </td>
+                  <td data-label="Mode">
                     <span className="journal-mode-badge">{trade.mode || 'N/A'}</span>
                   </td>
-                  <td>
+                  <td data-label="Status">
                     <span className={`journal-status-badge ${String(trade.status || 'OPEN').toLowerCase()}`}>{statusLabel(trade.status)}</span>
                   </td>
-                  <td className={`price-mono ${profitClass(trade.profit)}`}>
+                  <td className={`price-mono ${profitClass(trade.profit)}`} data-label="P/L">
                     {Number.isFinite(Number(trade.profit)) ? formatCurrency(trade.profit) : '—'}
                   </td>
                 </tr>

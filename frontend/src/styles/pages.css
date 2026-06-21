@@ -4090,6 +4090,10 @@
   gap: var(--space-5);
 }
 
+.command-results-column {
+  align-content: start;
+}
+
 .command-panel {
   min-width: 0;
   padding: var(--space-5);
@@ -4249,7 +4253,7 @@
 }
 
 .command-agent-panel {
-  min-height: 180px;
+  min-height: 240px;
   padding: var(--space-5);
   border: 1px solid var(--border-subtle);
   border-top: 0;
@@ -4453,18 +4457,33 @@
   .command-agent-tabs button {
     border-bottom: 1px solid var(--border-subtle);
   }
-  .command-quote-metrics,
   .command-trade-grid,
-  .journal-filters,
   .journal-drawer-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .journal-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .journal-filters .btn-secondary {
+    grid-column: 1 / -1;
+  }
+  .command-quote-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .command-quote-metrics .quote-delay {
+    grid-column: 1 / -1;
   }
   .journal-page {
     padding: var(--space-4);
   }
   .command-quote-metrics > div {
-    border-right: 0;
     border-bottom: 1px solid var(--border-subtle);
+  }
+  .command-quote-metrics > div:nth-child(odd) {
+    border-right: 1px solid var(--border-subtle);
+  }
+  .command-quote-metrics .quote-delay {
+    border-right: 0;
   }
   .command-decision-actions {
     align-items: stretch;
@@ -4476,6 +4495,70 @@
   }
   .command-chat-message {
     max-width: 92%;
+  }
+}
+
+@media (max-width: 380px) {
+  .journal-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .journal-table-wrap {
+    overflow: visible;
+  }
+
+  .journal-table,
+  .journal-table tbody,
+  .journal-table tr,
+  .journal-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .journal-table {
+    min-width: 0;
+  }
+
+  .journal-table thead {
+    display: none;
+  }
+
+  .journal-row {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-panel-solid);
+  }
+
+  .journal-row + .journal-detail-row {
+    margin-top: calc(var(--space-2) * -1);
+  }
+
+  .journal-row td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 32px;
+    padding: 0;
+    border-bottom: 0;
+    text-align: right;
+  }
+
+  .journal-row td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .journal-detail-row td {
+    display: block;
   }
 }
 
