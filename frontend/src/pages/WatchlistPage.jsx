@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { BellOff, Trash2, Plus, TrendingUp, TrendingDown, Minus, RotateCcw, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/clerkAdapter';
 import { fetchWithAuth } from '../lib/api';
 
@@ -71,6 +72,7 @@ UndoToast.propTypes = {
 
 export default function WatchlistPage() {
   const { getToken } = useAuth();
+  const navigate = useNavigate();
   const [watchlist, setWatchlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState([]);
@@ -83,7 +85,7 @@ export default function WatchlistPage() {
 
   const [error, setError] = useState(false);
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     setLoading(true);
     setError(false);
     fetchWithAuth('/api/watchlists', getToken)
@@ -104,11 +106,13 @@ export default function WatchlistPage() {
         setError(true);
       })
       .finally(() => setLoading(false));
-  };
+  }, [getToken]);
 
   useEffect(() => {
+    // Initial route load intentionally owns the async loading/error state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
-  }, [getToken]);
+  }, [loadData]);
 
   const signals = ['All', 'buy-zone', 'accumulate', 'wait', 'monitor'];
   const filtered = signalFilter === 'All' ? watchlist : watchlist.filter((s) => s.aiSignal === signalFilter);
@@ -134,7 +138,7 @@ export default function WatchlistPage() {
   const dismissToast = () => setToast(null);
   const dismissAlert = (id) => setAlerts((a) => a.filter((al) => al.id !== id));
 
-  const handleAddTicker = () => {
+  const handleAddTicker = useCallback(() => {
     const trimmed = newTicker.trim();
     if (!trimmed) {
       setAddError('Enter a ticker symbol.');
@@ -169,23 +173,26 @@ export default function WatchlistPage() {
     setShowAddModal(false);
     setNewTicker('');
     setAddError('');
-  };
+  }, [newTicker, watchlist]);
 
-  const handleModalKeyDown = (e) => {
-    if (e.key === 'Escape') {
-      setShowAddModal(false);
-      setNewTicker('');
-      setAddError('');
-    }
-    if (e.key === 'Enter') handleAddTicker();
-  };
+  const handleModalKeyDown = useCallback(
+    (e) => {
+      if (e.key === 'Escape') {
+        setShowAddModal(false);
+        setNewTicker('');
+        setAddError('');
+      }
+      if (e.key === 'Enter') handleAddTicker();
+    },
+    [handleAddTicker]
+  );
 
   useEffect(() => {
     if (!showAddModal) return undefined;
     const onKeyDown = (e) => handleModalKeyDown(e);
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [showAddModal, newTicker]);
+  }, [handleModalKeyDown, showAddModal]);
 
   const closeAddModal = () => {
     setShowAddModal(false);
@@ -244,7 +251,18 @@ export default function WatchlistPage() {
       const sig = SIGNAL_META[s.aiSignal];
       const isUp = s.changePct >= 0;
       return (
-        <tr key={s.ticker} className="watchlist-row">
+        <tr
+          key={s.ticker}
+          className="watchlist-row"
+          tabIndex={0}
+          onClick={() => navigate(`/ticker/${s.ticker}`)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              navigate(`/ticker/${s.ticker}`);
+            }
+          }}
+        >
           <td>
             <div className="ticker-cell">
               <div
@@ -348,7 +366,10 @@ export default function WatchlistPage() {
           <td style={{ textAlign: 'right' }}>
             <button
               className="btn-icon"
-              onClick={() => removeFromWatchlist(s.ticker)}
+              onClick={(event) => {
+                event.stopPropagation();
+                removeFromWatchlist(s.ticker);
+              }}
               aria-label={`Remove ${s.ticker} from watchlist`}
               title={`Remove ${s.ticker}`}
             >

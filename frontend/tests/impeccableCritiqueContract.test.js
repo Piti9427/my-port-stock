@@ -5,6 +5,11 @@ import path from 'node:path';
 const root = path.resolve(__dirname, '..');
 
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
+const readCssBundle = () => {
+  const entry = read('src/index.css');
+  const modules = Array.from(entry.matchAll(/@import\s+'\.\/styles\/([^']+)';/g), (match) => read(`src/styles/${match[1]}`));
+  return [entry, ...modules].join('\n');
+};
 
 describe('impeccable critique remediation contract', () => {
   it('keeps runtime data pages explicit about source, empty states, and no fake live feed', () => {
@@ -28,21 +33,21 @@ describe('impeccable critique remediation contract', () => {
   });
 
   it('keeps scenario planner protected against invalid trade math', () => {
-    const dashboard = read('src/pages/DashboardPage.jsx');
+    const scenarioPlanner = read('src/components/ScenarioPlanner.jsx');
 
-    expect(dashboard).toContain('ราคาเป้าหมายต้องสูงกว่าจุดตัดขาดทุน');
-    expect(dashboard).toContain('แนวรับต้องเรียงจาก S1 สูงสุดไป S3 ต่ำสุด');
-    expect(dashboard).toContain("disabled={!validation.canSave || saveStatus === 'Saving...'}");
+    expect(scenarioPlanner).toContain('ราคาเป้าหมายต้องสูงกว่าจุดตัดขาดทุน');
+    expect(scenarioPlanner).toContain('แนวรับต้องเรียงจาก S1 สูงสุดไป S3 ต่ำสุด');
+    expect(scenarioPlanner).toContain('disabled={hasErrors || rows.length === 0}');
   });
 
   it('does not keep Inter remnants in product UI CSS', () => {
-    const css = read('src/index.css');
+    const css = readCssBundle();
 
     expect(css).not.toMatch(/font-family:\s*['"]Inter['"]/);
   });
 
   it('does not reintroduce banned decorative UI patterns in source CSS', () => {
-    const css = read('src/index.css');
+    const css = readCssBundle();
 
     expect(css).not.toMatch(/background-clip:\s*text/);
     expect(css).not.toMatch(/transition:[^;]*width/);

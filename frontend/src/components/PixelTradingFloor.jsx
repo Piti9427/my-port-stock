@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { User, Cpu, Activity, Briefcase, FileSearch, ShieldAlert } from 'lucide-react';
 
@@ -56,31 +56,7 @@ export default function PixelTradingFloor() {
 
   const wsRef = useRef(null);
 
-  useEffect(() => {
-    // Connect to WebSocket
-    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws/agent-events';
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'AGENT_STATE_CHANGE') {
-          handleAgentStateChange(data);
-        }
-      } catch (err) {
-        console.error('Failed to parse WS message', err);
-      }
-    };
-
-    return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.close();
-      }
-    };
-  }, []);
-
-  const handleAgentStateChange = (data) => {
+  const handleAgentStateChange = useCallback((data) => {
     const { agent, state, message } = data;
 
     setAgents((prev) => {
@@ -108,7 +84,29 @@ export default function PixelTradingFloor() {
         },
       };
     });
-  };
+  }, []);
+
+  useEffect(() => {
+    // Connect to WebSocket
+    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws/agent-events';
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'AGENT_STATE_CHANGE') {
+          handleAgentStateChange(data);
+        }
+      } catch (err) {
+        console.error('Failed to parse WS message', err);
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [handleAgentStateChange]);
 
   return (
     <div
