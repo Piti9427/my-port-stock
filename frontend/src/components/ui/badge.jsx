@@ -24,4 +24,4 @@ const Badge = React.forwardRef(function Badge({ className, variant, ...props }, 
   return <div ref={ref} className={cn(badgeVariants({ variant }), className)} {...props} />;
 });
 
-export { Badge, badgeVariants };
+export { Badge };

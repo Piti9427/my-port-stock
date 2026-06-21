@@ -1,0 +1,6 @@
+/* Utility classes reserved for cross-page helpers that are not component or route specific. */
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand-primary) !important;
+  outline-offset: 2px;
+}
