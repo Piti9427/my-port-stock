@@ -56,6 +56,28 @@ describe("API Routes", () => {
     assert.equal(res.statusCode, 200);
     assert.equal(res.body.status, "INSUFFICIENT_DATA");
   });
+
+  it("fails closed on invalid chat ticker", async () => {
+    const { app } = require("../server");
+
+    const res = await request(app)
+      .post("/api/chat")
+      .send({ ticker: "not valid ticker", message: "What changed?" });
+
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.status, "INSUFFICIENT_DATA");
+  });
+
+  it("requires authenticated context before market chat", async () => {
+    const { app } = require("../server");
+
+    const res = await request(app)
+      .post("/api/chat")
+      .send({ ticker: "NVDA", message: "What invalidates the thesis?" });
+
+    assert.equal(res.statusCode, 401);
+    assert.equal(res.body.error, "Unauthorized");
+  });
 });
 
 describe("runtime portfolio isolation", () => {

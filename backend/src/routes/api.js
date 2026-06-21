@@ -1,26 +1,19 @@
 'use strict';
 const express = require('express');
 const { z } = require('zod');
-const { getAuth } = require('@clerk/express');
+const { getRequestUserId } = require('../auth/requestAuth');
 const { default: YahooFinance } = require('yahoo-finance2');
 
 const router = express.Router();
 
 function getUserId(req) {
-  if (req.auth?.userId) {
-    return req.auth.userId;
-  }
-  try {
-    return getAuth(req).userId;
-  } catch (err) {
-    console.error('Error getting userId:', err.message);
-    return null;
-  }
+  return getRequestUserId(req);
 }
 
 const { getScopedDb } = require('../db');
 const { supabaseConfigured } = require('../db/supabaseClient');
 const { normalizeTicker } = require('../common/format');
+const { fetchSparkline } = require('../services/marketData');
 
 const yahooFinance = new YahooFinance();
 
@@ -43,9 +36,7 @@ async function getSparkline(ticker) {
     if (now - cached.timestamp < SPARKLINE_TTL) return cached.data;
   }
   try {
-    const period1 = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const res = await yahooFinance.historical(ticker, { period1, interval: '1d' });
-    const data = res.map(r => r.close);
+    const data = await fetchSparkline(ticker, now);
     sparklineCache.set(ticker, { timestamp: now, data });
     return data;
   } catch (e) {

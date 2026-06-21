@@ -6,6 +6,7 @@ function buildVerifiedDataPacket(ticker, quotePacket, options = {}) {
   const journalContext = options.journalContext || readJournalContext(ticker);
   const portfolioContext =
     options.portfolioContext || readTickerPortfolioContext(ticker);
+  const historicalContextWarning = options.historicalContextWarning || null;
   const knownConflicts = [];
   const stalenessWarnings = [];
 
@@ -15,6 +16,10 @@ function buildVerifiedDataPacket(ticker, quotePacket, options = {}) {
 
   if (portfolioContext?.stale_hypothesis) {
     stalenessWarnings.push("Portfolio/watchlist data is historical context only");
+  }
+
+  if (historicalContextWarning) {
+    stalenessWarnings.push(historicalContextWarning);
   }
 
   if ((journalContext?.unresolved_issues?.length ?? 0) > 0) {
@@ -55,6 +60,7 @@ function buildVerifiedDataPacket(ticker, quotePacket, options = {}) {
     },
     portfolio_context: portfolioContext,
     journal_context: journalContext,
+    historical_context_warning: historicalContextWarning,
     known_conflicts: knownConflicts,
     staleness_warnings: stalenessWarnings,
     quote_packet: quotePacket,
