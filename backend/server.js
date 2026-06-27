@@ -215,6 +215,7 @@ function sanitizeHoldingRow(row) {
     sector: row?.sector || null,
     notes: row?.notes || null,
     source_note: row?.source_note || null,
+    opened_at: row?.opened_at || null,
   };
 }
 
@@ -235,6 +236,7 @@ function sanitizeJournalRow(row) {
     profit: toFiniteNumber(row?.profit, null),
     notes: row?.notes || null,
     source_note: row?.source_note || null,
+    cognitive_bias: row?.cognitive_bias || null,
   };
 }
 

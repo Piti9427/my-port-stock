@@ -55,11 +55,12 @@ async function enrichWithMarketData(items) {
         price: quote.regularMarketPrice,
         change: quote.regularMarketChange,
         changePct: quote.regularMarketChangePercent,
+        beta: quote.beta || 1.0,
         spark
       };
     } catch (e) {
       console.error(`Error enriching market data for ${item.ticker}:`, e.message);
-      return { ...item, price: null, change: null, changePct: null, spark: [] };
+      return { ...item, price: null, change: null, changePct: null, beta: 1.0, spark: [] };
     }
   }));
 }
@@ -95,21 +96,65 @@ const JournalSchema = z.object({
   profit: z.number().optional(),
   notes: z.string().trim().optional(),
   source_note: z.string().trim().optional(),
+  cognitive_bias: z.string().trim().nullable().optional(),
 });
 
 // Holdings Routes
 router.get('/holdings', async (req, res) => {
   if (!supabaseConfigured) {
-    return res.status(200).json(runtimeInsufficientData("Supabase is not configured", { holdings: [] }));
+    return res.status(200).json([]);
   }
   const userId = getUserId(req);
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
+    const { getUsdThbRate } = require('../services/marketData');
     const userDb = getScopedDb(userId);
     const holdings = await userDb.getUserHoldings(userId);
     const enriched = await enrichWithMarketData(holdings);
-    res.json(enriched);
+
+    const thbRate = await getUsdThbRate();
+
+    const finalHoldings = enriched.map(item => {
+      const price = item.price || item.avg_cost || 0;
+      const shares = item.shares || 0;
+      const costValueUsd = shares * (item.avg_cost || 0);
+      const currentValueUsd = shares * price;
+
+      // Beta calculation
+      const beta = item.beta || 1.0;
+
+      // P/L calculations
+      const plUsd = currentValueUsd - costValueUsd;
+      const isUsd = !item.ticker.endsWith('.BK');
+      const rate = isUsd ? thbRate : 1.0;
+
+      // Position Age & Time Stop check
+      let ageDays = 0;
+      if (item.opened_at) {
+        const opened = new Date(item.opened_at);
+        const today = new Date();
+        const diff = today.getTime() - opened.getTime();
+        ageDays = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+      }
+
+      const isSwing = item.mode === 'Swing Trade' || true;
+      const timeStopLimit = isSwing ? 15 : 5;
+      const timeStopHit = ageDays > timeStopLimit;
+
+      return {
+        ...item,
+        beta,
+        current_value_usd: currentValueUsd,
+        pl_usd: plUsd,
+        pl_thb: plUsd * rate,
+        fx_impact_thb: 0.0, // Static exchange rate assumed
+        age_days: ageDays,
+        time_stop_hit: timeStopHit,
+      };
+    });
+
+    res.json(finalHoldings);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -293,6 +338,46 @@ router.delete('/journal/:id', async (req, res) => {
 
     if (error) throw error;
     res.status(200).json({ message: 'Journal entry soft-deleted successfully', data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Watchlist Scanner Route
+router.get('/watchlist/scan', async (req, res) => {
+  if (!supabaseConfigured) {
+    return res.status(200).json(runtimeInsufficientData("Supabase is not configured", { alerts: [] }));
+  }
+  const userId = getUserId(req);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const userDb = getScopedDb(userId);
+    const watchlists = await userDb.getUserWatchlists(userId);
+    const enriched = await enrichWithMarketData(watchlists);
+
+    const alerts = enriched.map(item => {
+      const lastPrice = item.price;
+      const alertPrice = item.alert_price;
+      let triggered = false;
+
+      if (lastPrice && alertPrice) {
+        const pctDiff = Math.abs(lastPrice - alertPrice) / alertPrice;
+        if (pctDiff <= 0.01) {
+          triggered = true;
+        }
+      }
+
+      return {
+        id: item.id,
+        ticker: item.ticker,
+        last_price: lastPrice,
+        alert_price: alertPrice,
+        triggered,
+      };
+    });
+
+    res.json({ alerts });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
