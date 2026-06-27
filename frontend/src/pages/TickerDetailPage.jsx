@@ -27,6 +27,12 @@ function formatUsd(value) {
   return `$${numeric.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+function formatPercent(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return '—';
+  return `${(numeric * 100).toFixed(2)}%`;
+}
+
 function formatNumber(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return '—';
@@ -85,6 +91,12 @@ export default function TickerDetailPage() {
   const sources = useMemo(() => priceSources(quotePayload, packetPayload), [quotePayload, packetPayload]);
   const gateStatus = formatGateStatus(quotePayload.current_price_acceptance_gate || packetPayload.current_price_acceptance_gate);
   const contextSource = packetPayload?.portfolio_context?.source || packetPayload?.journal_context?.source;
+  const oracle = useMemo(() => packetPayload?.fundamental_packet?.oracle || {}, [packetPayload]);
+  const piotroski = oracle.piotroski_f_score;
+  const altman = oracle.altman_z_score;
+  const roce = oracle.roce;
+  const avwap = oracle.anchored_vwap;
+  const earningsDate = oracle.latest_past_earnings_date;
 
   const runAnalysis = useCallback(async () => {
     setAnalyzing(true);
@@ -169,6 +181,42 @@ export default function TickerDetailPage() {
           <MetricCard label="Last Price" value={formatUsd(quotePayload.last_price || packetPayload.last_price)} dataStamp="Display-only quote" mono />
           <MetricCard label="Position" value={holding ? 'Held' : 'Not held'} dataStamp="Supabase holdings" />
           <MetricCard label="Journal Rows" value={String(trades.length)} dataStamp="Supabase journal" mono />
+        </section>
+      )}
+
+      {!loading && (
+        <section className="ticker-detail-grid" style={{ marginTop: 'var(--space-4)' }}>
+          <MetricCard
+            label="Piotroski F-Score"
+            value={piotroski !== null && piotroski !== undefined ? `${piotroski}/9` : '—'}
+            dataStamp="Oracle F-Score"
+            mono
+          />
+          <MetricCard
+            label="Altman Z-Score"
+            value={altman !== null && altman !== undefined ? altman.toFixed(2) : '—'}
+            change={altman !== null && altman < 1.81 ? 'DISTRESS' : (altman > 2.99 ? 'SAFE' : 'GRAY')}
+            changeType={altman !== null && altman < 1.81 ? 'negative' : (altman > 2.99 ? 'positive' : 'neutral')}
+            dataStamp="Oracle Z-Score"
+            mono
+          />
+          <MetricCard
+            label="ROCE"
+            value={formatPercent(roce)}
+            dataStamp="Capital efficiency"
+            mono
+          />
+        </section>
+      )}
+
+      {!loading && avwap !== null && (
+        <section className="ticker-detail-grid" style={{ marginTop: 'var(--space-4)' }}>
+          <MetricCard
+            label="Anchored VWAP"
+            value={formatUsd(avwap)}
+            dataStamp={`Anchored from earnings ${earningsDate || ''}`}
+            mono
+          />
         </section>
       )}
 

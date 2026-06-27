@@ -53,6 +53,29 @@ Keep these at the repository root because they are primary project context or ru
 - Do not move `stock_portfolio.md` or `trade_journal.md`; they are source-of-truth context files.
 - Do not let sub-agent output or browser traces sit at root.
 
+## Documentation Standards
+
+To maintain high AI-Human developer workflow efficiency, all architectural, spec, design, and guide markdown documents under `docs/` must follow these rules:
+
+1. **AI Context Anchors (Frontmatter):**
+   Every documentation file must begin with a YAML frontmatter containing:
+   - `status`: Stable / Active Development / Draft / Obsolete
+   - `audience`: Human Developer & AI Agent / Human Only / AI Agent Only
+   - `associated_adr`: Link or file scheme URL to related ADR(s)
+   - `primary_tests`: Command or script path used to verify compliance
+
+2. **Runnable Verification Blocks:**
+   Every document must include a `## Verification` section at the bottom containing exact, copy-pasteable terminal commands to run.
+
+## Standardized notes/ Template
+
+All workflow, planning, and scoping records under `notes/` must be named in the format `notes/YYYY-MM-DD-short-description.md` and contain the following mandatory sections:
+
+- **Background & Problem:** Core context and reasons for the note.
+- **Architecture Impact:** Affected files, directories, databases, and schemas.
+- **Action Items & Issues:** Checklist of tasks to perform.
+- **Status:** Current status of implementation (e.g., Pending, Active, Completed).
+
 ## Verification
 
 After file organization changes:

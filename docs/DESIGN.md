@@ -1,6 +1,10 @@
 ---
 name: MyPortStock Dark Terminal
 description: Canonical product UI design system for the MyPortStock trading dashboard.
+status: Stable
+audience: Human Developer & AI Agent
+associated_adr: file:///Users/nopparuj/my-agents/MyPortStock/docs/adr/0001-supabase-runtime-source-of-truth.md
+primary_tests: npm run check:frontend-standard
 ---
 
 # Design System: MyPortStock Dark Terminal
@@ -129,3 +133,10 @@ Contrast rules:
 - Start with shared tokens in `frontend/src/index.css` so all logged-in pages inherit the same dark terminal foundation.
 - Then verify page-level surfaces: Dashboard, Command Center, Risk, Market, Journal, Analytics, Config, drawers, forms, tables, empty states, and Clerk/auth handoff.
 - Use Impeccable for UI critique, audit, polish, harden, clarify, and animate work.
+
+## 8. Verification
+
+To verify that the implementation adheres to the visual design tokens and contrast standards, run:
+```bash
+npm run check:frontend-standard
+```

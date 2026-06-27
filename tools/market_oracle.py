@@ -54,6 +54,216 @@ def calculate_macd_state(close):
         return "bearish"
     return "neutral"
 
+
+def get_statement_val(df, row_names, col):
+    if df is None or df.empty or col not in df.columns:
+        return None
+    for name in row_names:
+        if name in df.index:
+            try:
+                val = df.at[name, col]
+                if isinstance(val, (pd.Series, pd.DataFrame)):
+                    val = val.iloc[0] if hasattr(val, 'iloc') else val
+                if pd.isna(val) or val is None:
+                    continue
+                return float(val)
+            except Exception:
+                continue
+    return None
+
+def calculate_piotroski_f(financials, balance_sheet, cashflow):
+    if financials is None or financials.empty:
+        return None
+    if balance_sheet is None or balance_sheet.empty:
+        return None
+    if cashflow is None or cashflow.empty:
+        return None
+        
+    cols = sorted(financials.columns, reverse=True)
+    if len(cols) < 2:
+        return None
+        
+    curr_col = cols[0]
+    prev_col = cols[1]
+    
+    net_inc_curr = get_statement_val(financials, ["Net Income", "Net Income Common Stockholders"], curr_col)
+    net_inc_prev = get_statement_val(financials, ["Net Income", "Net Income Common Stockholders"], prev_col)
+    
+    assets_curr = get_statement_val(balance_sheet, ["Total Assets"], curr_col)
+    assets_prev = get_statement_val(balance_sheet, ["Total Assets"], prev_col)
+    
+    cfo_curr = get_statement_val(cashflow, ["Operating Cash Flow", "Total Cash From Operating Activities"], curr_col)
+    
+    debt_curr = get_statement_val(balance_sheet, ["Long Term Debt", "Total Debt"], curr_col) or 0.0
+    debt_prev = get_statement_val(balance_sheet, ["Long Term Debt", "Total Debt"], prev_col) or 0.0
+    
+    curr_assets_curr = get_statement_val(balance_sheet, ["Current Assets"], curr_col)
+    curr_assets_prev = get_statement_val(balance_sheet, ["Current Assets"], prev_col)
+    curr_liab_curr = get_statement_val(balance_sheet, ["Current Liabilities"], curr_col)
+    curr_liab_prev = get_statement_val(balance_sheet, ["Current Liabilities"], prev_col)
+    
+    shares_curr = get_statement_val(financials, ["Diluted Average Shares", "Basic Average Shares"], curr_col)
+    shares_prev = get_statement_val(financials, ["Diluted Average Shares", "Basic Average Shares"], prev_col)
+    
+    gp_curr = get_statement_val(financials, ["Gross Profit"], curr_col)
+    gp_prev = get_statement_val(financials, ["Gross Profit"], prev_col)
+    rev_curr = get_statement_val(financials, ["Total Revenue", "Operating Revenue"], curr_col)
+    rev_prev = get_statement_val(financials, ["Total Revenue", "Operating Revenue"], prev_col)
+    
+    points = {}
+    
+    # 1. ROA > 0
+    if net_inc_curr is not None and assets_curr and assets_curr > 0:
+        roa_curr = net_inc_curr / assets_curr
+        points["roa_positive"] = 1 if roa_curr > 0 else 0
+    else:
+        points["roa_positive"] = 0
+        
+    # 2. CFO > 0
+    points["cfo_positive"] = 1 if cfo_curr and cfo_curr > 0 else 0
+    
+    # 3. Change in ROA
+    if net_inc_curr is not None and assets_curr and assets_curr > 0 and net_inc_prev is not None and assets_prev and assets_prev > 0:
+        roa_curr = net_inc_curr / assets_curr
+        roa_prev = net_inc_prev / assets_prev
+        points["roa_increase"] = 1 if roa_curr > roa_prev else 0
+    else:
+        points["roa_increase"] = 0
+        
+    # 4. Accruals (CFO > Net Income)
+    points["accruals"] = 1 if cfo_curr is not None and net_inc_curr is not None and cfo_curr > net_inc_curr else 0
+    
+    # 5. Change in Leverage
+    if assets_curr and assets_curr > 0 and assets_prev and assets_prev > 0:
+        lev_curr = debt_curr / assets_curr
+        lev_prev = debt_prev / assets_prev
+        points["leverage_decrease"] = 1 if lev_curr < lev_prev or (lev_curr == 0 and lev_prev == 0) else 0
+    else:
+        points["leverage_decrease"] = 0
+        
+    # 6. Change in Liquidity
+    if curr_assets_curr is not None and curr_liab_curr and curr_liab_curr > 0 and curr_assets_prev is not None and curr_liab_prev and curr_liab_prev > 0:
+        cr_curr = curr_assets_curr / curr_liab_curr
+        cr_prev = curr_assets_prev / curr_liab_prev
+        points["liquidity_increase"] = 1 if cr_curr > cr_prev else 0
+    else:
+        points["liquidity_increase"] = 0
+        
+    # 7. No share dilution
+    points["no_share_dilution"] = 1 if shares_curr is not None and shares_prev is not None and shares_curr <= shares_prev else 0
+    
+    # 8. Change in Gross Margin
+    if gp_curr is not None and rev_curr and rev_curr > 0 and gp_prev is not None and rev_prev and rev_prev > 0:
+        gm_curr = gp_curr / rev_curr
+        gm_prev = gp_prev / rev_prev
+        points["margin_increase"] = 1 if gm_curr > gm_prev else 0
+    else:
+        points["margin_increase"] = 0
+        
+    # 9. Change in Asset Turnover
+    if rev_curr is not None and assets_curr and assets_curr > 0 and rev_prev is not None and assets_prev and assets_prev > 0:
+        at_curr = rev_curr / assets_curr
+        at_prev = rev_prev / assets_prev
+        points["turnover_increase"] = 1 if at_curr > at_prev else 0
+    else:
+        points["turnover_increase"] = 0
+        
+    f_score = sum(points.values())
+    return f_score
+
+def calculate_altman_z(financials, balance_sheet, info, last_price, col):
+    working_capital = get_statement_val(balance_sheet, ["Working Capital"], col)
+    current_assets = get_statement_val(balance_sheet, ["Current Assets"], col)
+    current_liab = get_statement_val(balance_sheet, ["Current Liabilities"], col)
+    if working_capital is None and current_assets is not None and current_liab is not None:
+        working_capital = current_assets - current_liab
+        
+    total_assets = get_statement_val(balance_sheet, ["Total Assets"], col)
+    retained_earnings = get_statement_val(balance_sheet, ["Retained Earnings"], col)
+    ebit = get_statement_val(financials, ["EBIT", "Operating Income"], col)
+    total_liab = get_statement_val(balance_sheet, ["Total Liabilities Net Minority Interest", "Total Liabilities"], col)
+    revenue = get_statement_val(financials, ["Total Revenue", "Operating Revenue"], col)
+    
+    market_cap = info.get("marketCap")
+    if not market_cap:
+        shares = get_statement_val(balance_sheet, ["Ordinary Shares Number", "Share Issued"], col)
+        if shares and last_price:
+            market_cap = shares * last_price
+            
+    if None in (working_capital, total_assets, retained_earnings, ebit, total_liab, revenue, market_cap):
+        return None
+        
+    if total_assets == 0 or total_liab == 0:
+        return None
+        
+    x1 = working_capital / total_assets
+    x2 = retained_earnings / total_assets
+    x3 = ebit / total_assets
+    x4 = market_cap / total_liab
+    x5 = revenue / total_assets
+    
+    z_score = 1.2 * x1 + 1.4 * x2 + 3.3 * x3 + 0.6 * x4 + 0.999 * x5
+    return z_score
+
+def calculate_roce(financials, balance_sheet, col):
+    ebit = get_statement_val(financials, ["EBIT", "Operating Income"], col)
+    total_assets = get_statement_val(balance_sheet, ["Total Assets"], col)
+    current_liab = get_statement_val(balance_sheet, ["Current Liabilities"], col)
+    if None in (ebit, total_assets, current_liab):
+        return None
+    capital_employed = total_assets - current_liab
+    if capital_employed <= 0:
+        return None
+    return ebit / capital_employed
+
+def get_latest_past_earnings_date(ticker):
+    try:
+        import datetime
+        import pytz
+        df = ticker.earnings_dates
+        if df is None or df.empty:
+            return None
+            
+        now = datetime.datetime.now(pytz.utc)
+        past_dates = []
+        for idx in df.index:
+            dt = idx.to_pydatetime()
+            if dt.tzinfo is not None:
+                dt = dt.astimezone(pytz.utc)
+            else:
+                dt = pytz.utc.localize(dt)
+            if dt < now:
+                past_dates.append(dt)
+                
+        if not past_dates:
+            return None
+            
+        return max(past_dates)
+    except Exception:
+        return None
+
+def calculate_anchored_vwap(history, anchor_date):
+    if history is None or history.empty or anchor_date is None:
+        return None
+        
+    hist = history.copy()
+    hist.index = pd.to_datetime(hist.index).tz_localize(None)
+    anchor_dt = pd.to_datetime(anchor_date).tz_localize(None)
+    
+    filtered = hist[hist.index >= anchor_dt]
+    if filtered.empty:
+        return None
+        
+    typical_price = (filtered["High"] + filtered["Low"] + filtered["Close"]) / 3
+    pv = typical_price * filtered["Volume"]
+    cum_pv = pv.sum()
+    cum_vol = filtered["Volume"].sum()
+    
+    if cum_vol == 0:
+        return None
+        
+    return clean_number(cum_pv / cum_vol)
+
 def build_financials(ticker):
     income = getattr(ticker, "quarterly_financials", None)
     if income is None or income.empty:
@@ -217,6 +427,32 @@ def analyze_stock(ticker_symbol):
         peg = info.get("pegRatio")
         fwd_pe = info.get("forwardPE")
         
+        financials = getattr(t, "financials", None)
+        if financials is None or financials.empty:
+            financials = getattr(t, "quarterly_financials", None)
+        if financials is None or financials.empty:
+            financials = getattr(t, "income_stmt", None)
+        if financials is None or financials.empty:
+            financials = getattr(t, "quarterly_income_stmt", None)
+
+        balance_sheet = getattr(t, "balance_sheet", None)
+        if balance_sheet is None or balance_sheet.empty:
+            balance_sheet = getattr(t, "quarterly_balance_sheet", None)
+
+        cashflow = getattr(t, "cashflow", None)
+        if cashflow is None or cashflow.empty:
+            cashflow = getattr(t, "quarterly_cashflow", None)
+
+        cols = sorted(financials.columns, reverse=True) if financials is not None and not financials.empty else []
+        curr_col = cols[0] if cols else None
+
+        f_score = calculate_piotroski_f(financials, balance_sheet, cashflow)
+        z_score = calculate_altman_z(financials, balance_sheet, info, last_price, curr_col) if curr_col else None
+        roce = calculate_roce(financials, balance_sheet, curr_col) if curr_col else None
+        
+        latest_past_earnings_date = get_latest_past_earnings_date(t)
+        avwap = calculate_anchored_vwap(hist, latest_past_earnings_date)
+        
         # Technicals
         ma50 = hist["Close"].rolling(window=50, min_periods=50).mean().iloc[-1]
         ma200 = hist["Close"].rolling(window=200, min_periods=200).mean().iloc[-1] if len(hist) >= 200 else None
@@ -261,6 +497,11 @@ def analyze_stock(ticker_symbol):
             "atr_14": clean_number(atr),
             "stop_loss_1_5x": clean_number(stop_loss),
             "target_t1_1_2_rr": clean_number(t1_target),
+            "piotroski_f_score": f_score,
+            "altman_z_score": clean_number(z_score, 4),
+            "roce": clean_number(roce, 4),
+            "anchored_vwap": clean_number(avwap, 2),
+            "latest_past_earnings_date": latest_past_earnings_date.date().isoformat() if hasattr(latest_past_earnings_date, "date") else (latest_past_earnings_date.isoformat() if latest_past_earnings_date else None),
             "gates": {
                 "peg_gate": pass_peg,
                 "trend_50ma": price_vs_50ma

@@ -67,6 +67,16 @@ describe('TickerDetailPage', () => {
               journal_checked: true,
               trade_rows: [{ ticker: 'NVDA', status: 'OPEN', entry: 175, stop_loss: 160 }],
             },
+            fundamental_packet: {
+              status: 'PASS',
+              oracle: {
+                piotroski_f_score: 8,
+                altman_z_score: 3.5,
+                roce: 0.15,
+                anchored_vwap: 185.5,
+                latest_past_earnings_date: '2026-04-30',
+              },
+            },
             historical_context_warning: 'Markdown portfolio/journal is historical context only',
           })
         );
@@ -94,6 +104,16 @@ describe('TickerDetailPage', () => {
     expect(screen.getByText(/Shares/i)).toBeInTheDocument();
     expect(screen.getByText('2', { selector: '.ticker-detail-value' })).toBeInTheDocument();
     expect(screen.getByText(/Yahoo Finance API/)).toBeInTheDocument();
+
+    // Verify institutional metrics render correctly
+    expect(screen.getByText(/Piotroski F-Score/i)).toBeInTheDocument();
+    expect(screen.getByText('8/9')).toBeInTheDocument();
+    expect(screen.getByText(/Altman Z-Score/i)).toBeInTheDocument();
+    expect(screen.getByText('3.50')).toBeInTheDocument();
+    expect(screen.getByText(/ROCE/i)).toBeInTheDocument();
+    expect(screen.getByText('15.00%')).toBeInTheDocument();
+    expect(screen.getByText(/Anchored VWAP/i)).toBeInTheDocument();
+    expect(screen.getByText('$185.50')).toBeInTheDocument();
   });
 
   test('shows Wait state for insufficient runtime context instead of generic error', async () => {
