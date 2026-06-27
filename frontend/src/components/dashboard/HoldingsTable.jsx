@@ -7,13 +7,30 @@ function numberValue(value) {
   return Number.isFinite(numeric) ? numeric : 0;
 }
 
-function money(value) {
-  return `฿${numberValue(value).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+function formatCurrency(value, ticker, { signed = false } = {}) {
+  const numeric = Number.isFinite(Number(value)) ? Number(value) : 0;
+  const isUsd = ticker && !ticker.endsWith('.BK');
+  
+  const absValue = Math.abs(numeric);
+  const formattedVal = absValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const symbol = isUsd ? '$' : '฿';
+  
+  if (signed) {
+    const sign = numeric > 0 ? '+' : (numeric < 0 ? '-' : '');
+    return `${sign}${symbol}${formattedVal}`;
+  } else {
+    const sign = numeric < 0 ? '-' : '';
+    return `${sign}${symbol}${formattedVal}`;
+  }
 }
 
-function semanticValue(value, formatter = money) {
-  const numeric = numberValue(value);
-  return <span className={numeric > 0 ? 'semantic-positive' : numeric < 0 ? 'semantic-negative' : 'semantic-neutral'}>{formatter(numeric)}</span>;
+function semanticValue(value, ticker, { signed = false } = {}) {
+  const numeric = Number.isFinite(Number(value)) ? Number(value) : 0;
+  return (
+    <span className={numeric > 0 ? 'semantic-positive' : numeric < 0 ? 'semantic-negative' : 'semantic-neutral'}>
+      {formatCurrency(numeric, ticker, { signed })}
+    </span>
+  );
 }
 
 export function HoldingsTable({ holdings = [], loading = false, status = 'OK', onOpenTicker, onPlan, onRetry, onFirstRunAction }) {
@@ -31,6 +48,7 @@ export function HoldingsTable({ holdings = [], loading = false, status = 'OK', o
         shares,
         avgCost: averageCost,
         price,
+        value,
         pnl,
         pnlPct: averageCost > 0 ? ((price - averageCost) / averageCost) * 100 : 0,
         weight: totalValue > 0 ? (value / totalValue) * 100 : 0,
@@ -41,17 +59,25 @@ export function HoldingsTable({ holdings = [], loading = false, status = 'OK', o
   const columns = useMemo(
     () => [
       { key: 'ticker', label: 'Ticker', mono: true, sortable: true },
-      { key: 'shares', label: 'Shares', mono: true, align: 'right', sortable: true },
-      { key: 'avgCost', label: 'Avg Cost', mono: true, align: 'right', sortable: true, render: (row) => money(row.avgCost) },
-      { key: 'price', label: 'Current', mono: true, align: 'right', sortable: true, render: (row) => money(row.price) },
-      { key: 'pnl', label: 'P/L', mono: true, align: 'right', sortable: true, render: (row) => semanticValue(row.pnl) },
+      { key: 'shares', label: 'Shares', mono: true, align: 'right', sortable: true, render: (row) => row.shares.toLocaleString(undefined, { maximumFractionDigits: 4 }) },
+      { key: 'avgCost', label: 'Avg Cost', mono: true, align: 'right', sortable: true, render: (row) => formatCurrency(row.avgCost, row.ticker) },
+      { key: 'price', label: 'Current', mono: true, align: 'right', sortable: true, render: (row) => formatCurrency(row.price, row.ticker) },
+      { key: 'value', label: 'Value', mono: true, align: 'right', sortable: true, render: (row) => formatCurrency(row.value, row.ticker) },
+      { key: 'pnl', label: 'P/L', mono: true, align: 'right', sortable: true, render: (row) => semanticValue(row.pnl, row.ticker, { signed: true }) },
       {
         key: 'pnlPct',
         label: 'P/L %',
         mono: true,
         align: 'right',
         sortable: true,
-        render: (row) => semanticValue(row.pnlPct, (value) => `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`),
+        render: (row) => {
+          const val = Number.isFinite(Number(row.pnlPct)) ? Number(row.pnlPct) : 0;
+          return (
+            <span className={val > 0 ? 'semantic-positive' : val < 0 ? 'semantic-negative' : 'semantic-neutral'}>
+              {val >= 0 ? '+' : ''}{val.toFixed(2)}%
+            </span>
+          );
+        },
       },
       { key: 'weight', label: 'Weight', mono: true, align: 'right', sortable: true, render: (row) => `${row.weight.toFixed(1)}%` },
       {
