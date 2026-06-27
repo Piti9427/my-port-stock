@@ -183,17 +183,34 @@ export default function PortfolioRiskPage() {
                     <th>Weight%</th>
                     <th>Stop Distance</th>
                     <th>THB Risk</th>
+                    <th>P/L THB</th>
+                    <th>Age</th>
                     <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {activeSector.holdings.map((holding) => (
-                    <tr key={holding.id || holding.ticker} className={holding.thbRisk === null ? 'risk-row-missing' : ''}>
-                      <td>{holding.ticker}</td>
+                    <tr key={holding.id || holding.ticker} className={`${holding.thbRisk === null ? 'risk-row-missing' : ''} ${holding.time_stop_hit ? 'time-stop-breached' : ''}`}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {holding.ticker}
+                          {holding.time_stop_hit && (
+                            <span style={{ fontSize: '0.65rem', background: '#3f1a1a', color: '#f87171', padding: '2px 4px', borderRadius: '4px', border: '1px solid #7f1d1d', fontFamily: 'monospace' }} title="Time Stop limit exceeded. Recycling of capital recommended.">
+                              ⏰ Time Stop
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td>{formatCurrency(holding.value)}</td>
                       <td>{formatPercent(holding.weight)}</td>
                       <td>{holding.stopDistancePct === null ? 'Unknown' : formatPercent(holding.stopDistancePct)}</td>
                       <td>{holding.thbRisk === null ? 'Unknown' : formatCurrency(holding.thbRisk)}</td>
+                      <td className={holding.pl_thb >= 0 ? 'semantic-positive' : 'semantic-negative'} style={{ color: holding.pl_thb >= 0 ? '#34d399' : '#f87171' }}>
+                        {holding.pl_thb !== undefined ? `${holding.pl_thb >= 0 ? '+' : ''}${Number(holding.pl_thb).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}
+                      </td>
+                      <td style={{ color: holding.time_stop_hit ? '#f87171' : 'inherit' }}>
+                        {holding.age_days !== undefined ? `${holding.age_days} วัน` : '—'}
+                      </td>
                       <td>{holding.status}</td>
                     </tr>
                   ))}
