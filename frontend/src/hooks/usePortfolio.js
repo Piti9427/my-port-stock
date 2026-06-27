@@ -14,14 +14,28 @@ function numberValue(value) {
 
 function buildSummary(holdings) {
   const sectors = new Set();
-  const totalValue = holdings.reduce((sum, holding) => {
+  let totalValue = 0;
+  let totalWeightedBeta = 0;
+  let totalBetaWeight = 0;
+
+  holdings.forEach((holding) => {
     if (holding.sector) sectors.add(holding.sector);
-    return sum + numberValue(holding.shares) * numberValue(holding.price);
-  }, 0);
+    const shares = numberValue(holding.shares);
+    const price = numberValue(holding.price || holding.avg_cost);
+    const val = shares * price;
+    totalValue += val;
+
+    const beta = numberValue(holding.beta ?? 1.0);
+    totalWeightedBeta += beta * val;
+    totalBetaWeight += val;
+  });
+
+  const portfolioBeta = totalBetaWeight > 0 ? Number((totalWeightedBeta / totalBetaWeight).toFixed(2)) : 1.0;
 
   return {
     holdingsCount: holdings.length,
     totalValue,
+    portfolioBeta,
     sectorCount: sectors.size,
   };
 }
