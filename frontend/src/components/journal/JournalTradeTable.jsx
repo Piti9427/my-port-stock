@@ -99,6 +99,14 @@ export function JournalTradeTable({ emptyAction, emptyDescription, expandedTrade
                         <section>
                           <h3>Original thesis</h3>
                           <p>{trade.notes || 'No thesis recorded.'}</p>
+                          {trade.cognitive_bias && (
+                            <div style={{ marginTop: '12px' }}>
+                              <strong>Cognitive Bias Tag: </strong>
+                              <span style={{ background: '#271c0c', color: '#fb923c', padding: '2px 6px', borderRadius: '4px', border: '1px solid #7c2d12', fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                                🧠 {trade.cognitive_bias}
+                              </span>
+                            </div>
+                          )}
                         </section>
                         <section>
                           <h3>Entry / exit</h3>

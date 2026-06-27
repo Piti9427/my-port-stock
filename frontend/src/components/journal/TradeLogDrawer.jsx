@@ -42,6 +42,7 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
     stopLoss: '',
     target: '',
     capital: '',
+    cognitiveBias: 'None',
     thesis: '',
   });
   const [error, setError] = useState('');
@@ -77,6 +78,7 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
           target: optionalNumber(form.target),
           stop_loss: optionalNumber(form.stopLoss),
           risk_reward: calculation.rr ? Number(calculation.rr.toFixed(2)) : undefined,
+          cognitive_bias: form.cognitiveBias === 'None' ? null : form.cognitiveBias,
           notes: form.thesis.trim(),
         },
       });
@@ -97,6 +99,18 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
             <option key={ticker} value={ticker} />
           ))}
         </datalist>
+        <div className="journal-drawer-type">
+          {['BUY', 'SELL', 'ADJUST'].map((value) => (
+            <button
+              key={value}
+              className={form.type === value ? 'active' : ''}
+              type="button"
+              onClick={() => update('type', value)}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
         <label>
           <span>Ticker</span>
           <input list="journal-ticker-suggestions" value={form.ticker} onChange={(event) => update('ticker', event.target.value.toUpperCase())} />
@@ -143,7 +157,15 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
             </button>
           ))}
         </div>
-        <label>
+        <label style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span>Cognitive Bias Tag</span>
+          <select value={form.cognitiveBias} onChange={(event) => update('cognitiveBias', event.target.value)} style={{ background: '#18181b', color: '#f4f4f5', border: '1px solid #27272a', padding: '8px', borderRadius: '4px', fontFamily: 'monospace' }}>
+            {['None', 'FOMO', 'Loss Aversion', 'Anchoring', 'Herd Behavior'].map(bias => (
+              <option key={bias} value={bias}>{bias}</option>
+            ))}
+          </select>
+        </label>
+        <label style={{ marginTop: '12px' }}>
           <span>Thesis</span>
           <textarea value={form.thesis} onChange={(event) => update('thesis', event.target.value)} />
         </label>
