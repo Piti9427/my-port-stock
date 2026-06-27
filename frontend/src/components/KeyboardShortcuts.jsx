@@ -1,228 +1,141 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { X } from 'lucide-react';
+import PropTypes from 'prop-types';
+
+const HELP_SHORTCUTS = [
+  { label: 'Dashboard', keys: ['g', 'd'] },
+  { label: 'Risk', keys: ['g', 'r'] },
+  { label: 'Market', keys: ['g', 'm'] },
+  { label: 'Command Center', keys: ['g', 'a'] },
+  { label: 'Journal', keys: ['g', 'j'] },
+  { label: 'Analytics', keys: ['g', 'v'] },
+  { label: 'Command Palette', keys: ['Cmd+K'] },
+  { label: 'Config', keys: ['g', 'c'] },
+];
+
+const SEQUENCE_ROUTES = {
+  gd: '/',
+  gr: '/risk',
+  gm: '/market',
+  ga: '/command-center',
+  gj: '/journal',
+  gv: '/analytics',
+  gc: '/config',
+};
+
+function ShortcutKbd({ children }) {
+  return <kbd className="shortcut-kbd">{children}</kbd>;
+}
+
+ShortcutKbd.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 export default function KeyboardShortcuts() {
   const navigate = useNavigate();
-  const [keySequence, setKeySequence] = useState('');
+  const titleId = useId();
+  const closeButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
+  const sequenceRef = useRef('');
+  const sequenceTimerRef = useRef(null);
   const [showHelp, setShowHelp] = useState(false);
 
+  const openHelp = useCallback(() => {
+    previousFocusRef.current = document.activeElement;
+    setShowHelp(true);
+  }, []);
+
+  const closeHelp = useCallback(() => {
+    setShowHelp(false);
+    requestAnimationFrame(() => previousFocusRef.current?.focus());
+  }, []);
+
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Ignore if typing in an input or textarea
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || e.target.isContentEditable) {
+    const handleKeyDown = (event) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName) || event.target.isContentEditable) {
         return;
       }
 
-      const key = e.key.toLowerCase();
+      const key = event.key.toLowerCase();
 
-      // Global quick shortcuts
-      if (e.key === '?') {
-        setShowHelp((prev) => !prev);
+      if (key === '?') {
+        event.preventDefault();
+        if (showHelp) closeHelp();
+        else openHelp();
         return;
       }
 
-      if (e.key === 'escape' && showHelp) {
-        setShowHelp(false);
+      if (key === 'escape' && showHelp) {
+        event.preventDefault();
+        closeHelp();
         return;
       }
 
-      setKeySequence((prev) => {
-        const nextSequence = prev + key;
+      if (key === 'tab' && showHelp) {
+        event.preventDefault();
+        closeButtonRef.current?.focus();
+        return;
+      }
 
-        // Handle sequences
-        switch (nextSequence) {
-          case 'gd':
-            navigate('/');
-            break;
-          case 'gr':
-            navigate('/risk');
-            break;
-          case 'gm':
-            navigate('/market');
-            break;
-          case 'ga':
-            navigate('/command-center');
-            break;
-          case 'gj':
-            navigate('/journal');
-            break;
-          case 'gv':
-            navigate('/analytics');
-            break;
-          case 'gc':
-            navigate('/config');
-            break;
-          default:
-            // If it's the start of a sequence ('g'), keep it. Otherwise, clear.
-            return key === 'g' ? 'g' : '';
-        }
+      const nextSequence = sequenceRef.current + key;
+      const target = SEQUENCE_ROUTES[nextSequence];
+      sequenceRef.current = target ? '' : key === 'g' ? 'g' : '';
 
-        // Clear sequence if matched
-        return '';
-      });
+      clearTimeout(sequenceTimerRef.current);
+      if (sequenceRef.current) {
+        sequenceTimerRef.current = setTimeout(() => {
+          sequenceRef.current = '';
+        }, 1500);
+      }
+
+      if (target) navigate(target);
     };
 
     globalThis.addEventListener('keydown', handleKeyDown);
-    return () => globalThis.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, showHelp]);
+    return () => {
+      globalThis.removeEventListener('keydown', handleKeyDown);
+      clearTimeout(sequenceTimerRef.current);
+    };
+  }, [closeHelp, navigate, openHelp, showHelp]);
 
-  // Clear sequence automatically after 1.5 seconds to prevent stuck states
   useEffect(() => {
-    if (keySequence) {
-      const timer = setTimeout(() => setKeySequence(''), 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [keySequence]);
+    if (!showHelp) return undefined;
+    const frame = requestAnimationFrame(() => closeButtonRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [showHelp]);
 
   if (!showHelp) return null;
 
-  const Kbd = ({ children }) => (
-    <kbd
-      style={{
-        background: 'var(--surface)',
-        padding: '2px 8px',
-        borderRadius: '4px',
-        border: '1px solid var(--border-subtle)',
-        fontFamily: 'monospace',
-        fontSize: '0.85rem',
-      }}
-    >
-      {children}
-    </kbd>
-  );
-
   return (
-    <div className="shortcut-backdrop" onClick={() => setShowHelp(false)}>
-      <div className="glass-card shortcut-dialog" onClick={(e) => e.stopPropagation()}>
-        <h3
-          style={{
-            marginBottom: '20px',
-            color: 'var(--text-primary)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          Keyboard Shortcuts
-          <button
-            onClick={() => setShowHelp(false)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              fontSize: '1.2rem',
-            }}
-          >
-            &times;
+    <div className="shortcut-backdrop" onClick={closeHelp}>
+      <div
+        className="glass-card shortcut-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="shortcut-dialog-header">
+          <h2 id={titleId}>Keyboard Shortcuts</h2>
+          <button ref={closeButtonRef} className="ui-icon-button" type="button" onClick={closeHelp} aria-label="Close keyboard shortcuts">
+            <X size={16} aria-hidden="true" />
           </button>
-        </h3>
-        <ul
-          style={{
-            listStyle: 'none',
-            padding: 0,
-            margin: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          <li
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span>Dashboard</span>{' '}
-            <span>
-              <Kbd>g</Kbd> <Kbd>d</Kbd>
-            </span>
-          </li>
-          <li
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span>Risk</span>{' '}
-            <span>
-              <Kbd>g</Kbd> <Kbd>r</Kbd>
-            </span>
-          </li>
-          <li
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span>Market</span>{' '}
-            <span>
-              <Kbd>g</Kbd> <Kbd>m</Kbd>
-            </span>
-          </li>
-          <li
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span>Command Center</span>{' '}
-            <span>
-              <Kbd>g</Kbd> <Kbd>a</Kbd>
-            </span>
-          </li>
-          <li
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span>Journal</span>{' '}
-            <span>
-              <Kbd>g</Kbd> <Kbd>j</Kbd>
-            </span>
-          </li>
-          <li
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span>Analytics</span>{' '}
-            <span>
-              <Kbd>g</Kbd> <Kbd>v</Kbd>
-            </span>
-          </li>
-          <li
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span>Config</span>{' '}
-            <span>
-              <Kbd>g</Kbd> <Kbd>c</Kbd>
-            </span>
-          </li>
-          <li
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginTop: '12px',
-              borderTop: '1px solid var(--border-subtle)',
-              paddingTop: '16px',
-            }}
-          >
-            <span>Show Help</span> <Kbd>?</Kbd>
+        </header>
+        <ul className="shortcut-list">
+          {HELP_SHORTCUTS.map((shortcut) => (
+            <li className="shortcut-row" key={shortcut.label}>
+              <span>{shortcut.label}</span>
+              <span className="shortcut-keys">
+                {shortcut.keys.map((key) => (
+                  <ShortcutKbd key={key}>{key}</ShortcutKbd>
+                ))}
+              </span>
+            </li>
+          ))}
+          <li className="shortcut-row shortcut-row-help">
+            <span>Show Help</span>
+            <ShortcutKbd>?</ShortcutKbd>
           </li>
         </ul>
       </div>

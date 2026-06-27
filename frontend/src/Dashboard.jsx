@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Loader2, X, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Search, Loader2, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';

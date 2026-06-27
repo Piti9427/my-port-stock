@@ -48,6 +48,71 @@ function validateAnalysisShape(value) {
   return value;
 }
 
+function unavailableChat(reason) {
+  return {
+    status: 'INSUFFICIENT_DATA',
+    reason_code: 'AI_CHAT_UNAVAILABLE',
+    error_details: reason,
+    message: reason,
+  };
+}
+
+async function generateContentWithTimeout(prompt) {
+  let timeoutId;
+  try {
+    const apiCall = ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      timeoutId = setTimeout(() => reject(new Error('Gemini API request timed out')), 8000)
+    );
+
+    return await Promise.race([apiCall, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
+async function chatWithVerifiedContext({ ticker, message, decisionMode, packet }) {
+  if (apiKey === 'mock') {
+    return unavailableChat('Gemini API key is missing');
+  }
+
+  if (!packet || packet.status === 'INSUFFICIENT_DATA') {
+    return unavailableChat(packet?.error_details || 'Verified packet is unavailable');
+  }
+
+  const prompt = `Act as Elite Investor CIO for MyPortStock.
+Answer in concise Thai.
+
+Rules:
+- Use only the verified packet below and the user's question.
+- Do not invent current price, portfolio state, journal state, catalyst timing, stop-loss, target, or execution advice.
+- If the verified packet is insufficient for the question, return INSUFFICIENT_DATA and explain what is missing.
+- Do not recommend Buy/Add unless the packet's current price acceptance gate and risk rules support it.
+
+Ticker: ${ticker}
+Decision Mode: ${decisionMode}
+User question: ${message}
+Verified packet JSON: ${JSON.stringify(packet)}
+
+Return plain Thai text only.`;
+
+  try {
+    const response = await generateContentWithTimeout(prompt);
+    const text = String(response.text || '').trim();
+    return {
+      status: text ? 'READY' : 'INSUFFICIENT_DATA',
+      message: text || 'Gemini response was empty',
+    };
+  } catch (error) {
+    console.error('Gemini Chat Error:', error.message);
+    return unavailableChat(`Gemini API unavailable: ${error.message}`);
+  }
+}
+
 async function analyzeTicker(ticker, portfolioData, oracleData) {
   if (apiKey === 'mock') {
     return unavailableAnalysis('Gemini API key is missing');
@@ -141,19 +206,8 @@ Ensure you return a JSON object ONLY, with the following properties:
   "analysis": "Thai detailed analysis text..."
 }`;
 
-  let timeoutId;
   try {
-    const apiCall = ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
-
-    // SRE best practice: enforce timeout to prevent request hanging indefinitely
-    const timeoutPromise = new Promise((_, reject) =>
-      timeoutId = setTimeout(() => reject(new Error('Gemini API request timed out')), 8000)
-    );
-
-    const response = await Promise.race([apiCall, timeoutPromise]);
+    const response = await generateContentWithTimeout(prompt);
     
     // Attempt to parse if the model returned JSON
     const text = response.text.replace(/```json/i, '').replace(/```/g, '').trim();
@@ -161,9 +215,13 @@ Ensure you return a JSON object ONLY, with the following properties:
   } catch (error) {
     console.error('Gemini API Error:', error.message);
     return unavailableAnalysis(`Gemini API unavailable: ${error.message}`);
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
   }
 }
 
-module.exports = { analyzeTicker, unavailableAnalysis, validateAnalysisShape };
+module.exports = {
+  analyzeTicker,
+  chatWithVerifiedContext,
+  unavailableAnalysis,
+  unavailableChat,
+  validateAnalysisShape,
+};

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Search, TrendingUp, TrendingDown, Zap, ChevronRight, X, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -100,6 +100,10 @@ const TICKERS = [
     market: 'NASDAQ',
     sector: 'ETF',
   },
+  // Space / orbital compute theme
+  { symbol: 'ASTS', name: 'AST SpaceMobile', market: 'NASDAQ', sector: 'Space Data Center' },
+  { symbol: 'RKLB', name: 'Rocket Lab USA', market: 'NASDAQ', sector: 'Space Data Center' },
+  { symbol: 'LUNR', name: 'Intuitive Machines', market: 'NASDAQ', sector: 'Space Data Center' },
   // Finance
   {
     symbol: 'JPM',
@@ -177,70 +181,104 @@ const TICKERS = [
   },
 ];
 
+const MARKET_INDICES = [
+  { label: 'S&P 500', symbol: 'SPY' },
+  { label: 'NASDAQ', symbol: 'QQQ' },
+  { label: 'DJI', symbol: 'DIA' },
+];
+
+const THEME_GROUPS = [
+  { name: 'AI Infrastructure', symbols: ['NVDA', 'AVGO', 'TSM', 'AMD', 'ORCL'] },
+  { name: 'Space Data Center', symbols: ['ASTS', 'RKLB', 'LUNR'] },
+  { name: 'Macro Hedges', symbols: ['SPY', 'QQQ', 'SOXX', 'GLD'] },
+];
+
+function displaySymbol(symbol) {
+  return symbol.replace('SET:', '');
+}
+
+function findTicker(symbol) {
+  return TICKERS.find((ticker) => ticker.symbol === symbol || displaySymbol(ticker.symbol) === symbol);
+}
+
+function buildSectorOverview(tickers) {
+  const sectors = new Map();
+  for (const ticker of tickers) {
+    const current = sectors.get(ticker.sector) || { sector: ticker.sector, count: 0 };
+    current.count += 1;
+    sectors.set(ticker.sector, current);
+  }
+  return Array.from(sectors.values())
+    .sort((a, b) => b.count - a.count || a.sector.localeCompare(b.sector))
+    .slice(0, 8);
+}
+
+function normalizeDisplayQuote(payload) {
+  const price = Number(payload?.price);
+  if (!Number.isFinite(price) || price <= 0) return null;
+
+  const change = Number(payload?.change);
+  const changePct = Number(payload?.changePct);
+  return {
+    ...payload,
+    price,
+    change: Number.isFinite(change) ? change : null,
+    changePct: Number.isFinite(changePct) ? changePct : null,
+  };
+}
+
 /* ─── TradingView Widget ──────────────────────────────────── */
 function TradingViewChart({ symbol }) {
-  const containerRef = useRef(null);
-  const prevSymbolRef = useRef(null);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    if (prevSymbolRef.current === symbol) return;
-    prevSymbolRef.current = symbol;
-
-    // Clear previous widget
-    containerRef.current.innerHTML = '';
-
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.type = 'text/javascript';
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-      autosize: true,
-      symbol: symbol,
-      interval: 'D',
-      timezone: 'Asia/Bangkok',
-      theme: 'dark',
-      style: '1',
-      locale: 'en',
-      allow_symbol_change: false,
-      calendar: false,
-      support_host: 'https://www.tradingview.com',
-      backgroundColor: 'rgba(var(--bg-slate-rgb), 1)',
-      gridColor: 'rgba(var(--text-inverse-rgb), 0.04)',
-      watchlist: [],
-      hide_side_toolbar: false,
-      studies: ['MASimple@tv-basicstudies', 'RSI@tv-basicstudies'],
-      show_popup_button: true,
-      popup_width: '1000',
-      popup_height: '650',
-    });
-
-    containerRef.current.appendChild(script);
-  }, [symbol]);
+  const config = {
+    autosize: true,
+    symbol,
+    interval: 'D',
+    timezone: 'Asia/Bangkok',
+    theme: 'dark',
+    style: '1',
+    locale: 'en',
+    allow_symbol_change: false,
+    hide_side_toolbar: false,
+    studies: ['MASimple@tv-basicstudies', 'RSI@tv-basicstudies'],
+  };
+  const src = `https://www.tradingview-widget.com/embed-widget/advanced-chart/?locale=en#${encodeURIComponent(JSON.stringify(config))}`;
 
   return (
-    <div className="tradingview-widget-container" ref={containerRef} style={{ height: '100%', width: '100%' }}>
-      <div className="tradingview-widget-container__widget" style={{ height: '100%', width: '100%' }} />
+    <div className="tradingview-widget-container" style={{ height: '100%', width: '100%' }}>
+      <iframe
+        title={`${symbol} TradingView chart`}
+        src={src}
+        loading="lazy"
+        allow="fullscreen"
+        style={{ width: '100%', height: '100%', border: 0 }}
+      />
     </div>
   );
 }
 
 /* ─── Ticker Row ──────────────────────────────────────────── */
-function TickerRow({ ticker, isActive, onClick }) {
+function TickerRow({ ticker, isActive, onSelect, onAnalyze }) {
+  const symbol = displaySymbol(ticker.symbol);
+
   return (
-    <button className={`ticker-row${isActive ? ' ticker-row--active' : ''}`} onClick={onClick} aria-pressed={isActive}>
-      <div className="ticker-row__icon" data-market={ticker.market}>
-        {ticker.symbol.replace('SET:', '').slice(0, 3)}
-      </div>
-      <div className="ticker-row__info">
-        <span className="ticker-row__symbol">{ticker.symbol.replace('SET:', '')}</span>
-        <span className="ticker-row__name">{ticker.name}</span>
-      </div>
-      <div className="ticker-row__meta">
-        <span className="ticker-row__market">{ticker.market}</span>
-        {isActive && <ChevronRight size={12} className="ticker-row__arrow" />}
-      </div>
-    </button>
+    <div className={`ticker-row${isActive ? ' ticker-row--active' : ''}`} role="option" aria-selected={isActive}>
+      <button className="ticker-row__select" type="button" onClick={onSelect} aria-pressed={isActive}>
+        <div className="ticker-row__icon" data-market={ticker.market}>
+          {symbol.slice(0, 3)}
+        </div>
+        <div className="ticker-row__info">
+          <span className="ticker-row__symbol">{symbol}</span>
+          <span className="ticker-row__name">{ticker.name}</span>
+        </div>
+        <div className="ticker-row__meta">
+          <span className="ticker-row__market">{ticker.market}</span>
+          {isActive && <ChevronRight size={12} className="ticker-row__arrow" />}
+        </div>
+      </button>
+      <button className="ticker-row__quick-analyze" type="button" onClick={onAnalyze} aria-label={`Quick analyze ${symbol}`}>
+        <Zap size={12} aria-hidden="true" />
+      </button>
+    </div>
   );
 }
 
@@ -256,7 +294,8 @@ TickerRow.propTypes = {
     market: PropTypes.string,
   }).isRequired,
   isActive: PropTypes.bool.isRequired,
-  onClick: PropTypes.func.isRequired,
+  onSelect: PropTypes.func.isRequired,
+  onAnalyze: PropTypes.func.isRequired,
 };
 
 export default function MarketExplorerPage() {
@@ -266,6 +305,7 @@ export default function MarketExplorerPage() {
   const [priceData, setPriceData] = useState(null);
   const [priceLoading, setPriceLoading] = useState(false);
   const searchRef = useRef(null);
+  const sectorOverview = useMemo(() => buildSectorOverview(TICKERS), []);
 
   const filtered = query.trim()
     ? TICKERS.filter(
@@ -275,6 +315,8 @@ export default function MarketExplorerPage() {
           t.sector.toLowerCase().includes(query.toLowerCase())
       )
     : TICKERS;
+
+  const selectedSymbol = displaySymbol(selected.symbol);
 
   // Fetch live price for the selected ticker
   const fetchPrice = useCallback(async (symbol) => {
@@ -289,7 +331,7 @@ export default function MarketExplorerPage() {
       const res = await fetch(`/api/price/${encodeURIComponent(ySymbol)}`);
       if (res.ok) {
         const data = await res.json();
-        setPriceData(data);
+        setPriceData(normalizeDisplayQuote(data));
       } else {
         setPriceData(null);
       }
@@ -301,6 +343,8 @@ export default function MarketExplorerPage() {
   }, []);
 
   useEffect(() => {
+    // Selected-ticker changes intentionally start the quote loading lifecycle.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchPrice(selected.symbol);
   }, [selected, fetchPrice]);
 
@@ -316,8 +360,20 @@ export default function MarketExplorerPage() {
     return () => globalThis.removeEventListener('keydown', handler);
   }, []);
 
-  const handleSendToAI = () => {
-    navigate('/', { state: { ticker: selected.symbol.replace('SET:', '') } });
+  const handleOpenDetail = () => {
+    navigate(`/ticker/${selectedSymbol}`);
+  };
+
+  const handleQuickAnalyze = useCallback(
+    (symbol) => {
+      navigate(`/command-center?ticker=${encodeURIComponent(displaySymbol(symbol))}`);
+    },
+    [navigate]
+  );
+
+  const handleSelectSymbol = (symbol) => {
+    const ticker = findTicker(symbol);
+    if (ticker) setSelected(ticker);
   };
 
   return (
@@ -351,6 +407,51 @@ export default function MarketExplorerPage() {
           </div>
         </div>
 
+        <section className="market-overview" aria-label="Market overview">
+          <div className="market-overview__section">
+            <div className="market-overview__title">Market indices</div>
+            <div className="market-index-grid">
+              {MARKET_INDICES.map((index) => (
+                <button key={index.symbol} type="button" className="market-index-pill" onClick={() => handleSelectSymbol(index.symbol)}>
+                  <span>{index.label}</span>
+                  <strong>{index.symbol}</strong>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="market-overview__section">
+            <div className="market-overview__title">Sector overview</div>
+            <div className="market-sector-grid">
+              {sectorOverview.map((sector) => (
+                <button key={sector.sector} type="button" className="market-sector-cell" onClick={() => setQuery(sector.sector)}>
+                  <span>{sector.sector}</span>
+                  <strong>{sector.count}</strong>
+                </button>
+              ))}
+            </div>
+            <div className="market-overview__note">Sector performance unavailable without verified current data</div>
+          </div>
+
+          <div className="market-overview__section">
+            <div className="market-overview__title">Theme watchlists</div>
+            <div className="theme-watchlist-groups">
+              {THEME_GROUPS.map((group) => (
+                <div key={group.name} className="theme-watchlist-group">
+                  <span>{group.name}</span>
+                  <div className="theme-symbols">
+                    {group.symbols.map((symbol) => (
+                      <button key={symbol} type="button" onClick={() => handleQuickAnalyze(symbol)} aria-label={`Quick analyze ${symbol}`}>
+                        {symbol}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <div className="ticker-list" role="listbox" aria-label="Ticker list">
           {filtered.length === 0 ? (
             <div className="ticker-empty">
@@ -359,7 +460,13 @@ export default function MarketExplorerPage() {
             </div>
           ) : (
             filtered.map((ticker) => (
-              <TickerRow key={ticker.symbol} ticker={ticker} isActive={selected.symbol === ticker.symbol} onClick={() => setSelected(ticker)} />
+              <TickerRow
+                key={ticker.symbol}
+                ticker={ticker}
+                isActive={selected.symbol === ticker.symbol}
+                onSelect={() => setSelected(ticker)}
+                onAnalyze={() => handleQuickAnalyze(ticker.symbol)}
+              />
             ))
           )}
         </div>
@@ -372,11 +479,11 @@ export default function MarketExplorerPage() {
       </aside>
 
       {/* ── Right Panel: Chart ── */}
-      <main className="explorer-chart-panel" aria-label="Price chart">
+      <section className="explorer-chart-panel" aria-label="Price chart">
         {/* Chart Header */}
         <div className="chart-header glass-panel">
           <div className="chart-header__left">
-            <div className="chart-header__symbol">{selected.symbol.replace('SET:', '')}</div>
+            <div className="chart-header__symbol">{selectedSymbol}</div>
             <div className="chart-header__name">{selected.name}</div>
             <span className="chart-header__badge" data-market={selected.market}>
               {selected.market}
@@ -386,6 +493,7 @@ export default function MarketExplorerPage() {
               <Clock size={10} aria-hidden="true" />
               Display quote only, not execution gate
             </span>
+            <span className="quote-gate-note">Execution price requires Command Center quote gate</span>
           </div>
           <div className="chart-header__right">
             {priceLoading && (
@@ -401,7 +509,10 @@ export default function MarketExplorerPage() {
             )}
             {!priceLoading && priceData && (
               <div className="live-price">
-                <span className="live-price__value">
+                <span
+                  key={`${selected.symbol}-${priceData.price}`}
+                  className={`live-price__value data-update-flash ${priceData.change >= 0 ? 'data-update-flash--up' : 'data-update-flash--down'}`}
+                >
                   ฿
                   {priceData.price?.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
@@ -417,14 +528,18 @@ export default function MarketExplorerPage() {
                 )}
               </div>
             )}
+            <button className="btn-secondary market-detail-btn" onClick={handleOpenDetail} aria-label={`Open ${selectedSymbol} detail`}>
+              Open detail
+            </button>
             <button
               id="send-to-ai-btn"
               className="btn-send-ai"
-              onClick={handleSendToAI}
-              title={`ส่ง ${selected.symbol.replace('SET:', '')} ไปให้ AI วิเคราะห์`}
+              onClick={() => handleQuickAnalyze(selected.symbol)}
+              title={`ส่ง ${selectedSymbol} ไปให้ AI วิเคราะห์`}
+              aria-label={`Quick analyze ${selectedSymbol}`}
             >
               <Zap size={14} fill="currentColor" strokeWidth={0} aria-hidden="true" />
-              ส่งไปวิเคราะห์
+              Quick analyze
             </button>
           </div>
         </div>
@@ -433,7 +548,7 @@ export default function MarketExplorerPage() {
         <div className="chart-canvas">
           <TradingViewChart symbol={selected.symbol} />
         </div>
-      </main>
+      </section>
     </div>
   );
 }

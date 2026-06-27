@@ -1,5 +1,6 @@
 const { default: YahooFinance } = require('yahoo-finance2');
 const yahooFinance = new YahooFinance();
+const SPARKLINE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 let cachedThbRate = null;
 let lastThbRateFetch = 0;
@@ -44,4 +45,30 @@ async function getLivePrice(ticker) {
   }
 }
 
-module.exports = { getLivePrice, getUsdThbRate };
+async function fetchSparkline(ticker, now = Date.now(), client = yahooFinance) {
+  let timeoutId;
+  try {
+    const apiCall = client.chart(ticker, {
+      period1: new Date(now - SPARKLINE_WINDOW_MS),
+      period2: new Date(now),
+      interval: '1d',
+    });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      timeoutId = setTimeout(() => reject(new Error('Yahoo Finance API request timed out')), 6000)
+    );
+
+    const result = await Promise.race([apiCall, timeoutPromise]);
+
+    return result.quotes
+      .map((quote) => quote.close)
+      .filter(Number.isFinite);
+  } catch (err) {
+    console.error(`[MarketData] Error fetching sparkline for ${ticker}:`, err.message);
+    throw err;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
+module.exports = { fetchSparkline, getLivePrice, getUsdThbRate };

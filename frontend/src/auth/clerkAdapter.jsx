@@ -8,6 +8,13 @@ import {
 import PropTypes from 'prop-types';
 import { isDevAuthBypassEnabled, shouldUseClerkProvider } from './devAuth';
 
+const DEV_AUTH_BYPASS_STATE = {
+  isLoaded: true,
+  isSignedIn: true,
+  userId: 'dev-ui-user',
+  getToken: async () => 'dev-ui-auth-bypass',
+};
+
 export function AppAuthProvider({ children, publishableKey, appearance }) {
   if (!shouldUseClerkProvider()) {
     return children;
@@ -59,14 +66,11 @@ SignInButton.propTypes = {
   children: PropTypes.node,
 };
 
+// This adapter intentionally keeps Clerk components and its auth hook together.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   if (isDevAuthBypassEnabled()) {
-    return {
-      isLoaded: true,
-      isSignedIn: true,
-      userId: 'dev-ui-user',
-      getToken: async () => 'dev-ui-auth-bypass',
-    };
+    return DEV_AUTH_BYPASS_STATE;
   }
 
   // Dev UI bypass intentionally skips ClerkProvider, so the real hook is only safe in Clerk mode.

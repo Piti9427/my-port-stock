@@ -124,14 +124,6 @@ function AIFloorCanvas() {
           spritesRef.current[id] = graphics;
         }
       }
-
-      // Animation loop
-      let tick = 0;
-      app.ticker.add(() => {
-        tick += 0.05;
-        // Apply simple animations based on React state (passed via closure/ref)
-        // In a real app, we'd sync this better, but this works for the prototype
-      });
     };
 
     initPixi();
@@ -214,6 +206,8 @@ export default function AIFloorPage() {
 
   useEffect(() => {
     if (!lastEvent?.message) return;
+    // Event history is derived from the latest external WebSocket event.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLogs((prev) => {
       const newLogs = [...prev, { time: new Date().toLocaleTimeString(), msg: lastEvent.message }];
       return newLogs.slice(-20);

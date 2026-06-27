@@ -1,0 +1,70 @@
+/* Motion tokens and global animation-only rules live here as they are extracted from page modules. */
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drawer-slide-in {
+  from {
+    transform: translateX(16px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-exit {
+  to {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes data-update-flash-up {
+  from {
+    background: var(--fin-profit-dim);
+    color: var(--fin-profit);
+  }
+  to {
+    background: transparent;
+    color: var(--text-primary);
+  }
+}
+
+@keyframes data-update-flash-down {
+  from {
+    background: var(--fin-loss-dim);
+    color: var(--fin-loss);
+  }
+  to {
+    background: transparent;
+    color: var(--text-primary);
+  }
+}

@@ -16,16 +16,23 @@
 
 ## Keyword Map
 
-| Keyword | Meaning | Primary File |
-| :--- | :--- | :--- |
-| `portfolio-review` | Full held-portfolio health review | `stock_portfolio.md`, `trade_journal.md` |
-| `space-data-center` | Orbital compute / space data center theme from BT beartai clip | `stock_portfolio.md`, `notes/2026-05-30-space-data-center-theme.md` |
-| `theme-watchlist` | Research/watchlist additions, not executed trades | `stock_portfolio.md` |
-| `risk-plan-missing` | Holdings or active trades missing stop/R/R/hard THB risk | `trade_journal.md` |
-| `ANET-conflict` | [Resolved 2026-06-01] ANET limit order was never filled; trade journal corrected | `trade_journal.md` |
-| `no-chase` | Avoid buying extended momentum names without pullback/R/R | `ELITE_INVESTOR_SOP.md` |
+| Keyword             | Meaning                                                                          | Primary File                                                        |
+| :------------------ | :------------------------------------------------------------------------------- | :------------------------------------------------------------------ |
+| `portfolio-review`  | Full held-portfolio health review                                                | `stock_portfolio.md`, `trade_journal.md`                            |
+| `space-data-center` | Orbital compute / space data center theme from BT beartai clip                   | `stock_portfolio.md`, `notes/2026-05-30-space-data-center-theme.md` |
+| `theme-watchlist`   | Research/watchlist additions, not executed trades                                | `stock_portfolio.md`                                                |
+| `risk-plan-missing` | Holdings or active trades missing stop/R/R/hard THB risk                         | `trade_journal.md`                                                  |
+| `ANET-conflict`     | [Resolved 2026-06-01] ANET limit order was never filled; trade journal corrected | `trade_journal.md`                                                  |
+| `no-chase`          | Avoid buying extended momentum names without pullback/R/R                        | `ELITE_INVESTOR_SOP.md`                                             |
 
 ## Durable Entries
+
+### 2026-06-21 - UX/UI Refactor Manual Gate Scope
+
+- Keywords: `ux-ui-refactor`, `voiceover`, `live-clerk`, `acceptance-scope`, `manual-gates`
+- Decision: VoiceOver manual testing and live Clerk signed-in new/returning flows are intentionally skipped for this acceptance pass by user direction; automated AX-tree, dev-auth E2E, and live signed-out Clerk boundary smoke remain the evidence.
+- Action: Updated `docs/plans/ux_ui_refactor_plan.md` Phase 12.2/12.3 so these items no longer block completion.
+- Source: `docs/plans/ux_ui_refactor_plan.md`, `output/ux-ui-browser-verification.mjs`, `output/live-clerk-signed-out-smoke.mjs`
 
 ### 2026-06-17 - Markdown Runtime Redaction
 
@@ -223,3 +230,143 @@
 - Decision: Restore real fundamental, technical, and SWOT audits under the 7-dimension SOP. Update Python oracle to pull quarterly financial statements and W1/D1 technical metrics; modify Express backend to map AI sub-agent scores to the decision engine; design a premium tabbed React UI containing SWOT accordions, quarterly tables, W1 checklist badges, and a monospace Trade Ticket.
 - Action: Saved design spec to `docs/superpowers/specs/2026-06-16-deep-analysis-sop-design.md` and created implementation plan.
 - Source: `docs/superpowers/specs/2026-06-16-deep-analysis-sop-design.md`
+
+### 2026-06-19 - Dynamic Scoping and Ticker Discovery
+
+- Keywords: `dynamic-scoping`, `ticker-discovery`, `grill-me`, `rule-update`, `interactive-flow`
+- Decision: Replaced the static watchlist scan behavior for broad queries with an interactive scoping flow. The agent must now ask clarifying questions (using the `ask_question` tool) to narrow down target timeframes, sectors, and risk profiles before scanning or discovering new tickers.
+- Action: Updated `AGENTS.md` and `GEMINI.md` mandatory behaviors with the new Dynamic Scoping & Discovery rules.
+- Source: User feedback on broad recommendation queries.
+
+### 2026-06-20 - UX/UI Runtime Contract Scope
+
+- Keywords: `ux-ui-refactor`, `runtime-contract`, `per-user-analysis`, `ticker-drilldown`, `production-hardening`
+- Decision: Expand `docs/plans/ux_ui_refactor_plan.md` from frontend-only UX/UI work into UX/UI plus runtime data contract hardening, limited to auth, per-user analysis context, and API response shape. No schema redesign or theme redesign.
+- Action: Added Phase 0 contract hardening, moved ticker drilldown to early execution priority, corrected tool/version assumptions, verified live Supabase schema/advisors, and updated verification/rollback gates.
+- Source: `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-20 - Phase 0 Runtime Contract + Ticker Drilldown Slice Implemented
+
+- Keywords: `phase-0`, `runtime-contract`, `supabase-context`, `fetchWithAuth`, `useApi`, `domain-hooks`, `ui-primitives`, `ticker-drilldown`, `app-shell-navigation`
+- Decision: `GET /api/packet/:ticker` and `POST /api/analyze` must build portfolio/journal context from authenticated per-user Supabase rows or fail closed; markdown remains historical warning only.
+- Action: Added backend contract tests and helper exports for Supabase-scoped analysis context, added `historical_context_warning` to verified packets, expanded `fetchWithAuth`, created domain hooks and shared primitives, added `/ticker/:symbol` with Dashboard/Watchlist/Journal/Market/Command Center entry points, added Cmd+K Command Palette ticker navigation, and reorganized the authenticated app shell with grouped navigation, collapsible sidebar, config utility link, and route-aware page header.
+- Source: `backend/server.js`, `backend/tests/runtimeData.test.js`, `frontend/src/lib/api.js`, `frontend/src/hooks/`, `frontend/src/components/ui/`, `frontend/src/pages/TickerDetailPage.jsx`, `frontend/src/components/CommandPalette.jsx`, `frontend/src/App.jsx`
+
+### 2026-06-20 - Dev UI Auth Bypass Contract Hardened
+
+- Keywords: `dev-ui-auth-bypass`, `dev-ui-user`, `clerk`, `supabase-runtime`, `production-fail-closed`
+- Decision: Local visual testing may use `Authorization: Bearer dev-ui-auth-bypass` only when `DEV_UI_AUTH_BYPASS=true` and `NODE_ENV` is not production; production must reject the bypass token and require Clerk-backed identity.
+- Action: Added a shared backend request auth resolver, wired both `server.js` and runtime API routes to it, enabled the flag only in backend `npm run dev`, and added backend tests for enabled/disabled/production cases.
+- Source: `backend/src/auth/requestAuth.js`, `backend/tests/devAuthBypass.test.js`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-20 - CSS Architecture Foundation Split
+
+- Keywords: `css-architecture`, `style-modules`, `anti-slop`, `dark-terminal-ui`, `frontend-tests`
+- Decision: `frontend/src/index.css` is now a thin style entrypoint that imports planned modules under `frontend/src/styles/`; tests that assert CSS selectors or tokens must read the imported bundle, not only the entry file.
+- Action: Added `cssArchitectureContract` tests, split the large stylesheet into `tokens`, `base`, `layout`, `components`, `pages`, `utilities`, and `animations`, and enforced no Inter remnants, no transition-width, and no decorative box shadows outside focus rings.
+- Source: `frontend/src/index.css`, `frontend/src/styles/`, `frontend/tests/cssArchitectureContract.test.js`
+
+### 2026-06-21 - Dashboard North Star Decomposition
+
+- Keywords: `dashboard-decomposition`, `portfolio-summary`, `holdings-table`, `scenario-planner`, `command-center-prefill`, `route-scroll-reset`
+- Decision: Keep Dashboard as a composition-only operational overview backed by authenticated domain hooks; detailed analysis stays in Command Center and planned scenarios must not mutate journal/holdings until the user enters the trade workflow.
+- Action: Extracted Dashboard panels and Scenario Planner, added flat responsive overview grids, wired ticker drilldown and `?ticker=` analysis handoff, added deterministic route scroll reset, and verified desktop/390px layouts with contract and browser tests.
+- Source: `frontend/src/pages/DashboardPage.jsx`, `frontend/src/components/dashboard/`, `frontend/src/components/ScenarioPlanner.jsx`, `frontend/src/components/RouteScrollReset.jsx`, `frontend/tests/dashboard*.test.*`
+
+### 2026-06-21 - Command Center Authenticated Analysis Flow
+
+- Keywords: `command-center`, `authenticated-analysis`, `api-chat`, `supabase-context`, `quote-panel`, `runtime-contract`
+- Decision: Command Center should be a component-composed analysis workspace; any analysis/chat answer that uses portfolio or journal context must go through authenticated Supabase-scoped verified packets and fail closed when AI/current data is unavailable.
+- Action: Extracted Command Center panels and orchestration hook, added `/api/chat` on the verified packet path, kept schema unchanged, normalized quote delay metadata rendering, and verified desktop/mobile/browser/API behavior.
+- Source: `frontend/src/pages/CommandCenterPage.jsx`, `frontend/src/components/command-center/`, `frontend/src/hooks/useCommandCenter.js`, `backend/server.js`, `backend/src/services/aiAnalyst.js`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-21 - Journal Decision Loop Slice
+
+- Keywords: `journal-page`, `decision-loop`, `url-filters`, `trade-drawer`, `post-mortem`, `supabase-journal`, `dev-auth-loop`
+- Decision: Trade Journal Phase 5.1 stays schema-stable on the existing Supabase `journal` table; closed-trade thesis/post-mortem UX uses `notes` and `source_note` rather than adding new columns.
+- Action: Extracted Journal filters/table/drawer components, added URL-persisted filters, sortable rows, expandable trade detail, risk-aware Log Trade drawer, stable dev auth bypass state, and a regression test for unstable `getToken` function identity.
+- Source: `frontend/src/pages/JournalPage.jsx`, `frontend/src/components/journal/`, `frontend/tests/journalPage.test.jsx`, `frontend/src/auth/clerkAdapter.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-21 - Analytics Closed-Trade Decision Loop
+
+- Keywords: `analytics-page`, `closed-trades`, `equity-curve`, `metric-card`, `url-filters`, `supabase-journal`, `ponytail`
+- Decision: Analytics Phase 5.2 should derive performance metrics from existing closed Supabase `journal` rows only; no chart dependency, API change, or schema migration is needed for the current plan.
+- Action: Rebuilt Analytics around `useJournal`, native URL-persisted filters, shared `MetricCard` KPI cards, a minimal SVG cumulative P/L curve, and no-data vs no-match empty states with regression tests.
+- Source: `frontend/src/pages/AnalyticsPage.jsx`, `frontend/src/components/analytics/`, `frontend/tests/analyticsPage.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-21 - Portfolio Risk Holdings-Only Hardening
+
+- Keywords: `portfolio-risk`, `risk-budget`, `missing-stop-loss`, `supabase-holdings`, `ponytail`
+- Decision: Portfolio Risk Phase 6.1 stays on the existing Supabase `holdings` API shape; stop-loss data is optional/future-compatible and missing stops must render as unknown risk rather than inferred risk.
+- Action: Refactored Risk page to use `usePortfolio`, accessible sector buttons, position-level risk rows, known-risk budget gauge, missing stop-loss highlighting, and a regression test blocking unstable auth fetch loops.
+- Source: `frontend/src/pages/PortfolioRiskPage.jsx`, `frontend/src/components/risk/riskCalculations.js`, `frontend/tests/portfolioRiskPage.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-21 - Market Explorer Display-Only Hardening
+
+- Keywords: `market-explorer`, `display-quote-only`, `quick-analyze`, `sector-overview`, `theme-watchlists`, `ponytail`
+- Decision: Market Explorer Phase 6.2 remains a discovery/display surface; it must not present static coverage as verified sector performance or execution-ready price data.
+- Action: Added display-only quote warnings, static market/sector/theme overview, Space Data Center tickers in the local universe, row/theme Quick analyze handoff to Command Center, and preserved `/ticker/:symbol` drilldown through an Open detail action.
+- Source: `frontend/src/pages/MarketExplorerPage.jsx`, `frontend/tests/marketExplorerPage.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-21 - Config Local-Only Settings Restructure
+
+- Keywords: `config-page`, `settings-sidebar`, `api-key-masking`, `per-section-save`, `localstorage`, `ponytail`
+- Decision: Config Phase 7.1 is a frontend-local settings organization slice only; it must not change backend env/secret behavior or pretend local preferences configure Supabase runtime data.
+- Action: Split Config into extracted config model/sidebar/section components, added General/API Keys/Risk Parameters/Notifications/Data Management sections, per-section dirty save, masked API key handling that excludes secrets from localStorage, and a page-size regression test.
+- Source: `frontend/src/pages/ConfigPage.jsx`, `frontend/src/components/config/`, `frontend/tests/configPage.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-21 - First-Run Empty States Without Sample Data
+
+- Keywords: `first-run-empty-state`, `dashboard`, `journal`, `analytics`, `risk`, `supabase-empty`, `ponytail`
+- Decision: First-run UX must guide empty Supabase accounts without sample rows, markdown runtime fallback, or schema changes.
+- Action: Added first-run copy/actions for Dashboard, Journal, Analytics, and Risk; Dashboard routes to Journal, Journal opens Log Trade, Analytics requires a closed trade, and Risk explains the holdings requirement.
+- Source: `frontend/src/components/dashboard/HoldingsTable.jsx`, `frontend/src/pages/DashboardPage.jsx`, `frontend/src/pages/JournalPage.jsx`, `frontend/src/pages/AnalyticsPage.jsx`, `frontend/src/pages/PortfolioRiskPage.jsx`, `frontend/tests/firstRunEmptyStates.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-21 - UX/UI Hardening Automated Pass
+
+- Keywords: `ux-ui-refactor`, `anti-slop`, `mobile-bottom-nav`, `stale-data`, `focus-visible`, `motion`, `phase-12`, `ponytail`
+- Decision: Finish the production hardening slice with automated/static contracts only; do not add browser dependencies or unused live-update animation hooks.
+- Action: Added CSS anti-slop contracts, stale-data indicator timing/display, mobile bottom-nav CSS, global focus-visible fallback, reduced-motion-safe drawer/toast/skeleton/route motion, and recorded that browser/VoiceOver/E2E smoke remains manual pending.
+- Source: `frontend/tests/cssArchitectureContract.test.js`, `frontend/tests/appShellNavigation.test.jsx`, `frontend/tests/productionDataContract.test.js`, `frontend/src/styles/`, `frontend/src/hooks/useApi.js`, `frontend/src/components/ui/DataStamp.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-21 - UX/UI Refactor Phase 12 Browser Evidence
+
+- Keywords: `ux-ui-refactor`, `phase-12`, `cdp-browser-qa`, `impeccable-critique`, `contrast`, `keyboard-flow`, `voiceover-pending`
+- Decision: Use clean headless Chrome CDP as the production browser-verification fallback when Playwright MCP is unavailable; do not add Playwright/Puppeteer just for this plan.
+- Action: Verified route matrix `32/32`, contrast `4/4`, malformed quote state checks `2/2`, Cmd+K/keyboard focus flow, and saved desktop/mobile Dashboard/Market screenshots. Wrote Impeccable snapshot `.impeccable/critique/2026-06-21T07-19-12Z__frontend-src.md` with trend `28 -> 38`. Manual VoiceOver and full signed-in Clerk flows remain explicit pending items.
+- Source: `docs/plans/ux_ui_refactor_plan.md`, `.impeccable/critique/2026-06-21T07-19-12Z__frontend-src.md`, `artifacts/screenshots/ux-ui-refactor-dashboard-desktop-cdp.png`, `artifacts/screenshots/ux-ui-refactor-market-mobile-cdp.png`
+
+### 2026-06-21 - UX/UI Refactor Dev-Auth Flow Contracts
+
+- Keywords: `ux-ui-refactor`, `phase-12`, `end-to-end-flow`, `dev-auth`, `new-user-flow`, `returning-user-flow`, `clerk-pending`
+- Decision: Use RTL/App-shell dev-auth flow contracts as automated evidence for Phase 12.3 while keeping live Clerk sign-in verification as a separate manual gate; do not add browser E2E dependencies for this plan.
+- Action: Added `frontend/tests/endToEndUserFlows.test.jsx` covering empty-account analyze/log/journal/analytics/risk flow and returning-user dashboard/ticker-detail/analysis/scenario-planner/journal append flow. Focused command passed: `npm test --workspace=frontend -- --run tests/endToEndUserFlows.test.jsx`.
+- Source: `frontend/tests/endToEndUserFlows.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-21 - UX/UI Refactor Accessibility Landmark Hardening
+
+- Keywords: `ux-ui-refactor`, `phase-12`, `accessibility-tree`, `single-main-landmark`, `screen-reader`, `voiceover-pending`
+- Decision: `App.jsx` owns the authenticated product `main` landmark; route pages must not add nested `<main>` landmarks. CDP Accessibility Tree smoke is useful automated evidence but does not replace manual VoiceOver verification.
+- Action: Added an app-shell regression for nested main landmarks, converted authenticated page wrappers/panels from `main` to `div`/`section`, and verified 8 routes through Chrome CDP Accessibility Tree with one DOM/AX main landmark, one h1, named main navigation, and no unlabeled interactive controls.
+- Source: `frontend/tests/appShellNavigation.test.jsx`, `frontend/src/pages/DashboardPage.jsx`, `frontend/src/pages/CommandCenterPage.jsx`, `frontend/src/pages/ConfigPage.jsx`, `frontend/src/pages/MarketExplorerPage.jsx`, `frontend/src/pages/TickerDetailPage.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-21 - UX/UI Refactor Zero-Warning Quality Gate
+
+- Keywords: `ux-ui-refactor`, `phase-12`, `zero-warning-lint`, `react-compiler`, `websocket-reconnect`, `scenario-planner-reset`, `prettier`
+- Decision: Close the production quality gate with the smallest behavior-preserving fixes: remove unused exports, stabilize effect callbacks, use narrow documented lint suppressions for intentional lifecycle/provider patterns, and avoid file-splitting or new dependencies solely for Fast Refresh.
+- Action: Reduced frontend lint warnings from 19 to 0, added a regression proving `ScenarioPlanner` clears draft levels after close/reopen, and formatted the refactor workspace. Verified with `npm run check:all --workspace=frontend`, `npm run lint --workspace=frontend -- --max-warnings=0`, and 45/45 backend tests.
+- Source: `frontend/src/components/ScenarioPlanner.jsx`, `frontend/src/components/PixelTradingFloor.jsx`, `frontend/src/hooks/useAgentEvents.jsx`, `frontend/src/pages/WatchlistPage.jsx`, `frontend/tests/dashboardComponents.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-21 - UX/UI Refactor CDP Matrix and Final Gate Refresh
+
+- Keywords: `ux-ui-refactor`, `phase-12`, `cdp-browser-matrix`, `contrast-audit`, `mobile-ticker-detail`, `manual-voiceover-pending`
+- Decision: Treat clean headless Chrome CDP plus automated dev-auth flows as the current production-style browser evidence, while keeping manual VoiceOver and live Clerk sign-in flows explicitly pending.
+- Action: Added a one-off dependency-free CDP verifier under `output/`, fixed mobile Ticker Detail intrinsic overflow at 390px, reran route matrix `32/32`, contrast `8/8`, state matrix, keyboard flow, new-user browser flow, and returning-user browser flow. Full gates passed: frontend 27 files / 124 tests, lint, placeholder typecheck, architecture, build, backend 46 tests, Impeccable detector `[]`.
+- Source: `output/ux-ui-browser-verification.mjs`, `frontend/src/styles/pages.css`, `frontend/tests/appShellNavigation.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-21 - UX/UI Refactor Live Clerk Boundary Smoke
+
+- Keywords: `ux-ui-refactor`, `phase-12`, `clerk-signed-out`, `sign-in-surface`, `live-clerk-pending`
+- Decision: Live Clerk verification can safely prove the signed-out boundary and sign-in surface without credentials, but signed-in new/returning flows still require user login and remain manual gates.
+- Action: Added `output/live-clerk-signed-out-smoke.mjs` and verified `npm run dev --workspace=frontend` renders Landing instead of authenticated shell, has no missing publishable-key state, and opens the Clerk sign-in surface from Sign In.
+- Source: `output/live-clerk-signed-out-smoke.mjs`, `frontend/src/auth/clerkAdapter.jsx`, `frontend/src/main.jsx`, `docs/plans/ux_ui_refactor_plan.md`

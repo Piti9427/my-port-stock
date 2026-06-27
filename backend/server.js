@@ -6,8 +6,12 @@ const http = require("node:http");
 const path = require("node:path");
 const { createAgentEventBus, broadcast } = require("./src/ws/agentEventBus");
 const { execFile } = require("node:child_process");
-const { analyzeTicker } = require("./src/services/aiAnalyst");
+const { analyzeTicker, chatWithVerifiedContext } = require("./src/services/aiAnalyst");
 const { clerkMiddleware } = require('@clerk/express');
+const {
+  applyDevUiAuthBypass,
+  getRequestUserId,
+} = require("./src/auth/requestAuth");
 
 const DECISION_MODE_AGENT_MAP = {
   'Quick Trade': ['catalyst-hunter', 'quant-technician'],
@@ -29,19 +33,6 @@ function getAgentWorkingMessage(agent, ticker) {
     'catalyst-hunter': `Scanning upcoming catalysts for ${ticker}...`,
   };
   return messages[agent] || `Analyzing ${ticker}...`;
-}
-
-function getRequestUserId(req) {
-  if (req.auth?.userId) return req.auth.userId;
-  if (typeof req.auth === "function") {
-    try {
-      return req.auth()?.userId || null;
-    } catch (err) {
-      console.error('Error resolving request auth userId:', err);
-      return null;
-    }
-  }
-  return null;
 }
 
 function runtimeInsufficientData(reason, extras = {}) {
@@ -125,18 +116,9 @@ const {
   isValidQuoteSource,
 } = require("./src/gates/priceGate");
 const { buildVerifiedDataPacket } = require("./src/packets/verifiedDataPacket");
-const {
-  readJournalContext,
-  readTickerPortfolioContext,
-} = require("./src/journal/journalReader");
 const { evaluateDecision } = require("./src/decision/decisionEngine");
 const { supabaseConfigured } = require("./src/db/supabaseClient");
-const {
-  getUserJournal,
-  getUserJournalByTicker,
-  getUserPortfolio,
-  insertJournalEntry,
-} = require("./src/db");
+const { getScopedDb } = require("./src/db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -145,16 +127,21 @@ const quoteCache = new Map();
 
 app.use(express.json({ limit: "256kb" }));
 if (process.env.CLERK_SECRET_KEY) {
-  app.use(clerkMiddleware({
+  const clerkAuth = clerkMiddleware({
     publishableKey: process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY,
     secretKey: process.env.CLERK_SECRET_KEY
-  }));
+  });
+  app.use((req, res, next) => {
+    if (applyDevUiAuthBypass(req)) return next();
+    return clerkAuth(req, res, next);
+  });
 } else if (process.env.NODE_ENV === 'production') {
   // In production, force clerkMiddleware to throw or handle missing key securely
   app.use(clerkMiddleware());
 } else {
   console.warn("⚠️ CLERK_SECRET_KEY is missing! Bypassing Clerk auth for development.");
   app.use((req, res, next) => {
+    if (applyDevUiAuthBypass(req)) return next();
     req.auth = { userId: "dev_mock_user_123" };
     next();
   });
@@ -211,17 +198,224 @@ async function getQuotePacket(ticker) {
   return packet;
 }
 
-async function getVerifiedPacket(ticker, decisionMode) {
-  const quotePacket = await getQuotePacket(ticker);
+const HISTORICAL_CONTEXT_WARNING =
+  "Markdown portfolio/journal is historical context only; runtime analysis uses Supabase per-user rows.";
 
-  if (quotePacket.status === "INSUFFICIENT_DATA") {
-    return insufficientData(quotePacket.error_details);
+function toFiniteNumber(value, fallback = null) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
+function sanitizeHoldingRow(row) {
+  return {
+    ticker: normalizeTicker(row?.ticker) || row?.ticker || null,
+    name: row?.name || null,
+    shares: toFiniteNumber(row?.shares, 0),
+    avg_cost: toFiniteNumber(row?.avg_cost, null),
+    sector: row?.sector || null,
+    notes: row?.notes || null,
+    source_note: row?.source_note || null,
+  };
+}
+
+function sanitizeJournalRow(row) {
+  return {
+    id: row?.id || null,
+    date: row?.date || null,
+    ticker: normalizeTicker(row?.ticker) || row?.ticker || null,
+    type: row?.type || null,
+    mode: row?.mode || null,
+    status: row?.status || null,
+    shares: toFiniteNumber(row?.shares, null),
+    price: toFiniteNumber(row?.price, null),
+    entry: toFiniteNumber(row?.entry, null),
+    target: toFiniteNumber(row?.target, null),
+    stop_loss: toFiniteNumber(row?.stop_loss, null),
+    risk_reward: toFiniteNumber(row?.risk_reward, null),
+    profit: toFiniteNumber(row?.profit, null),
+    notes: row?.notes || null,
+    source_note: row?.source_note || null,
+  };
+}
+
+function isOpenJournalRow(row) {
+  const status = String(row?.status || "").trim().toUpperCase();
+  return status === "OPEN" || status === "ACTIVE";
+}
+
+function buildJournalUnresolvedIssues(rows) {
+  const issues = [];
+  rows.forEach((row) => {
+    const status = String(row?.status || "").trim().toUpperCase();
+    if (!isOpenJournalRow(row)) return;
+
+    if (!Number.isFinite(Number(row?.stop_loss)) || Number(row.stop_loss) <= 0) {
+      issues.push(`${normalizeTicker(row?.ticker) || "Ticker"} open trade is missing an executable stop-loss`);
+    }
+
+    const riskReward = Number(row?.risk_reward);
+    if (Number.isFinite(riskReward) && riskReward < 2) {
+      issues.push(`${normalizeTicker(row?.ticker) || "Ticker"} open trade risk/reward is below 1:2`);
+    }
+
+    if (!status) {
+      issues.push(`${normalizeTicker(row?.ticker) || "Ticker"} journal status is missing`);
+    }
+  });
+  return issues;
+}
+
+function unavailableRuntimeContexts(ticker) {
+  return {
+    portfolioContext: {
+      source: "unavailable",
+      user_scope: "authenticated",
+      ticker,
+      is_held: false,
+      stale_hypothesis: false,
+      holdings_rows: [],
+    },
+    journalContext: {
+      source: "unavailable",
+      user_scope: "authenticated",
+      ticker,
+      journal_checked: false,
+      is_repeat_ticker: false,
+      is_active_trade: false,
+      active_trade_rows: [],
+      unresolved_issues: ["Supabase runtime data unavailable for authenticated analysis context"],
+    },
+  };
+}
+
+function getRuntimeDbForUser(userId) {
+  if (!userId || !supabaseConfigured) {
+    return null;
+  }
+  return getScopedDb(userId);
+}
+
+async function buildAuthenticatedAnalysisContext({ userId, ticker, db } = {}) {
+  const normalizedTicker = normalizeTicker(ticker);
+  if (!normalizedTicker) {
+    return runtimeInsufficientData("Invalid ticker format", {
+      historicalContextWarning: HISTORICAL_CONTEXT_WARNING,
+      ...unavailableRuntimeContexts(null),
+    });
   }
 
-  return buildVerifiedDataPacket(ticker, quotePacket, {
+  if (!userId) {
+    return runtimeInsufficientData("Missing authenticated user for analysis context", {
+      historicalContextWarning: HISTORICAL_CONTEXT_WARNING,
+      ...unavailableRuntimeContexts(normalizedTicker),
+    });
+  }
+
+  if (
+    !db ||
+    typeof db.getUserPortfolio !== "function" ||
+    typeof db.getUserJournalByTicker !== "function"
+  ) {
+    return runtimeInsufficientData("Supabase runtime data unavailable for authenticated analysis context", {
+      historicalContextWarning: HISTORICAL_CONTEXT_WARNING,
+      ...unavailableRuntimeContexts(normalizedTicker),
+    });
+  }
+
+  try {
+    const [holdings, journalRows] = await Promise.all([
+      db.getUserPortfolio(userId),
+      db.getUserJournalByTicker(userId, normalizedTicker),
+    ]);
+
+    const tickerHoldings = (holdings || []).filter(
+      (row) => normalizeTicker(row?.ticker) === normalizedTicker,
+    );
+    const sanitizedHoldings = tickerHoldings.map(sanitizeHoldingRow);
+    const sanitizedJournalRows = (journalRows || []).map(sanitizeJournalRow);
+    const activeTradeRows = sanitizedJournalRows.filter(isOpenJournalRow);
+    const unresolvedIssues = buildJournalUnresolvedIssues(journalRows || []);
+
+    return {
+      status: "READY",
+      portfolioContext: {
+        source: "supabase",
+        user_scope: "authenticated",
+        ticker: normalizedTicker,
+        is_held: sanitizedHoldings.some((row) => row.shares > 0),
+        stale_hypothesis: false,
+        holdings_count: sanitizedHoldings.length,
+        holdings_rows: sanitizedHoldings,
+      },
+      journalContext: {
+        source: "supabase",
+        user_scope: "authenticated",
+        ticker: normalizedTicker,
+        journal_checked: true,
+        is_repeat_ticker: sanitizedJournalRows.length > 0,
+        is_active_trade: activeTradeRows.length > 0,
+        active_trade_rows: activeTradeRows,
+        trade_rows: sanitizedJournalRows,
+        unresolved_issues: unresolvedIssues,
+      },
+      historicalContextWarning: HISTORICAL_CONTEXT_WARNING,
+    };
+  } catch (error) {
+    console.error("Runtime analysis context lookup failed:", error.message);
+    return runtimeInsufficientData("Supabase runtime data unavailable for authenticated analysis context", {
+      historicalContextWarning: HISTORICAL_CONTEXT_WARNING,
+      ...unavailableRuntimeContexts(normalizedTicker),
+    });
+  }
+}
+
+async function buildRuntimeVerifiedPacket({
+  ticker,
+  decisionMode,
+  quotePacket,
+  userId,
+  db,
+} = {}) {
+  const normalizedTicker = normalizeTicker(ticker);
+  if (!normalizedTicker) {
+    return insufficientData("Invalid ticker format");
+  }
+
+  if (!quotePacket || quotePacket.status === "INSUFFICIENT_DATA") {
+    return insufficientData(quotePacket?.error_details || "Missing quote packet");
+  }
+
+  const runtimeContext = await buildAuthenticatedAnalysisContext({
+    userId,
+    ticker: normalizedTicker,
+    db: db || getRuntimeDbForUser(userId),
+  });
+
+  if (runtimeContext.status === "INSUFFICIENT_DATA") {
+    return runtimeInsufficientData(runtimeContext.error_details, {
+      historical_context_warning: runtimeContext.historicalContextWarning,
+      portfolio_context: runtimeContext.portfolioContext,
+      journal_context: runtimeContext.journalContext,
+    });
+  }
+
+  return buildVerifiedDataPacket(normalizedTicker, quotePacket, {
     decisionMode,
-    journalContext: readJournalContext(ticker),
-    portfolioContext: readTickerPortfolioContext(ticker),
+    journalContext: runtimeContext.journalContext,
+    portfolioContext: runtimeContext.portfolioContext,
+    historicalContextWarning: runtimeContext.historicalContextWarning,
+  });
+}
+
+async function getVerifiedPacket(ticker, decisionMode, options = {}) {
+  const quotePacket = options.quotePacket || await getQuotePacket(ticker);
+
+  return buildRuntimeVerifiedPacket({
+    ticker,
+    decisionMode,
+    quotePacket,
+    userId: options.userId,
+    db: options.db,
   });
 }
 
@@ -296,7 +490,8 @@ app.get("/api/packet/:ticker", async (req, res) => {
   }
 
   const decisionMode = normalizeDecisionMode(req.query.mode);
-  const packet = await getVerifiedPacket(ticker, decisionMode);
+  const userId = getRequestUserId(req);
+  const packet = await getVerifiedPacket(ticker, decisionMode, { userId });
   return res.status(200).json(packet);
 });
 
@@ -310,7 +505,7 @@ function broadcastAnalyzeKickoff(ticker, agents, totalAgents) {
   });
 }
 
-function buildManualVerifiedPacket(ticker, manualPrice, decisionMode) {
+async function buildManualVerifiedPacket(ticker, manualPrice, decisionMode, options = {}) {
   const quotePacket = {
     as_of: new Date().toISOString(),
     ticker,
@@ -321,10 +516,13 @@ function buildManualVerifiedPacket(ticker, manualPrice, decisionMode) {
     market_session: "Regular",
     current_price_acceptance_gate: "pass",
   };
-  return buildVerifiedDataPacket(ticker, quotePacket, {
+
+  return buildRuntimeVerifiedPacket({
+    ticker,
     decisionMode,
-    journalContext: readJournalContext(ticker),
-    portfolioContext: readTickerPortfolioContext(ticker),
+    quotePacket,
+    userId: options.userId,
+    db: options.db,
   });
 }
 
@@ -411,6 +609,54 @@ function buildInsufficientAnalyzeResponse(packet, ticker, decisionMode) {
   };
 }
 
+app.post("/api/chat", async (req, res) => {
+  const ticker = normalizeTicker(req.body?.ticker);
+  if (!ticker) {
+    return res.status(200).json(insufficientData("Invalid ticker format"));
+  }
+
+  const message = String(req.body?.message || "").trim();
+  if (!message || message.length > 1000) {
+    return res.status(400).json({ error: "Message must be 1-1000 characters" });
+  }
+
+  const userId = getRequestUserId(req);
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const decisionMode = normalizeDecisionMode(req.body?.decision_mode);
+
+  try {
+    const packet = await getVerifiedPacket(ticker, decisionMode, { userId });
+    if (packet.status === "INSUFFICIENT_DATA") {
+      return res.status(200).json({
+        as_of: new Date().toISOString(),
+        ticker,
+        decision_mode: decisionMode,
+        ...packet,
+        message: packet.error_details,
+      });
+    }
+
+    const chat = await chatWithVerifiedContext({
+      ticker,
+      message,
+      decisionMode,
+      packet,
+    });
+
+    return res.status(200).json({
+      as_of: new Date().toISOString(),
+      ticker,
+      decision_mode: decisionMode,
+      ...chat,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/analyze", async (req, res) => {
   const ticker = normalizeTicker(req.body?.ticker);
   if (!ticker) {
@@ -424,11 +670,12 @@ app.post("/api/analyze", async (req, res) => {
   try {
     broadcastAnalyzeKickoff(ticker, agents, totalAgents);
 
+    const userId = getRequestUserId(req);
     const manualPrice = req.body.manual_price ? Number.parseFloat(req.body.manual_price) : null;
     const packet =
       manualPrice && !Number.isNaN(manualPrice) && manualPrice > 0 && manualPrice < 1000000
-        ? buildManualVerifiedPacket(ticker, manualPrice, decisionMode)
-        : await getVerifiedPacket(ticker, decisionMode);
+        ? await buildManualVerifiedPacket(ticker, manualPrice, decisionMode, { userId })
+        : await getVerifiedPacket(ticker, decisionMode, { userId });
 
     if (packet.status === "INSUFFICIENT_DATA") {
       broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker });
@@ -436,7 +683,7 @@ app.post("/api/analyze", async (req, res) => {
     }
 
     const oracleData = await runMarketOracle(ticker);
-    const geminiData = await analyzeTicker(ticker, packet.portfolioContext, oracleData);
+    const geminiData = await analyzeTicker(ticker, packet.portfolio_context, oracleData);
 
     packet.fundamental_packet = { ...packet.fundamental_packet, gemini_scores: geminiData, oracle: oracleData };
 
@@ -492,6 +739,8 @@ module.exports = {
   buildYahooQuoteSource,
   evaluateDecision,
   buildDeepAnalysisPayload,
+  buildAuthenticatedAnalysisContext,
+  buildRuntimeVerifiedPacket,
   getNewYorkMarketSession,
   getQuotePacket,
   getVerifiedPacket,

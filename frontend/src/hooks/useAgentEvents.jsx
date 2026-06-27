@@ -24,62 +24,65 @@ export function AgentEventsProvider({ children }) {
   const wsRef = useRef(null);
   const reconnectTimer = useRef(null);
 
-  const connect = useCallback(() => {
-    try {
-      const ws = new WebSocket(WS_URL);
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        setConnected(true);
-        if (reconnectTimer.current) {
-          clearTimeout(reconnectTimer.current);
-          reconnectTimer.current = null;
-        }
-      };
-
-      ws.onmessage = (evt) => {
-        try {
-          const event = JSON.parse(evt.data);
-          setLastEvent(event);
-
-          if (event.type === 'AGENT_STATE_CHANGE') {
-            setAgentStates((prev) => ({
-              ...prev,
-              [event.agent]: {
-                state: event.state,
-                message: event.message || null,
-                ticker: event.ticker,
-              },
-            }));
-          }
-
-          if (event.type === 'ANALYSIS_COMPLETE') {
-            setAnalysisResult(event.payload);
-          }
-        } catch (parseError) {
-          console.debug('Ignored malformed agent event payload:', parseError);
-        }
-      };
-
-      ws.onclose = () => {
-        setConnected(false);
-        reconnectTimer.current = setTimeout(connect, 3000);
-      };
-
-      ws.onerror = () => ws.close();
-    } catch (connectError) {
-      console.debug('WebSocket connect failed, retrying:', connectError);
-      reconnectTimer.current = setTimeout(connect, 3000);
-    }
-  }, []);
-
   useEffect(() => {
+    let disposed = false;
+
+    const connect = () => {
+      try {
+        const ws = new WebSocket(WS_URL);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          setConnected(true);
+          if (reconnectTimer.current) {
+            clearTimeout(reconnectTimer.current);
+            reconnectTimer.current = null;
+          }
+        };
+
+        ws.onmessage = (evt) => {
+          try {
+            const event = JSON.parse(evt.data);
+            setLastEvent(event);
+
+            if (event.type === 'AGENT_STATE_CHANGE') {
+              setAgentStates((prev) => ({
+                ...prev,
+                [event.agent]: {
+                  state: event.state,
+                  message: event.message || null,
+                  ticker: event.ticker,
+                },
+              }));
+            }
+
+            if (event.type === 'ANALYSIS_COMPLETE') {
+              setAnalysisResult(event.payload);
+            }
+          } catch (parseError) {
+            console.debug('Ignored malformed agent event payload:', parseError);
+          }
+        };
+
+        ws.onclose = () => {
+          setConnected(false);
+          if (!disposed) reconnectTimer.current = setTimeout(connect, 3000);
+        };
+
+        ws.onerror = () => ws.close();
+      } catch (connectError) {
+        console.debug('WebSocket connect failed, retrying:', connectError);
+        if (!disposed) reconnectTimer.current = setTimeout(connect, 3000);
+      }
+    };
+
     connect();
     return () => {
+      disposed = true;
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
       if (wsRef.current) wsRef.current.close();
     };
-  }, [connect]);
+  }, []);
 
   const resetAnalysis = useCallback(() => {
     setAnalysisResult(null);
@@ -104,6 +107,8 @@ AgentEventsProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
+// The provider and hook share this private context contract.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAgentEvents() {
   return useContext(AgentEventsContext);
 }

@@ -4,7 +4,9 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const css = readFileSync(resolve(__dirname, '../src/index.css'), 'utf8');
+const read = (file) => readFileSync(resolve(__dirname, '..', file), 'utf8');
+const cssEntry = read('src/index.css');
+const css = [cssEntry, ...Array.from(cssEntry.matchAll(/@import\s+'\.\/styles\/([^']+)';/g), (match) => read(`src/styles/${match[1]}`))].join('\n');
 const main = readFileSync(resolve(__dirname, '../src/main.jsx'), 'utf8');
 
 const rootBlock = css.match(/:root\s*\{(?<body>[\s\S]*?)\n\s*\}/)?.groups?.body ?? '';

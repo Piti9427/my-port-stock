@@ -27,6 +27,7 @@ This is the canonical instruction entrypoint for the MyPortStock workspace.
 - Treat stale watchlist prices as context, not execution data.
 - Review `trade_journal.md` before advising on an existing position, repeat ticker, or strategy adjustment.
 - Log every executed trade thesis and update post-mortems after exits so future advice learns from actual outcomes.
+- **Dynamic Scoping & Discovery:** When the user asks a broad investment recommendation question (e.g. 'มีหุ้นแนะนำไหม', 'คืนนี้ซื้ออะไรดี') without specifying specific tickers or a narrow theme, do not default to the same pre-defined set of tech/watchlist stocks. Instead, proactively ask clarifying questions (using the `ask_question` tool) to scope down the timeframe (Decision Mode), sectors/themes, and risk tolerance. Once scoped, dynamically search the web or database to discover fresh candidate tickers in those sectors, then pass them through the standard SOP gates.
 - When a discussion creates a durable decision, plan, watchlist update, risk rule, or unresolved follow-up, append one compact keyword entry to `PROJECT_MEMORY_INDEX.md`. Create a detailed note under `notes/` only when the index entry would become too long.
 - Do not bloat context by reading all notes. Read `PROJECT_MEMORY_INDEX.md` first, then open only the linked note whose keyword matches the current request.
 
