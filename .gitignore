@@ -18,6 +18,8 @@ artifacts/playwright-mcp/
 .sonarlint/
 .sonar-analyze-temp/
 .vscode/
+.impeccable/
+.gemini/
 
 # Supabase
 supabase/.temp/

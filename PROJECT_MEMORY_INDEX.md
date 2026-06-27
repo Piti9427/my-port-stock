@@ -24,8 +24,32 @@
 | `risk-plan-missing` | Holdings or active trades missing stop/R/R/hard THB risk                         | `trade_journal.md`                                                  |
 | `ANET-conflict`     | [Resolved 2026-06-01] ANET limit order was never filled; trade journal corrected | `trade_journal.md`                                                  |
 | `no-chase`          | Avoid buying extended momentum names without pullback/R/R                        | `ELITE_INVESTOR_SOP.md`                                             |
+| `skills-workflow`   | Project developer workflow using integrated Agent Skills                         | `docs/PROJECT_SKILLS_WORKFLOW.md`                                   |
+| `clerk-isolation`   | Clerk user data isolation and Supabase database RLS architecture                 | `docs/adr/0002-clerk-user-isolation-rls.md`                          |
+| `autonomous-search` | Sub-agent contextual search and hybrid oracle contract architecture               | `docs/adr/0003-subagent-autonomous-search.md`                       |
 
 ## Durable Entries
+
+### 2026-06-27 - Clerk User Isolation and RLS in Supabase (ADR 0002)
+
+- Keywords: `clerk-isolation`, `supabase`, `rls`, `jwt`, `holdings-trigger`
+- Decision: Confirmed the multi-tenant architecture where user identity is mapped via locally-signed Supabase JWTs with subject set to Clerk's `userId`, enforced by table-level RLS policies, and holdings state is dynamically derived using DB-level triggers (event sourcing) on journal transactions.
+- Action: Created [0002-clerk-user-isolation-rls.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/adr/0002-clerk-user-isolation-rls.md).
+- Source: [0002-clerk-user-isolation-rls.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/adr/0002-clerk-user-isolation-rls.md)
+
+### 2026-06-27 - Sub-Agent Autonomous Search and Hybrid Data Contract (ADR 0003)
+
+- Keywords: `autonomous-search`, `data-contract`, `search-caching`, `ai-council`
+- Decision: Established a hybrid model allowing sub-agents to search for qualitative context (headlines, FCF context) but strictly binding all calculations (Last Price, risk) to the Orchestrator's verified packet. Redundant searches are mitigated via a 1-hour backend cache layer and a 3-search limit.
+- Action: Created [0003-subagent-autonomous-search.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/adr/0003-subagent-autonomous-search.md).
+- Source: [0003-subagent-autonomous-search.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/adr/0003-subagent-autonomous-search.md)
+
+### 2026-06-27 - Project Skills Workflow Integration
+
+- Keywords: `skills-workflow`, `agent-skills`, `planning-workflow`, `tdd`, `supabase`, `qa`
+- Decision: Formulated a project-wide developer workflow by mapping and integrating existing Agent Skills (Supabase, TDD, React best practices, security, QA) with the MyPortStock technology stack.
+- Action: Created the canonical developer guide at [PROJECT_SKILLS_WORKFLOW.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/PROJECT_SKILLS_WORKFLOW.md).
+- Source: [PROJECT_SKILLS_WORKFLOW.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/PROJECT_SKILLS_WORKFLOW.md)
 
 ### 2026-06-21 - UX/UI Refactor Manual Gate Scope
 
@@ -370,3 +394,10 @@
 - Decision: Live Clerk verification can safely prove the signed-out boundary and sign-in surface without credentials, but signed-in new/returning flows still require user login and remain manual gates.
 - Action: Added `output/live-clerk-signed-out-smoke.mjs` and verified `npm run dev --workspace=frontend` renders Landing instead of authenticated shell, has no missing publishable-key state, and opens the Clerk sign-in surface from Sign In.
 - Source: `output/live-clerk-signed-out-smoke.mjs`, `frontend/src/auth/clerkAdapter.jsx`, `frontend/src/main.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+
+### 2026-06-27 - Unbiased Institutional CIO Upgrade & AI Documentation Map
+
+- Keywords: `institutional-cio`, `piotroski-f-score`, `altman-z-score`, `roce`, `anchored-vwap`, `zvr-ratio`, `documentation-map`
+- Decision: Implemented the institutional-grade upgrade by adding F-Score, Z-Score, ROCE, and Anchored VWAP calculations to the Python market oracle, enforcing their thresholds in the backend decision engine, and displaying them as metric cards on the frontend ticker detail page. Created a dedicated AI Agent documentation map and formatted ADR 0004 with YAML frontmatter/runnable verifications to align with repo standards.
+- Action: Updated `tools/market_oracle.py`, `backend/src/decision/decisionEngine.js`, `frontend/src/pages/TickerDetailPage.jsx`, created `docs/DOCUMENTATION_MAP.md`, updated `docs/adr/0004-unbiased-institutional-quality-gates.md`, and validated using Vitest/Node test runner (182 total checks pass).
+- Source: `plan.md`, `tools/market_oracle.py`, `backend/src/decision/decisionEngine.js`, `frontend/src/pages/TickerDetailPage.jsx`, `docs/DOCUMENTATION_MAP.md`, `docs/adr/0004-unbiased-institutional-quality-gates.md`

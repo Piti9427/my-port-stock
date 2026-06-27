@@ -172,19 +172,23 @@ Hard gates override the numeric score:
 - No actionable `Buy/Add` without a hard stop-loss and hard THB risk.
 - No action on a held or repeat ticker until `trade_journal.md` has been reviewed.
 - If thesis integrity fails, the verdict must be `Trim`, `Avoid`, or `Exit Review` regardless of score.
-- If any sub-agent returns `INSUFFICIENT_DATA`, the maximum verdict is `Wait` unless the missing data is explicitly irrelevant to the user's timeframe.
+- If any sub-agent or data feed returns `INSUFFICIENT_DATA` for a required metric, the maximum verdict is `Wait` (no guessing or extrapolating).
 - If the setup depends on a catalyst that is unverified or already passed, the maximum verdict is `Wait`.
 - If the price is extended and the stop required for a valid setup would break the THB risk budget, the maximum verdict is `Wait`.
 - If portfolio concentration or speculative allocation cap would be exceeded, the maximum verdict is `Wait`, `Trim`, or `Avoid`.
 - If a sub-agent marks `Mode Fit` as `Poor`, its score must be capped at `5` for that decision mode.
+- **Piotroski & Altman Z-Score Gates:** A `Buy/Add` for `Long-Term/Core` strictly requires Piotroski F-Score >= 7/9 and Altman Z-Score > 2.99 and positive ROCE. A Z-Score < 1.81 strictly downgrades the verdict to `Avoid` / `Wait`.
+- **Piotroski Swing Gate:** A `Buy/Add` for `Swing Trade` strictly requires Piotroski F-Score >= 5/9.
+- **Devil's Advocate Rule:** Every analysis report must contain a dedicated **"Devil's Advocate / Bear Case"** section identifying exactly 3 high-conviction bear points/blindspots.
+- **R/R Challenge:** Any buy query must prompt an immediate, explicit challenge of the R/R ratio in the final response to serve as an emotional brake.
 
 Mode-specific gates:
 
 | Decision Mode | Extra Gates |
 |---|---|
 | `Quick Trade` | Must have current intraday/daily price, catalyst freshness, liquidity, executable stop, and no stale snippet dependency |
-| `Swing Trade` | Must have current daily/weekly setup, R/R >= `1:2`, catalyst path, and defined invalidation |
-| `Long-Term/Core` | Must have thesis integrity, earnings/FCF quality, valuation discipline, weekly trend health, and no broken macro assumption |
+| `Swing Trade` | Must have current daily/weekly setup, R/R >= `1:2`, catalyst path, ZVR >= 1.5, and defined invalidation |
+| `Long-Term/Core` | Must have thesis integrity, earnings/FCF quality, Piotroski >= 7/9, Altman Z-Score > 2.99, ROCE > 0, weekly trend health (Golden Filter), and no broken macro assumption |
 | `Existing Position / Exit Review` | Must review `trade_journal.md`, original thesis, current unrealized risk, stop discipline, tax/position impact, and exit/trim alternatives |
 
 False-buy checklist before any `Buy/Add`:
@@ -203,6 +207,12 @@ False-buy checklist before any `Buy/Add`:
 [ ] R/R >= 1:2 using current price, not stale snapshot price
 [ ] Catalyst timing is current and not already priced in
 [ ] Portfolio concentration and speculative cap remain valid
+[ ] Piotroski F-Score passes threshold (>= 7/9 Core, >= 5/9 Swing)
+[ ] Altman Z-Score > 2.99 (Core Safe Zone), not in Distress Zone (< 1.81)
+[ ] ROCE is positive (Core)
+[ ] Devil's Advocate 3-point bear case explicitly written
+[ ] R/R emotional challenge completed
+[ ] ZVR >= 1.5 (rebound or breakout day volume confirmation)
 ```
 
 Verdict mapping:

@@ -52,6 +52,26 @@ _Avoid_: fixed full memo, every-section dashboard, incomplete summary
 Relevant news, financials, filings, technical facts, portfolio context, or market data that can change the verdict, gate status, risk/reward, thesis integrity, or next action.
 _Avoid_: news dump, metric dump, trivia, unrelated background
 
+**Expectation Gap**:
+The variance between actual financial results and Wall Street consensus expectations. Used to measure the post-earnings shock and direction of institutional adjustments.
+_Avoid_: rumors, unconsensus targets, raw earnings beat without guidance check
+
+**Piotroski F-Score**:
+A 9-point fundamental health index used to confirm balance sheet strength.
+_Avoid_: basic debt checks, subjective financial grades
+
+**Altman Z-Score**:
+A quantitative credit-strength score used to identify credit risks and potential insolvency.
+_Avoid_: credit agency ratings, general debt-to-equity assumptions
+
+**ROIC/ROCE**:
+Returns on invested or employed capital used to verify that growth companies generate cash-flow efficiency from capital expenditure (CapEx).
+_Avoid_: ROE, basic net profit margin
+
+**Anchored VWAP (AVWAP)**:
+The volume-weighted average price plotted from a key calendar event, representing the core institutional price defense zone.
+_Avoid_: simple moving average, generic VWAP without anchor point
+
 **Full Investment Dashboard**:
 An expanded **Insight Presentation** used when the user asks for a full memo, pre-trade execution review, portfolio-entry thesis, or complete audit. It uses the full investment answer structure instead of the shorter **Adaptive Drilldown**.
 _Avoid_: default chat reply, quick insight, casual scan

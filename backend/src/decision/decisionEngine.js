@@ -237,6 +237,44 @@ function evaluateDecision(packet, options = {}) {
   const blockers = collectDecisionBlockers(packet, isHeldOrRepeat);
   const warnings = [];
 
+  const oracle = packet.fundamental_packet?.oracle;
+  const piotroski = oracle?.piotroski_f_score;
+  const altman = oracle?.altman_z_score;
+  const roce = oracle?.roce;
+  const zvr = oracle?.daily_technicals?.zvr_ratio;
+
+  if (decisionMode === "Long-Term/Core") {
+    if (piotroski === null || piotroski === undefined) {
+      blockers.push("Piotroski F-Score data unavailable");
+    } else if (piotroski < 7) {
+      blockers.push(`Piotroski F-Score ${piotroski}/9 is below required 7/9 for Core`);
+    }
+
+    if (altman === null || altman === undefined) {
+      blockers.push("Altman Z-Score data unavailable");
+    } else if (altman <= 2.99) {
+      blockers.push(`Altman Z-Score ${altman} is below required 2.99 for Core`);
+    }
+
+    if (roce === null || roce === undefined) {
+      blockers.push("ROCE data unavailable");
+    } else if (roce <= 0) {
+      blockers.push(`ROCE ${roce} is non-positive, must be positive for Core`);
+    }
+  } else if (decisionMode === "Swing Trade") {
+    if (piotroski === null || piotroski === undefined) {
+      blockers.push("Piotroski F-Score data unavailable");
+    } else if (piotroski < 5) {
+      blockers.push(`Piotroski F-Score ${piotroski}/9 is below required 5/9 for Swing`);
+    }
+
+    if (zvr === null || zvr === undefined) {
+      blockers.push("ZVR data unavailable");
+    } else if (zvr < 1.5) {
+      blockers.push(`ZVR ratio ${zvr} is below required 1.5 for Swing Daily Confluence`);
+    }
+  }
+
   if (hasInsufficientSubAgent(agentResults)) {
     warnings.push("At least one sub-agent returned INSUFFICIENT_DATA");
   }
@@ -246,7 +284,7 @@ function evaluateDecision(packet, options = {}) {
     warnings.push("No executable stop-loss, R/R >= 1:2, and hard THB risk plan supplied");
   }
 
-  const { verdict: initialVerdict, trafficLight } = resolveVerdict({
+  let { verdict: initialVerdict, trafficLight } = resolveVerdict({
     decisionMode,
     isHeldOrRepeat,
     blockers,
@@ -254,6 +292,12 @@ function evaluateDecision(packet, options = {}) {
     score: scoreResult.score,
     hasRiskPlan: riskPlanReady,
   });
+
+  if (decisionMode === "Long-Term/Core" && altman !== null && altman !== undefined && altman < 1.81) {
+    initialVerdict = isHeldOrRepeat ? "Trim" : "Avoid";
+    trafficLight = "red";
+  }
+
   const verdict =
     packet.current_price_acceptance_gate === "pass" ? initialVerdict : "Wait";
 

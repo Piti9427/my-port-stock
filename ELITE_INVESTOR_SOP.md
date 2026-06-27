@@ -207,6 +207,9 @@ Every investment answer must state the selected decision mode before scoring. Do
 ### Dimension 3 — Financials & Earnings Report Intelligence (The Growth & Quality Gate)
 - **Valuation Filter (PEG Ratio):** For Growth and Tech stocks, use Forward P/E relative to Expected EPS Growth. **Pass Criteria:** PEG < 1.5 is undervalued/fair. PEG > 2.0 requires extreme caution or wait for pullback.
 - **Cash Flow Reality (DCF/FCF):** Growth without cash is a trap. Verify **Free Cash Flow Margin** is positive and consistent. The company must generate real cash (Operating CF - Capex) to fund its own growth without dilution.
+- **Piotroski F-Score (Financial Strength Check):** Assess the 9-point criteria. **Pass Criteria:** F-Score >= 7/9 for Core, >= 5/9 for Swing.
+- **Altman Z-Score (Credit Risk Check):** Check the bankruptcy/solvency index. **Pass Criteria:** Z-Score > 2.99 (Safe Zone). A Z-Score < 1.81 (Distress Zone) strictly forbids a Buy/Add for Core.
+- **ROIC/ROCE (Capital Efficiency Check):** Ensure positive ROIC/ROCE to verify efficient deployment of capital.
 - **Earnings Quality & Transcripts:** Is profit from core business or special items? Deep dive into Earnings Call commentary, next-quarter targets, and management tone.
 
 ---
@@ -244,7 +247,8 @@ Every investment answer must state the selected decision mode before scoring. Do
 
 #### 📊 4. The Tape Reader: Price Action & Volume (The Confirmation)
 - **Candlestick Patterns:** Identify high-conviction signals like **Rejection Tails** at key S/R levels, **Engulfing Bars** at trend reversals, and **Inside Bars** for volatility contraction.
-- **Volume Profiling (ZVR):** Every breakout MUST be validated by the **Zanger Volume Ratio (ZVR)** — Volume > 50-200% of the 20-day average. 
+- **Volume Profiling (ZVR):** Every breakout and daily rebound MUST be validated by the **Zanger Volume Ratio (ZVR)** — Volume >= 1.5x (150%) of the 20-day average (ZVR >= 1.5) to confirm institutional buying.
+- **Anchored VWAP (AVWAP):** Plot from key events (latest earnings release, major gaps, or volume climax). Use as key institutional average cost support; buying is preferred when price holds AVWAP.
 - **Institutional Footprints:** Look for **Institutional Absorption** (High volume, tight price range) and **Volume Climax** (Vertical volume spikes indicating trend exhaustion).
 - **S/R Flips:** Prioritize entries where previous major resistance has been confirmed as new support through a high-volume retest.
 
@@ -452,11 +456,12 @@ Begin with the **hottest Sector/Theme** running in the market — not individual
 | 1. D1 Pullback to Dynamic Support | Price pulls back to touch Daily EMA 20 or Daily MA 50 (not chasing breakout) |
 | 2. D1 Rebound Candle | Bullish reversal candle closing above the support line (rejection tail, engulfing, or green close) |
 | 3. Chart Pattern | VCP / Cup & Handle / Flat Base / Bull Flag / Inside Bar forming at support |
-| 4. Volume Confirmation (ZVR) | Volume > 50–200% of 20-day average on rebound or breakout candle |
+| 4. Volume Confirmation (ZVR) | Volume >= 1.5x (150%) of the 20-day average (ZVR >= 1.5) on rebound or breakout candle |
 | 5. D1 RSI | RSI < 50 (room to run) or Bullish Divergence (price new low, RSI higher low) |
 | 6. MACD Divergence | Daily MACD histogram turning positive or bullish crossover |
 | 7. S/R Flip or Fibonacci | Former resistance confirmed as support, or price at 38.2% / 50% / 61.8% Fibonacci retracement |
 | 8. Institutional/Options Flow | Unusual call buying or dark pool block at support zone |
+| 9. Anchored VWAP (AVWAP) | Price holding above or rebounding from the AVWAP anchored from the latest earnings release |
 
 **Rule:** 3+ signals = ENTRY ALLOWED | 1–2 signals = WAIT | 0 signals = AVOID
 
