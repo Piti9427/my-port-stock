@@ -50,7 +50,9 @@ _Avoid_: fixed full memo, every-section dashboard, incomplete summary
 
 **Decision-Impact Evidence**:
 Relevant news, financials, filings, technical facts, portfolio context, or market data that can change the verdict, gate status, risk/reward, thesis integrity, or next action.
-_Avoid_: news dump, metric dump, trivia, unrelated background
+**Hypothetical Average Cost**:
+The simulated average cost of a holding after incorporating a planned buy transaction, calculated dynamically prior to execution.
+_Avoid_: estimated cost, forecast average
 
 **Expectation Gap**:
 The variance between actual financial results and Wall Street consensus expectations. Used to measure the post-earnings shock and direction of institutional adjustments.
@@ -72,6 +74,25 @@ _Avoid_: ROE, basic net profit margin
 The volume-weighted average price plotted from a key calendar event, representing the core institutional price defense zone.
 _Avoid_: simple moving average, generic VWAP without anchor point
 
+**Portfolio Drawdown Circuit Breaker**:
+A hard gate that suspends all new buy orders when the total portfolio unrealized + realized P/L breaches the configured maximum drawdown percentage, protecting against permanent capital impairment.
+_Avoid_: soft warning, optional limit, advisory-only drawdown
+
+**Position Time Stop**:
+A calendar-based review trigger that flags open positions exceeding a Decision Mode-specific holding period without reaching Target 1 or hitting Stop Loss, prompting re-evaluation to recycle dead capital.
+_Avoid_: indefinite hold, passive waiting, ignoring opportunity cost
+
+**Trailing Stop**:
+A dynamic stop-loss level that follows the highest closing price after Target 1 is reached, calculated as the highest close minus ATR × 1.5, used to lock in realized gains while allowing trend continuation.
+_Avoid_: fixed stop only, mental stop, no profit protection
+
+**Earnings Proximity Gate**:
+A position-size limiter that caps new entries to Test Position size (30%) when the next earnings announcement is within 5 calendar days, preventing oversized exposure to binary earnings events.
+_Avoid_: full position before earnings, ignoring event risk
+
+**FX Risk Exposure**:
+The impact of THB/USD exchange rate movements on the real returns of USD-denominated holdings when measured in Thai Baht, displayed as a separate P/L line item alongside the raw USD P/L.
+_Avoid_: USD-only P/L, ignoring currency impact
 **Full Investment Dashboard**:
 An expanded **Insight Presentation** used when the user asks for a full memo, pre-trade execution review, portfolio-entry thesis, or complete audit. It uses the full investment answer structure instead of the shorter **Adaptive Drilldown**.
 _Avoid_: default chat reply, quick insight, casual scan
