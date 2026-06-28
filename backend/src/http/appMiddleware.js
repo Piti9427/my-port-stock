@@ -69,6 +69,7 @@ function buildContentSecurityPolicy(env = process.env) {
     objectSrc: ["'none'"],
     scriptSrc: compactSources(["'self'", clerkOrigin]),
     styleSrc: ["'self'", "'unsafe-inline'"],
+    upgradeInsecureRequests: null,
     workerSrc: ["'self'", "blob:"],
   };
 }
@@ -78,6 +79,7 @@ const securityHeaders = helmet({
     directives: buildContentSecurityPolicy(),
   },
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  strictTransportSecurity: false,
 });
 
 function requestContext(req, res, next) {

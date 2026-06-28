@@ -54,6 +54,11 @@ describe("HTTP hardening", () => {
     assert.ok(response.headers["content-security-policy"]);
     assert.ok(response.headers["referrer-policy"]);
     assert.equal(response.headers["x-powered-by"], undefined);
+    assert.equal(response.headers["strict-transport-security"], undefined);
+    assert.doesNotMatch(
+      response.headers["content-security-policy"],
+      /upgrade-insecure-requests/,
+    );
   });
 
   it("publishes standard rate-limit policies without legacy headers", async () => {
