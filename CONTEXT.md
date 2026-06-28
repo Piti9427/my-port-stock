@@ -166,12 +166,16 @@ The installable web application form factor for MyPortStock. It uses a service w
 _Avoid_: mobile app, native app, hybrid app (unless Capacitor is explicitly added)
 
 **Alert Rule**:
-A user-defined price threshold that the backend scheduler evaluates only against a quote packet that passes the Current Price Acceptance Gate. Initial sources are existing watchlist alert fields and active journal stop/target fields. An alert rule is not a trading order.
+A user-confirmed price condition stored as an explicit per-user rule and evaluated only against a quote packet that passes the Current Price Acceptance Gate. Multiple above, below, or zone rules may exist for one US ticker/ETF. Journal or Plan may prefill a form but never creates or changes a rule silently. An alert rule is not a trading order.
 _Avoid_: trade signal, auto-trade, order trigger
 
 **Scheduled Alert**:
 A backend-generated, edge-triggered event produced when a verified market price changes an alert condition from unmatched to matched. Delivered through Web Push on a bounded polling interval during applicable market sessions.
 _Avoid_: real-time alert, streaming alert, instant notification
+
+**Degraded Data Alert**:
+A redacted notification emitted once after two consecutive verification failures for a monitored ticker. It reports that market data is unavailable without displaying an unverified price or trading instruction; one successful verification resets the failure counter.
+_Avoid_: price alert, stale-price alert, inferred quote
 
 ## Example Dialogue
 

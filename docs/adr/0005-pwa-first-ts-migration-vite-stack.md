@@ -32,8 +32,10 @@ The original proposal combined PWA delivery, a full TypeScript migration, alert 
 3. **Use existing verified quote infrastructure for alerts.**
    - Alert evaluation must reuse the existing two-source quote packet and Current Price Acceptance Gate.
    - A single Yahoo quote cannot trigger an alert.
-   - Initial thresholds come from existing `watchlists.alert_price`/`alert_type` and active journal `stop_loss`/`target`; no speculative alert-rule abstraction is added.
+   - V1 covers US stocks and ETFs only.
+   - Users explicitly manage multiple `alert_rules` per ticker. Journal or Plan may prefill a rule form in a later slice, but the user must confirm before saving.
    - Persist edge state and immutable, idempotent alert events in additive Supabase tables.
+   - Two consecutive quote-verification failures create one degraded-data event; a successful verification resets the failure counter.
 
 4. **Use a bounded in-process scheduler for the single VPS process.**
    - Use recursive `setTimeout`, not `node-cron`.
@@ -43,7 +45,7 @@ The original proposal combined PWA delivery, a full TypeScript migration, alert 
 
 5. **Use Web Push as the only notification channel in this delivery.**
    - Notification permission is requested only after explicit user interaction.
-   - Payloads are factual alert records, not investment recommendations.
+   - Lock-screen payloads are redacted to ticker plus a generic alert/data-unavailable message. Price, threshold, holdings, verdict, and recommendations require the authenticated application.
    - LINE Notify is rejected because the service ended on 2025-03-31. LINE Messaging API is a separate future decision because it requires Official Account onboarding, recipient identity mapping, and quota acceptance.
 
 6. **Do not block delivery on a full TypeScript migration.**

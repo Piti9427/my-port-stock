@@ -426,6 +426,13 @@
 ### 2026-06-28 - PWA-First Architecture and Verified Alert Plan
 
 - Keywords: `pwa`, `verified-alerts`, `alert-scheduler`, `web-push`, `static-only-cache`, `adr-0005`
-- Decision: Keep Vite + Express; precache only the app shell and never cache authenticated APIs. Reuse the two-source Current Price Acceptance Gate for edge-triggered alerts, use a bounded native timer with an environment kill switch, and deliver through Web Push. Full TypeScript migration, LINE Messaging API, Capacitor, and distributed scheduling are separate deferred decisions; LINE Notify is discontinued.
-- Action: Revised ADR-0005 and the implementation plan into TDD stages for PWA shell, verified alerts, Web Push, and production verification.
+- Decision: Keep Vite + Express; cache only the shell. V1 supports explicit multiple alert rules per US ticker/ETF, two-source edge-triggered evaluation, a degraded-data event after two consecutive failures, and redacted Web Push. Journal/Plan may prefill but never auto-syncs rules.
+- Action: Revised ADR-0005 and Slice 3 plan; TypeScript, LINE, Capacitor, Thai equities, and distributed scheduling remain deferred.
 - Source: `docs/adr/0005-pwa-first-ts-migration-vite-stack.md`, `docs/plans/webapp-pwa-implementation-plan.md`, `CONTEXT.md`
+
+### 2026-06-28 - Product Platform Vertical-Slice Roadmap
+
+- Keywords: `product-platform`, `decision-hub`, `progressive-disclosure`, `vertical-slices`, `backend-hardening`
+- Decision: Deliver the approved multi-user Personal Investment OS through just-in-time vertical plans. Gate 0 backend hardening precedes per-user preferences, Today/Portfolio Risk, PWA/Inbox, Analyze/Plan, Discover, and Journal Learning.
+- Action: Added the master roadmap and detailed Gate 0 plan; later slice plans are written only after the preceding repository state is verified.
+- Source: `docs/superpowers/specs/2026-06-28-myportstock-product-platform-design.md`, `docs/superpowers/plans/2026-06-28-product-platform-roadmap.md`, `docs/superpowers/plans/2026-06-28-backend-production-hardening.md`
