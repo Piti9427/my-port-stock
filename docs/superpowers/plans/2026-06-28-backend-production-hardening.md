@@ -12,6 +12,8 @@
 
 **Context7 basis:** Express 5 rejected promises reach the final four-argument error handler automatically; error middleware must be mounted last. Behind one nginx reverse proxy, `trust proxy` must be exactly `1` so rate limiting sees the client IP.
 
+**Implementation status (2026-06-28):** Tasks 0–7 are implemented on `feature/backend-production-hardening`. Local verification passes with 79 backend tests, 130 frontend tests, production build, lint with zero errors, and production-mode loopback smoke. Gate 0 remains open until the configured nginx path and an explicitly confirmed non-production Supabase project pass Task 8 Steps 3–4.
+
 ---
 
 ## Scope decisions

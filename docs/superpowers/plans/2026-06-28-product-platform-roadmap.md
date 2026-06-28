@@ -107,16 +107,16 @@ Every slice must prove:
 
 ## Roadmap status
 
-| Item                  | Status                                                     |
-| :-------------------- | :--------------------------------------------------------- |
-| Master product design | Complete — commit `08a0035`                                |
-| Gate 0 detailed plan  | Ready for review                                           |
-| Slice 1 detailed plan | Pending Gate 0 completion                                  |
-| Slice 2 detailed plan | Pending Slice 1 completion                                 |
-| Slice 3 detailed plan | Revised to approved product contract; pending dependencies |
-| Slice 4 detailed plan | Pending Slice 3 completion                                 |
-| Slice 5 detailed plan | Pending Slice 4 completion                                 |
-| Slice 6 detailed plan | Pending Slice 5 completion                                 |
+| Item                  | Status                                                       |
+| :-------------------- | :----------------------------------------------------------- |
+| Master product design | Complete — commit `08a0035`                                  |
+| Gate 0 detailed plan  | Implemented locally; pending nginx and Supabase verification |
+| Slice 1 detailed plan | Pending Gate 0 environment verification                      |
+| Slice 2 detailed plan | Pending Slice 1 completion                                   |
+| Slice 3 detailed plan | Revised to approved product contract; pending dependencies   |
+| Slice 4 detailed plan | Pending Slice 3 completion                                   |
+| Slice 5 detailed plan | Pending Slice 4 completion                                   |
+| Slice 6 detailed plan | Pending Slice 5 completion                                   |
 
 ## Deferred scope
 

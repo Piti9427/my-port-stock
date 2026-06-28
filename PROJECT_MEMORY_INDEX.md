@@ -25,10 +25,18 @@
 | `ANET-conflict`     | [Resolved 2026-06-01] ANET limit order was never filled; trade journal corrected | `trade_journal.md`                                                  |
 | `no-chase`          | Avoid buying extended momentum names without pullback/R/R                        | `ELITE_INVESTOR_SOP.md`                                             |
 | `skills-workflow`   | Project developer workflow using integrated Agent Skills                         | `docs/PROJECT_SKILLS_WORKFLOW.md`                                   |
-| `clerk-isolation`   | Clerk user data isolation and Supabase database RLS architecture                 | `docs/adr/0002-clerk-user-isolation-rls.md`                          |
-| `autonomous-search` | Sub-agent contextual search and hybrid oracle contract architecture               | `docs/adr/0003-subagent-autonomous-search.md`                       |
+| `clerk-isolation`   | Clerk user data isolation and Supabase database RLS architecture                 | `docs/adr/0002-clerk-user-isolation-rls.md`                         |
+| `autonomous-search` | Sub-agent contextual search and hybrid oracle contract architecture              | `docs/adr/0003-subagent-autonomous-search.md`                       |
 
 ## Durable Entries
+
+### 2026-06-28 - Gate 0 Backend Hardening Local Implementation
+
+- Keywords: `backend-hardening`, `request-id`, `rate-limit`, `websocket-auth`, `integrity-constraints`
+- Decision: Gate 0 Tasks 0–7 are implemented on `feature/backend-production-hardening`; do not mark the gate complete until the real one-hop nginx path and an explicitly confirmed non-production Supabase target pass verification.
+- Evidence: 79 backend tests and 130 frontend tests pass; production build succeeds; lint has zero errors; local production smoke returns health `200`, API JSON `404`, SPA `200`, security/rate headers, anonymous WebSocket `401`, and graceful shutdown exit `0`.
+- Action: Confirm the linked Supabase project, run migration preflight/advisors and RLS verification, then verify nginx client IP/header behavior before planning Slice 1.
+- Source: `docs/superpowers/plans/2026-06-28-backend-production-hardening.md`, `supabase/migrations/20260628160000_backend_integrity_constraints.sql`
 
 ### 2026-06-27 - Clerk User Isolation and RLS in Supabase (ADR 0002)
 
