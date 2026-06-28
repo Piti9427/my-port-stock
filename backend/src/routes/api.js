@@ -99,6 +99,7 @@ const JournalSchema = z.object({
   source_note: z.string().trim().optional(),
   cognitive_bias: z.string().trim().nullable().optional(),
 });
+const JournalIdSchema = z.string().uuid();
 
 // Holdings Routes
 router.get('/holdings', async (req, res, next) => {
@@ -256,6 +257,9 @@ router.post('/watchlists', async (req, res, next) => {
 });
 
 router.delete('/watchlists/:ticker', async (req, res, next) => {
+  const ticker = normalizeTicker(req.params.ticker);
+  if (!ticker) return res.status(400).json({ error: 'Invalid ticker format' });
+
   if (!supabaseConfigured) {
     return res.status(503).json(runtimeInsufficientData("Supabase is not configured"));
   }
@@ -263,7 +267,6 @@ router.delete('/watchlists/:ticker', async (req, res, next) => {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    const ticker = req.params.ticker.trim().toUpperCase();
     const scopedSupabase = require('../db/supabaseClient').createScopedClient(userId);
 
     const { data, error } = await scopedSupabase
@@ -337,6 +340,9 @@ router.post('/journal', async (req, res, next) => {
 });
 
 router.delete('/journal/:id', async (req, res, next) => {
+  const parsedId = JournalIdSchema.safeParse(req.params.id);
+  if (!parsedId.success) return res.status(400).json({ error: 'Invalid journal ID' });
+
   if (!supabaseConfigured) {
     return res.status(503).json(runtimeInsufficientData("Supabase is not configured"));
   }
@@ -344,7 +350,7 @@ router.delete('/journal/:id', async (req, res, next) => {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    const { id } = req.params;
+    const id = parsedId.data;
     const scopedSupabase = require('../db/supabaseClient').createScopedClient(userId);
 
     const { data, error } = await scopedSupabase

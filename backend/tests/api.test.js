@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const express = require("express");
 const request = require("supertest");
 
-function loadIsolatedApi({ userId, scopedDb }) {
+function loadIsolatedApi({ userId, scopedDb, scopedClientFactory }) {
   const prevUrl = process.env.SUPABASE_URL;
   const prevKey = process.env.SUPABASE_ANON_KEY;
 
@@ -18,8 +18,13 @@ function loadIsolatedApi({ userId, scopedDb }) {
   }
 
   const db = require("../src/db");
+  const supabaseClient = require("../src/db/supabaseClient");
   const originalGetScopedDb = db.getScopedDb;
+  const originalCreateScopedClient = supabaseClient.createScopedClient;
   db.getScopedDb = scopedDb;
+  if (scopedClientFactory) {
+    supabaseClient.createScopedClient = scopedClientFactory;
+  }
 
   const router = require("../src/routes/api");
   const app = express();
@@ -34,6 +39,7 @@ function loadIsolatedApi({ userId, scopedDb }) {
     app,
     restore() {
       db.getScopedDb = originalGetScopedDb;
+      supabaseClient.createScopedClient = originalCreateScopedClient;
       for (const mod of [apiPath, dbPath, supabaseClientPath]) {
         delete require.cache[mod];
       }
@@ -77,6 +83,88 @@ describe("API Routes", () => {
 
     assert.equal(res.statusCode, 401);
     assert.equal(res.body.error, "Unauthorized");
+  });
+
+  it("rejects control characters in market chat messages", async () => {
+    const { app } = require("../server");
+
+    const res = await request(app)
+      .post("/api/chat")
+      .send({ ticker: "NVDA", message: "hidden\u0000control" });
+
+    assert.equal(res.statusCode, 400);
+    assert.deepEqual(res.body, { error: "Message must be 1-1000 characters" });
+  });
+
+  it("rejects market chat messages over 1,000 characters", async () => {
+    const { app } = require("../server");
+
+    const res = await request(app)
+      .post("/api/chat")
+      .send({ ticker: "NVDA", message: "x".repeat(1001) });
+
+    assert.equal(res.statusCode, 400);
+    assert.deepEqual(res.body, { error: "Message must be 1-1000 characters" });
+  });
+
+  it("allows tabs and newlines through market chat message validation", async () => {
+    const { app } = require("../server");
+
+    const res = await request(app)
+      .post("/api/chat")
+      .send({ ticker: "NVDA", message: "line one\n\tline two" });
+
+    assert.equal(res.statusCode, 401);
+  });
+});
+
+describe("route input validation", () => {
+  let restore = () => {};
+
+  beforeEach(() => {
+    restore();
+  });
+
+  afterEach(() => {
+    restore();
+  });
+
+  it("rejects malformed watchlist tickers before Supabase access", async () => {
+    let supabaseCalls = 0;
+    const loaded = loadIsolatedApi({
+      userId: "user_a",
+      scopedDb: () => ({}),
+      scopedClientFactory: () => {
+        supabaseCalls += 1;
+        throw new Error("database secret detail");
+      },
+    });
+    restore = loaded.restore;
+
+    const res = await request(loaded.app).delete("/api/watchlists/not%20valid");
+
+    assert.equal(res.statusCode, 400);
+    assert.deepEqual(res.body, { error: "Invalid ticker format" });
+    assert.equal(supabaseCalls, 0);
+  });
+
+  it("rejects malformed journal IDs before Supabase access", async () => {
+    let supabaseCalls = 0;
+    const loaded = loadIsolatedApi({
+      userId: "user_a",
+      scopedDb: () => ({}),
+      scopedClientFactory: () => {
+        supabaseCalls += 1;
+        throw new Error("database secret detail");
+      },
+    });
+    restore = loaded.restore;
+
+    const res = await request(loaded.app).delete("/api/journal/not-a-uuid");
+
+    assert.equal(res.statusCode, 400);
+    assert.deepEqual(res.body, { error: "Invalid journal ID" });
+    assert.equal(supabaseCalls, 0);
   });
 });
 

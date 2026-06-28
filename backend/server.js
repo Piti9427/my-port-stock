@@ -4,6 +4,7 @@ const Sentry = require("@sentry/node");
 const express = require("express");
 const http = require("node:http");
 const path = require("node:path");
+const { z } = require("zod");
 const { createAgentEventBus, broadcast } = require("./src/ws/agentEventBus");
 const { execFile } = require("node:child_process");
 const { analyzeTicker, chatWithVerifiedContext } = require("./src/services/aiAnalyst");
@@ -132,6 +133,11 @@ const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "127.0.0.1";
 const quoteCache = new BoundedMap(200);
 const apiRateLimiters = createApiRateLimiters();
+const ChatMessageSchema = z.string()
+  .trim()
+  .min(1)
+  .max(1000)
+  .refine((message) => !/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(message));
 
 if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", 1);
@@ -634,10 +640,11 @@ app.post("/api/chat", async (req, res, next) => {
     return res.status(200).json(insufficientData("Invalid ticker format"));
   }
 
-  const message = String(req.body?.message || "").trim();
-  if (!message || message.length > 1000) {
+  const parsedMessage = ChatMessageSchema.safeParse(req.body?.message);
+  if (!parsedMessage.success) {
     return res.status(400).json({ error: "Message must be 1-1000 characters" });
   }
+  const message = parsedMessage.data;
 
   const userId = getRequestUserId(req);
   if (!userId) {
