@@ -12,7 +12,11 @@ const {
   applyDevUiAuthBypass,
   getRequestUserId,
 } = require("./src/auth/requestAuth");
-const { requestContext } = require("./src/http/appMiddleware");
+const {
+  createApiRateLimiters,
+  requestContext,
+  securityHeaders,
+} = require("./src/http/appMiddleware");
 const { errorHandler, notFoundHandler } = require("./src/http/errors");
 
 const DECISION_MODE_AGENT_MAP = {
@@ -126,8 +130,17 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "127.0.0.1";
 const quoteCache = new Map();
+const apiRateLimiters = createApiRateLimiters();
 
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+app.disable("x-powered-by");
 app.use(requestContext);
+app.use(securityHeaders);
+app.use(apiRateLimiters.ordinary);
+app.use(["/api/quote", "/api/packet"], apiRateLimiters.quote);
+app.use(["/api/analyze", "/api/chat"], apiRateLimiters.ai);
 app.use(express.json({ limit: "256kb" }));
 if (process.env.CLERK_SECRET_KEY) {
   const clerkAuth = clerkMiddleware({
