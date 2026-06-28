@@ -491,7 +491,7 @@ export default function MarketExplorerPage() {
             <span className="chart-header__sector">{selected.sector}</span>
             <span className="data-stamp" style={{ marginLeft: 8 }}>
               <Clock size={10} aria-hidden="true" />
-              Display quote only, not execution gate
+              <span>Display quote only, not execution gate</span>
             </span>
             <span className="quote-gate-note">Execution price requires Command Center quote gate</span>
           </div>

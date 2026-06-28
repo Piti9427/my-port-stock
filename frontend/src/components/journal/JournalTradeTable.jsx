@@ -69,7 +69,7 @@ export function JournalTradeTable({ emptyAction, emptyDescription, expandedTrade
                     }
                   }}
                 >
-                  <td data-label="Date">{formatDate(trade.date || trade.created_at)}</td>
+                  <td className="font-mono" data-label="Date">{formatDate(trade.date || trade.created_at)}</td>
                   <td data-label="Ticker">
                     <Link className="ticker-detail-inline-link" to={`/ticker/${trade.ticker}`} onClick={(event) => event.stopPropagation()}>
                       {trade.ticker}
@@ -78,7 +78,7 @@ export function JournalTradeTable({ emptyAction, emptyDescription, expandedTrade
                   <td data-label="Type">
                     <span className={`journal-type ${String(trade.type).toLowerCase()}`}>{trade.type || 'TRADE'}</span>
                   </td>
-                  <td data-label="Shares">{trade.shares ?? '—'}</td>
+                  <td className="font-mono" data-label="Shares">{trade.shares ?? '—'}</td>
                   <td className="price-mono" data-label="Price">
                     {formatCurrency(trade.price ?? trade.entry)}
                   </td>
@@ -113,19 +113,19 @@ export function JournalTradeTable({ emptyAction, emptyDescription, expandedTrade
                           <dl>
                             <div>
                               <dt>Entry</dt>
-                              <dd>{formatCurrency(trade.entry ?? trade.price)}</dd>
+                              <dd className="font-mono">{formatCurrency(trade.entry ?? trade.price)}</dd>
                             </div>
                             <div>
                               <dt>Target</dt>
-                              <dd>{formatCurrency(trade.target)}</dd>
+                              <dd className="font-mono">{formatCurrency(trade.target)}</dd>
                             </div>
                             <div>
                               <dt>Stop</dt>
-                              <dd>{formatCurrency(trade.stop_loss)}</dd>
+                              <dd className="font-mono">{formatCurrency(trade.stop_loss)}</dd>
                             </div>
                             <div>
                               <dt>R/R</dt>
-                              <dd>{trade.risk_reward || '—'}</dd>
+                              <dd className="font-mono">{trade.risk_reward || '—'}</dd>
                             </div>
                           </dl>
                         </section>

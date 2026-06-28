@@ -31,6 +31,7 @@
     --status-warning-bg: rgba(var(--status-warning-rgb), 0.12);
 
     --muted: #737373;
+    --font-mono: 'JetBrains Mono', monospace;
 
     /* Mapped legacy variables for non-Tailwind pages */
     --bg-void: #0a0a0a;
@@ -49,6 +50,7 @@
     --text-inverse: #0a0a0a;
 
     --brand-rgb: 16, 185, 129;
+    --brand-primary-oklch: oklch(72.7% 0.165 155.6);
     --brand-primary: #10b981;
     --brand-dark: #059669;
     --brand-glow: rgba(var(--brand-rgb), 0.12);
@@ -58,14 +60,19 @@
     --accent-glow: rgba(var(--accent-rgb), 0.16);
     --accent-primary-dim: rgba(var(--accent-rgb), 0.1);
 
-    --fin-profit: #34d399;
+    --fin-profit-oklch: oklch(78.5% 0.145 145);
+    --fin-profit: var(--fin-profit-oklch);
     --fin-success: var(--fin-profit);
-    --fin-profit-dim: rgba(var(--status-success-rgb), 0.12);
-    --fin-loss: #f87171;
+    --fin-profit-dim: oklch(22.5% 0.04 145 / 0.18);
+
+    --fin-loss-oklch: oklch(72.5% 0.16 20);
+    --fin-loss: var(--fin-loss-oklch);
     --fin-danger: var(--fin-loss);
-    --fin-loss-dim: rgba(var(--status-danger-rgb), 0.12);
-    --fin-warning: #facc15;
-    --fin-warning-dim: rgba(var(--status-warning-rgb), 0.12);
+    --fin-loss-dim: oklch(22% 0.04 20 / 0.18);
+
+    --fin-warning-oklch: oklch(82.5% 0.15 85);
+    --fin-warning: var(--fin-warning-oklch);
+    --fin-warning-dim: oklch(24% 0.04 85 / 0.18);
 
     --radius-lg: 12px;
     --radius-md: 8px;

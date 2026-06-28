@@ -92,8 +92,9 @@ test('Portfolio Risk shows position-level value, weight, stop distance, THB risk
 test('Portfolio Risk renders known-risk budget gauge and missing-stop summary', async () => {
   render(<PortfolioRiskPage />);
 
-  expect(await screen.findByText('Known risk ฿90 / ฿50,000')).toBeInTheDocument();
-  expect(screen.getByText('1 position missing stop-loss')).toBeInTheDocument();
+  expect(await screen.findByText('฿90')).toBeInTheDocument();
+  expect(screen.getByText(/งบประมาณ ฿50,000/)).toBeInTheDocument();
+  expect(screen.getByText(/1 position missing stop-loss/)).toBeInTheDocument();
 
   const gauge = screen.getByRole('progressbar', { name: 'Risk budget used' });
   expect(gauge).toHaveAttribute('aria-valuemin', '0');

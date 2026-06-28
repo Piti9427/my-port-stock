@@ -1,27 +1,11 @@
 import { useMemo } from 'react';
+import { formatCurrency } from '../../lib/format.js';
 import { DataTable } from '../ui/DataTable.jsx';
 import { EmptyState } from '../ui/EmptyState.jsx';
 
 function numberValue(value) {
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : 0;
-}
-
-function formatCurrency(value, ticker, { signed = false } = {}) {
-  const numeric = Number.isFinite(Number(value)) ? Number(value) : 0;
-  const isUsd = ticker && !ticker.endsWith('.BK');
-  
-  const absValue = Math.abs(numeric);
-  const formattedVal = absValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const symbol = isUsd ? '$' : '฿';
-  
-  if (signed) {
-    const sign = numeric > 0 ? '+' : (numeric < 0 ? '-' : '');
-    return `${sign}${symbol}${formattedVal}`;
-  } else {
-    const sign = numeric < 0 ? '-' : '';
-    return `${sign}${symbol}${formattedVal}`;
-  }
 }
 
 function semanticValue(value, ticker, { signed = false } = {}) {

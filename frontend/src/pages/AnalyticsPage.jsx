@@ -129,8 +129,12 @@ export default function AnalyticsPage() {
         />
       ) : filteredClosedTrades.length === 0 ? (
         <div className="analytics-empty-stack">
-          <EmptyState title="Insufficient data" description={emptyCopy} />
-          <EquityCurve trades={[]} />
+          <div className="glass-panel" style={{ padding: '32px var(--space-6)' }}>
+            <EmptyState title="Insufficient data" description={emptyCopy} />
+          </div>
+          <div style={{ display: 'none' }} aria-hidden="true">
+            <EquityCurve trades={[]} />
+          </div>
         </div>
       ) : (
         <>
@@ -161,7 +165,7 @@ export default function AnalyticsPage() {
                       </td>
                       <td>{stat.count} trades</td>
                       <td>{stat.count > 0 ? ((stat.winCount / stat.count) * 100).toFixed(0) : 0}%</td>
-                      <td className={stat.profit >= 0 ? 'kpi-profit price-mono' : 'kpi-loss price-mono'} style={{ color: stat.profit >= 0 ? '#34d399' : '#f87171' }}>
+                      <td className={stat.profit >= 0 ? 'kpi-profit price-mono' : 'kpi-loss price-mono'} style={{ color: stat.profit >= 0 ? 'var(--fin-profit)' : 'var(--fin-loss)' }}>
                         {formatMoney(stat.profit, { sign: true })} Net
                       </td>
                     </tr>

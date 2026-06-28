@@ -1,3 +1,4 @@
+import { formatCurrency } from '../../lib/format.js';
 import { EmptyState } from '../ui/EmptyState.jsx';
 import { Skeleton } from '../ui/Skeleton.jsx';
 
@@ -64,9 +65,9 @@ export function WatchlistPanel({ items = [], loading = false, status = 'OK', onO
                   </div>
                   <span>{item.name || item.sector || 'Tracked ticker'}</span>
                 </button>
-                <span className="dashboard-watchlist-price">{Number.isFinite(price) ? `฿${price.toFixed(2)}` : '—'}</span>
+                <span className="dashboard-watchlist-price font-mono">{formatCurrency(price, item.ticker)}</span>
                 <Sparkline data={item.spark} positive={positive} />
-                <span className={positive ? 'semantic-positive' : 'semantic-negative'}>
+                <span className={`${positive ? 'semantic-positive' : 'semantic-negative'} font-mono`}>
                   {Number.isFinite(changePct) ? `${positive ? '+' : ''}${changePct.toFixed(2)}%` : '—'}
                 </span>
                 <button className="btn-secondary" type="button" onClick={() => onAnalyze?.(item.ticker)} aria-label={`วิเคราะห์ ${item.ticker}`}>

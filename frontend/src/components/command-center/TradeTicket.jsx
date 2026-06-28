@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { useMemo, useState } from 'react';
 import { Drawer } from '../ui/Drawer.jsx';
+import { currencySymbol } from '../../lib/format';
 
 function numeric(value) {
   const number = Number(value);
@@ -89,42 +90,77 @@ export function TradeTicket({ open, ticker, decisionMode, quotePrice, currentHol
           ))}
         </div>
         <div className="command-trade-grid">
-          <label>
-            Shares
-            <input aria-label="Shares" type="number" min="0" step="0.0001" value={shares} onChange={(event) => setShares(event.target.value)} />
-          </label>
-          <label>
-            Execution price
-            <input aria-label="Execution price" type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} />
-          </label>
-          <label>
-            Stop loss
-            <input type="number" min="0" step="0.01" value={stopLoss} onChange={(event) => setStopLoss(event.target.value)} />
-          </label>
-          <label>
-            Target
-            <input type="number" min="0" step="0.01" value={target} onChange={(event) => setTarget(event.target.value)} />
-          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label htmlFor="ticket-shares-input">Shares</label>
+            <input
+              id="ticket-shares-input"
+              type="number"
+              min="0"
+              step="0.0001"
+              value={shares}
+              onChange={(event) => setShares(event.target.value)}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label htmlFor="ticket-price-input">Execution price</label>
+            <input
+              id="ticket-price-input"
+              type="number"
+              min="0"
+              step="0.01"
+              value={price}
+              onChange={(event) => setPrice(event.target.value)}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label htmlFor="ticket-stoploss-input">Stop loss</label>
+            <input
+              id="ticket-stoploss-input"
+              type="number"
+              min="0"
+              step="0.01"
+              value={stopLoss}
+              onChange={(event) => setStopLoss(event.target.value)}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label htmlFor="ticket-target-input">Target</label>
+            <input
+              id="ticket-target-input"
+              type="number"
+              min="0"
+              step="0.01"
+              value={target}
+              onChange={(event) => setTarget(event.target.value)}
+            />
+          </div>
         </div>
-        <div className="command-trade-calculation">
+        <div className="command-trade-calculation font-mono">
           <span>Hard risk: {calculation.risk == null ? '—' : `฿${calculation.risk.toFixed(2)}`}</span>
           <span>R/R: {calculation.rr == null ? '—' : `1:${calculation.rr.toFixed(2)}`}</span>
           {hypotheticalAvgCost != null && (
-            <span>ต้นทุนเฉลี่ยใหม่: ฿{hypotheticalAvgCost.toFixed(2)}</span>
+            <span>ต้นทุนเฉลี่ยใหม่: {currencySymbol(ticker)}{hypotheticalAvgCost.toFixed(2)}</span>
           )}
         </div>
-        <label className="command-field" style={{ marginTop: '12px' }}>
-          Cognitive Bias Tag
-          <select value={cognitiveBias} onChange={(event) => setCognitiveBias(event.target.value)} style={{ width: '100%', background: '#18181b', color: '#f4f4f5', border: '1px solid #27272a', padding: '8px', borderRadius: '4px', marginTop: '4px', fontFamily: 'monospace' }}>
-            {['None', 'FOMO', 'Loss Aversion', 'Anchoring', 'Herd Behavior'].map(bias => (
-              <option key={bias} value={bias}>{bias}</option>
+        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label htmlFor="ticket-bias-select">Cognitive Bias Tag</label>
+          <select
+            id="ticket-bias-select"
+            value={cognitiveBias}
+            onChange={(event) => setCognitiveBias(event.target.value)}
+            style={{ width: '100%', background: '#18181b', color: '#f4f4f5', border: '1px solid #27272a', padding: '8px', borderRadius: '4px', fontFamily: 'monospace' }}
+          >
+            {['None', 'FOMO', 'Loss Aversion', 'Anchoring', 'Herd Behavior'].map((bias) => (
+              <option key={bias} value={bias}>
+                {bias}
+              </option>
             ))}
           </select>
-        </label>
-        <label className="command-field" style={{ marginTop: '12px' }}>
-          Notes
-          <textarea value={notes} maxLength={2000} onChange={(event) => setNotes(event.target.value)} />
-        </label>
+        </div>
+        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label htmlFor="ticket-notes-input">Notes</label>
+          <textarea id="ticket-notes-input" value={notes} maxLength={2000} onChange={(event) => setNotes(event.target.value)} />
+        </div>
         {submitted && validationError && (
           <div className="command-inline-error" role="alert">
             {validationError}

@@ -9,6 +9,7 @@ import { MetricCard } from '../components/ui/MetricCard';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { ScenarioPlanner } from '../components/ScenarioPlanner';
 import { fetchWithAuth } from '../lib/api';
+import { formatCurrency } from '../lib/format';
 import { useApi } from '../hooks/useApi';
 
 const DEFAULT_DECISION_MODE = 'Swing Trade';
@@ -21,11 +22,7 @@ function normalizeSymbol(symbol) {
     .slice(0, 10);
 }
 
-function formatUsd(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return '$—';
-  return `$${numeric.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
+
 
 function formatPercent(value) {
   const numeric = Number(value);
@@ -161,7 +158,7 @@ export default function TickerDetailPage() {
           <StatusBadge status={gateStatus === 'Pass' ? 'buy' : 'wait'} label={`Gate: ${gateStatus}`} />
         </div>
         <div className="ticker-detail-price-row">
-          <span className="ticker-detail-price">{formatUsd(quotePayload.last_price || packetPayload.last_price)}</span>
+          <span className="ticker-detail-price font-mono">{formatCurrency(quotePayload.last_price || packetPayload.last_price, symbol)}</span>
           <span className="ticker-detail-copy">Display-only quote, not execution-ready unless the price gate passes.</span>
         </div>
       </header>
@@ -205,7 +202,7 @@ export default function TickerDetailPage() {
 
       {!loading && (
         <section className="ticker-detail-grid">
-          <MetricCard label="Last Price" value={formatUsd(quotePayload.last_price || packetPayload.last_price)} dataStamp="Display-only quote" mono />
+          <MetricCard label="Last Price" value={formatCurrency(quotePayload.last_price || packetPayload.last_price, symbol)} dataStamp="Display-only quote" mono />
           <MetricCard label="Position" value={holding ? 'Held' : 'Not held'} dataStamp="Supabase holdings" />
           <MetricCard label="Journal Rows" value={String(trades.length)} dataStamp="Supabase journal" mono />
         </section>
@@ -241,7 +238,7 @@ export default function TickerDetailPage() {
           {avwap !== null && (
             <MetricCard
               label="Anchored VWAP"
-              value={formatUsd(avwap)}
+              value={formatCurrency(avwap, symbol)}
               dataStamp={`Anchored from earnings ${earningsDate || ''}`}
               mono
             />
@@ -249,7 +246,7 @@ export default function TickerDetailPage() {
           {analysis?.adaptive_drilldown?.calculated_trailing_stop && (
             <MetricCard
               label="Dynamic Trailing Stop"
-              value={formatUsd(analysis.adaptive_drilldown.calculated_trailing_stop)}
+              value={formatCurrency(analysis.adaptive_drilldown.calculated_trailing_stop, symbol)}
               dataStamp="🔒 Lock Profit Level (ATR × 1.5)"
               mono
               change="LOCK"
@@ -265,17 +262,17 @@ export default function TickerDetailPage() {
             <span className="panel-title">Authenticated Runtime Context</span>
             <span className="data-stamp">
               <Clock size={10} aria-hidden="true" />
-              {contextSource === 'supabase' ? 'Supabase per-user context' : 'Supabase context unavailable'}
+              <span>{contextSource === 'supabase' ? 'Supabase per-user context' : 'Supabase context unavailable'}</span>
             </span>
           </div>
           <div className="ticker-detail-context-grid">
             <div>
               <div className="ticker-detail-label">Shares</div>
-              <div className="ticker-detail-value">{formatNumber(holding?.shares)}</div>
+              <div className="ticker-detail-value font-mono">{formatNumber(holding?.shares)}</div>
             </div>
             <div>
               <div className="ticker-detail-label">Average Cost</div>
-              <div className="ticker-detail-value">{formatUsd(holding?.avg_cost)}</div>
+              <div className="ticker-detail-value font-mono">{formatCurrency(holding?.avg_cost, symbol)}</div>
             </div>
             <div>
               <div className="ticker-detail-label">Source</div>

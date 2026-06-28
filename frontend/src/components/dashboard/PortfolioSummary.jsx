@@ -8,8 +8,12 @@ function numberValue(value) {
 function formatMoney(value, { signed = false } = {}) {
   if (!Number.isFinite(value)) return '—';
   const absolute = Math.abs(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
-  if (!signed) return value > 0 ? `฿${absolute}` : '—';
-  return `${value >= 0 ? '+' : '-'}฿${absolute}`;
+  if (signed) {
+    const sign = value > 0 ? '+' : value < 0 ? '-' : '';
+    return `${sign}฿${absolute}`;
+  }
+  const sign = value < 0 ? '-' : '';
+  return `${sign}฿${absolute}`;
 }
 
 export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', timestamp, stale = false }) {
@@ -47,7 +51,7 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
   return (
     <section className="portfolio-summary" role="region" aria-label="Portfolio summary">
       {isDrawdownBreached && (
-        <div className="drawdown-banner" style={{ background: '#270f0f', color: '#f87171', padding: '12px', borderRadius: '4px', marginBottom: '16px', border: '1px solid #7f1d1d', fontFamily: 'monospace', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="drawdown-banner">
           <span>🛑 DRAWDOWN LIMIT HIT — New buys suspended ({drawdownPct.toFixed(1)}% / 15%)</span>
         </div>
       )}
@@ -70,7 +74,7 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
         </div>
         <div>
           <dt>Portfolio Beta</dt>
-          <dd style={{ color: portfolioBeta > 1.2 ? '#f87171' : (portfolioBeta < 0.8 ? '#60a5fa' : '#34d399') }}>
+          <dd style={{ color: portfolioBeta > 1.2 ? 'var(--fin-loss)' : (portfolioBeta < 0.8 ? 'var(--accent-primary)' : 'var(--fin-profit)') }}>
             {portfolioBeta.toFixed(2)}
           </dd>
         </div>

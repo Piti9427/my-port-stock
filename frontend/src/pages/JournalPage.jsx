@@ -188,7 +188,7 @@ export default function JournalPage() {
           </span>
           <span className="data-stamp">
             <Clock size={10} aria-hidden="true" />
-            Supabase journal data
+            <span>Supabase journal data</span>
           </span>
         </div>
         {error ? (
