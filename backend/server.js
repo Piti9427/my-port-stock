@@ -759,18 +759,68 @@ app.get(/.*/, (req, res) => {
 Sentry.setupExpressErrorHandler(app);
 app.use(errorHandler);
 
-if (require.main === module) {
+function closeHttpServer(server) {
+  return new Promise((resolve, reject) => {
+    server.close((error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
+
+function createGracefulShutdown({
+  eventBus,
+  server,
+  timeoutMs = 10_000,
+  forceExit = (code) => process.exit(code),
+}) {
+  let shutdownPromise = null;
+
+  return function shutdown(signal = "shutdown") {
+    if (shutdownPromise) return shutdownPromise;
+
+    shutdownPromise = (async () => {
+      const forceExitTimer = setTimeout(() => {
+        console.error(`Forced exit after ${timeoutMs}ms during ${signal}`);
+        forceExit(1);
+      }, timeoutMs);
+      forceExitTimer.unref?.();
+
+      try {
+        await eventBus.close();
+        await closeHttpServer(server);
+      } finally {
+        clearTimeout(forceExitTimer);
+      }
+    })();
+
+    return shutdownPromise;
+  };
+}
+
+function startServer({ port = PORT, host = HOST } = {}) {
   const server = http.createServer(app);
+  const eventBus = createAgentEventBus(server, { ticketStore: wsTicketStore });
+  const shutdown = createGracefulShutdown({ eventBus, server });
 
   server.on("error", (error) => {
-    console.error(`Investment Agent failed to listen on ${HOST}:${PORT}: ${error.message}`);
+    console.error(`Investment Agent failed to listen on ${host}:${port}: ${error.message}`);
     process.exit(1);
   });
 
-  server.listen(PORT, HOST, () => {
-    console.log(`Investment Agent listening on http://${HOST}:${PORT}`);
+  server.listen(port, host, () => {
+    const address = server.address();
+    const activePort = typeof address === "object" && address ? address.port : port;
+    console.log(`Investment Agent listening on http://${host}:${activePort}`);
   });
-  createAgentEventBus(server, { ticketStore: wsTicketStore });
+
+  return { eventBus, server, shutdown };
+}
+
+if (require.main === module) {
+  const runtime = startServer();
+  process.once("SIGTERM", () => void runtime.shutdown("SIGTERM"));
+  process.once("SIGINT", () => void runtime.shutdown("SIGINT"));
 }
 
 module.exports = {
@@ -785,6 +835,7 @@ module.exports = {
   buildDeepAnalysisPayload,
   buildAuthenticatedAnalysisContext,
   buildRuntimeVerifiedPacket,
+  createGracefulShutdown,
   getNewYorkMarketSession,
   getQuotePacket,
   getVerifiedPacket,
@@ -795,4 +846,5 @@ module.exports = {
   parseMoney,
   parseSimpleCsv,
   quoteCache,
+  startServer,
 };
