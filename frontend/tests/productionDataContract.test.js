@@ -35,6 +35,15 @@ test('HTML entrypoint does not include local-only live reload scripts', () => {
   expect(source).not.toContain('live.js');
 });
 
+test('Agent events obtain a fresh authenticated one-time ticket before each socket', () => {
+  const source = read('src/hooks/useAgentEvents.jsx');
+
+  expect(source).toContain("fetchWithAuth('/api/ws-ticket', getToken");
+  expect(source).toContain("method: 'POST'");
+  expect(source).toContain('encodeURIComponent(ticket)');
+  expect(source).not.toContain('new WebSocket(WS_URL)');
+});
+
 test('Command Center sends canonical decision mode values', () => {
   const controls = read('src/components/command-center/AnalysisControls.jsx');
   const hook = read('src/hooks/useCommandCenter.js');

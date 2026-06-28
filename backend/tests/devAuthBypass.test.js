@@ -103,6 +103,22 @@ describe("dev UI auth bypass", () => {
     assert.deepEqual(loaded.calls, ["dev-ui-user"]);
   });
 
+  it("issues a short-lived WebSocket ticket through authenticated HTTP", async () => {
+    const loaded = loadServerWithScopedDb({
+      devUiAuthBypass: "true",
+      scopedDb: () => ({}),
+    });
+    restore = loaded.restore;
+
+    const res = await request(loaded.app)
+      .post("/api/ws-ticket")
+      .set("Authorization", "Bearer dev-ui-auth-bypass");
+
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body.ticket, /^[0-9a-f-]{36}$/i);
+    assert.equal(res.body.expires_in_seconds, 30);
+  });
+
   it("rejects the dev UI token when the bypass flag is not enabled", async () => {
     const loaded = loadServerWithScopedDb({
       scopedDb: () => ({

@@ -6,6 +6,7 @@ const http = require("node:http");
 const path = require("node:path");
 const { z } = require("zod");
 const { createAgentEventBus, broadcast } = require("./src/ws/agentEventBus");
+const { WsTicketStore } = require("./src/ws/wsTicketStore");
 const { execFile } = require("node:child_process");
 const { analyzeTicker, chatWithVerifiedContext } = require("./src/services/aiAnalyst");
 const { clerkMiddleware } = require('@clerk/express');
@@ -133,6 +134,7 @@ const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "127.0.0.1";
 const quoteCache = new BoundedMap(200);
 const apiRateLimiters = createApiRateLimiters();
+const wsTicketStore = new WsTicketStore();
 const ChatMessageSchema = z.string()
   .trim()
   .min(1)
@@ -470,6 +472,17 @@ app.get("/health", (req, res) => {
   });
 });
 
+app.post("/api/ws-ticket", (req, res) => {
+  const userId = getRequestUserId(req);
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+  const issued = wsTicketStore.issue(userId);
+  return res.status(200).json({
+    ticket: issued.ticket,
+    expires_in_seconds: issued.expiresInSeconds,
+  });
+});
+
 app.get("/api/quote/:ticker", async (req, res) => {
   const ticker = normalizeTicker(req.params.ticker);
   if (!ticker) {
@@ -520,13 +533,13 @@ app.get("/api/packet/:ticker", async (req, res) => {
   return res.status(200).json(packet);
 });
 
-function broadcastAnalyzeKickoff(ticker, agents, totalAgents) {
-  broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'TYPING', ticker, message: `Dispatching ${totalAgents} sub-agents for ${ticker}...` });
-  agents.forEach((agent) => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SPAWNED', ticker }));
+function broadcastAnalyzeKickoff(ticker, agents, totalAgents, userId) {
+  broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'TYPING', ticker, message: `Dispatching ${totalAgents} sub-agents for ${ticker}...` }, { userId });
+  agents.forEach((agent) => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SPAWNED', ticker }, { userId }));
   agents.forEach((agent, idx) => {
-    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'WALKING', ticker }), idx * 400);
-    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SITTING', ticker }), idx * 400 + 600);
-    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'TYPING', ticker, message: getAgentWorkingMessage(agent, ticker) }), idx * 400 + 900);
+    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'WALKING', ticker }, { userId }), idx * 400);
+    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SITTING', ticker }, { userId }), idx * 400 + 600);
+    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'TYPING', ticker, message: getAgentWorkingMessage(agent, ticker) }, { userId }), idx * 400 + 900);
   });
 }
 
@@ -594,15 +607,15 @@ function mergeGeminiAnalysis(analysis, geminiData) {
   }
 }
 
-function broadcastAnalyzeCompletion(ticker, agents, totalAgents, analysis) {
+function broadcastAnalyzeCompletion(ticker, agents, totalAgents, analysis, userId) {
   let completed = 0;
   agents.forEach((agent, idx) => {
     setTimeout(() => {
       completed++;
-      broadcast({ type: 'ANALYSIS_PROGRESS', agent, ticker, payload: { progress: completed, total: totalAgents } });
-      broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'PRESENTING', ticker });
-      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'DONE', ticker }), 800);
-      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'EXITED', ticker }), 1500);
+      broadcast({ type: 'ANALYSIS_PROGRESS', agent, ticker, payload: { progress: completed, total: totalAgents } }, { userId });
+      broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'PRESENTING', ticker }, { userId });
+      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'DONE', ticker }, { userId }), 800);
+      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'EXITED', ticker }, { userId }), 1500);
     }, (totalAgents - idx) * 600 + 1000);
   });
 
@@ -612,9 +625,9 @@ function broadcastAnalyzeCompletion(ticker, agents, totalAgents, analysis) {
       agent: 'cio',
       ticker,
       payload: { verdict: analysis.decision_snapshot?.verdict || 'Complete', analysis },
-    });
-    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'PRESENTING', ticker, message: `Analysis complete for ${ticker}` });
-    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }), 2000);
+    }, { userId });
+    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'PRESENTING', ticker, message: `Analysis complete for ${ticker}` }, { userId });
+    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }, { userId }), 2000);
   }, totalAgents * 600 + 2500);
 }
 
@@ -692,11 +705,10 @@ app.post("/api/analyze", async (req, res, next) => {
   const decisionMode = normalizeDecisionMode(req.body.decision_mode);
   const agents = getAgentsForMode(decisionMode);
   const totalAgents = agents.length;
+  const userId = getRequestUserId(req);
 
   try {
-    broadcastAnalyzeKickoff(ticker, agents, totalAgents);
-
-    const userId = getRequestUserId(req);
+    broadcastAnalyzeKickoff(ticker, agents, totalAgents, userId);
     const manualPrice = req.body.manual_price ? Number.parseFloat(req.body.manual_price) : null;
     const packet =
       manualPrice && !Number.isNaN(manualPrice) && manualPrice > 0 && manualPrice < 1000000
@@ -704,7 +716,7 @@ app.post("/api/analyze", async (req, res, next) => {
         : await getVerifiedPacket(ticker, decisionMode, { userId });
 
     if (packet.status === "INSUFFICIENT_DATA") {
-      broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker });
+      broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }, { userId });
       return res.status(200).json(buildInsufficientAnalyzeResponse(packet, ticker, decisionMode));
     }
 
@@ -722,7 +734,7 @@ app.post("/api/analyze", async (req, res, next) => {
     mergeGeminiAnalysis(analysis, geminiData);
     analysis.deep_analysis = buildDeepAnalysisPayload(oracleData, geminiData);
 
-    broadcastAnalyzeCompletion(ticker, agents, totalAgents, analysis);
+    broadcastAnalyzeCompletion(ticker, agents, totalAgents, analysis, userId);
 
     return res.status(200).json({
       as_of: new Date().toISOString(),
@@ -730,7 +742,7 @@ app.post("/api/analyze", async (req, res, next) => {
       ...analysis,
     });
   } catch (error) {
-    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker });
+    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }, { userId });
     return next(error);
   }
 });
@@ -758,7 +770,7 @@ if (require.main === module) {
   server.listen(PORT, HOST, () => {
     console.log(`Investment Agent listening on http://${HOST}:${PORT}`);
   });
-  createAgentEventBus(server);
+  createAgentEventBus(server, { ticketStore: wsTicketStore });
 }
 
 module.exports = {
