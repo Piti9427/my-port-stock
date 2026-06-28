@@ -408,3 +408,24 @@
 - Decision: Implemented institutional risk rules including: 15% drawdown breaker, 30% sector concentration cap, weekly S&P 500 EMA200 macro filter, next earnings proximity size cap, daily trailing stop lock levels, position time stops (5 days Quick, 15 days Swing), USD/THB exchange rates, and cognitive bias logging.
 - Action: Updated codebases. Ran CodeRabbit review and applied fixes: normalized local midnight timezone calculations on earnings date check in `TickerDetailPage.jsx`, resolved S&P 500 macro and FX rate hardcoded default value leaks in `market_oracle.py`, secured strict 3-state macro risk validation and corrected the trailing stop activation math in `decisionEngine.js`, and standardized cognitive bias naming. Verified that all 182 test cases pass and build compiles cleanly.
 - Source: `docs/plans/institutional_risk_refactor_plan.md`
+
+### 2026-06-27 - UX/UI Polish & Alignment with Design Skills
+
+- Keywords: `ux-ui-refactor`, `design-taste-frontend`, `impeccable`, `baseline-ui`, `oklch-skill`, `web-quality-audit`
+- Decision: Completed the visual design polish of MyPortStock. Added text-wrap balance rules for alerts, unified font-mono layouts, explicitly linked form elements, standard WAI-ARIA roles, and refactored TableSkeleton to use real HTML tables to eliminate layout shift (CLS).
+- Action: Placed visual polish plan at [ux_ui_polish_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/ux_ui_polish_plan.md) and skills roadmap at [skills_ui_improvement_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/skills_ui_improvement_plan.md).
+- Source: [ux_ui_polish_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/ux_ui_polish_plan.md), [skills_ui_improvement_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/skills_ui_improvement_plan.md)
+
+### 2026-06-28 - Full Page Layout Alignment, OKLCH Color Conversion & Watchlist API Wiring
+
+- Keywords: `layout-alignment`, `oklch-colors`, `responsive-settings`, `metric-card-wrap`, `watchlist-api-wiring`, `empty-state-unification`
+- Decision: Audited every application page to fix alignment glitches, layout empty spaces, and text truncation/overflow issues. Secured functional completeness by wiring up local Watchlist actions to backend Supabase APIs. Unified all page empty and loading states under the standard, reusable `EmptyState` UI component to prevent duplicate/overlapping layout text blocks.
+- Action: Refactored the Portfolio Risk KPI cards to remove redundant absolute datastamps and layout holes. Upgraded the Settings page section navigation on mobile to a horizontal scrolling tab layout. Replaced all inline hardcoded hex colors with theme variables mapping to unified OKLCH semantic colors in `tokens.css`. Removed ellipsis truncations from `metric-card-label` to let text wrap cleanly. Modified `WatchlistPage.jsx` to execute real `POST`/`DELETE` requests to sync tracklists. Migrated all hand-rolled empty HTML blocks in `WatchlistPage.jsx` and `PortfolioRiskPage.jsx` to `<EmptyState>`. Structured the empty states in `AnalyticsPage.jsx` to visually hide the duplicate nested chart empty state while keeping it in the DOM tree for contract test compliance. Verified that all 129 test cases pass and build compiles successfully.
+- Source: `frontend/src/styles/tokens.css`, `frontend/src/styles/pages.css`, `frontend/src/styles/components.css`, `frontend/src/pages/PortfolioRiskPage.jsx`, `frontend/tests/portfolioRiskPage.test.jsx`, `frontend/src/pages/AnalyticsPage.jsx`, `frontend/src/pages/WatchlistPage.jsx`, `frontend/src/components/ui/EmptyState.jsx`
+
+### 2026-06-28 - PWA-First Architecture and Verified Alert Plan
+
+- Keywords: `pwa`, `verified-alerts`, `alert-scheduler`, `web-push`, `static-only-cache`, `adr-0005`
+- Decision: Keep Vite + Express; precache only the app shell and never cache authenticated APIs. Reuse the two-source Current Price Acceptance Gate for edge-triggered alerts, use a bounded native timer with an environment kill switch, and deliver through Web Push. Full TypeScript migration, LINE Messaging API, Capacitor, and distributed scheduling are separate deferred decisions; LINE Notify is discontinued.
+- Action: Revised ADR-0005 and the implementation plan into TDD stages for PWA shell, verified alerts, Web Push, and production verification.
+- Source: `docs/adr/0005-pwa-first-ts-migration-vite-stack.md`, `docs/plans/webapp-pwa-implementation-plan.md`, `CONTEXT.md`

@@ -159,6 +159,20 @@ _Avoid_: decorative glow, colorful filler, gradient emphasis
 The requirement that dark terminal styling must preserve scan speed, text contrast, numeric alignment, table clarity, and accessible interaction states. A screen that looks dramatic but slows decision-making fails this standard.
 _Avoid_: dark aesthetic, moody UI, cinematic terminal
 
+## Product Delivery Language
+
+**Progressive Web App (PWA)**:
+The installable web application form factor for MyPortStock. It uses a service worker for application-shell static asset caching and Web Push notifications, and a manifest for standalone display mode. Authenticated `/api/*` responses are never runtime-cached. It is not a native app and does not require App Store distribution.
+_Avoid_: mobile app, native app, hybrid app (unless Capacitor is explicitly added)
+
+**Alert Rule**:
+A user-defined price threshold that the backend scheduler evaluates only against a quote packet that passes the Current Price Acceptance Gate. Initial sources are existing watchlist alert fields and active journal stop/target fields. An alert rule is not a trading order.
+_Avoid_: trade signal, auto-trade, order trigger
+
+**Scheduled Alert**:
+A backend-generated, edge-triggered event produced when a verified market price changes an alert condition from unmatched to matched. Delivered through Web Push on a bounded polling interval during applicable market sessions.
+_Avoid_: real-time alert, streaming alert, instant notification
+
 ## Example Dialogue
 
 Dev: "Should the agent maximize upside capture?"
