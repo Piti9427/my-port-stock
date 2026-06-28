@@ -3,6 +3,14 @@ import AIFloorPage from '../src/pages/AIFloorPage';
 import { AgentEventsProvider } from '../src/hooks/useAgentEvents';
 import { vi } from 'vitest';
 
+vi.mock('../src/auth/clerkAdapter.jsx', () => ({
+  useAuth: () => ({
+    getToken: vi.fn(),
+    isLoaded: true,
+    isSignedIn: false,
+  }),
+}));
+
 vi.mock('pixi.js', () => ({
   Application: class {
     init() {
