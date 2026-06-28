@@ -12,6 +12,8 @@ const {
   applyDevUiAuthBypass,
   getRequestUserId,
 } = require("./src/auth/requestAuth");
+const { requestContext } = require("./src/http/appMiddleware");
+const { errorHandler, notFoundHandler } = require("./src/http/errors");
 
 const DECISION_MODE_AGENT_MAP = {
   'Quick Trade': ['catalyst-hunter', 'quant-technician'],
@@ -125,6 +127,7 @@ const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "127.0.0.1";
 const quoteCache = new Map();
 
+app.use(requestContext);
 app.use(express.json({ limit: "256kb" }));
 if (process.env.CLERK_SECRET_KEY) {
   const clerkAuth = clerkMiddleware({
@@ -611,7 +614,7 @@ function buildInsufficientAnalyzeResponse(packet, ticker, decisionMode) {
   };
 }
 
-app.post("/api/chat", async (req, res) => {
+app.post("/api/chat", async (req, res, next) => {
   const ticker = normalizeTicker(req.body?.ticker);
   if (!ticker) {
     return res.status(200).json(insufficientData("Invalid ticker format"));
@@ -655,11 +658,11 @@ app.post("/api/chat", async (req, res) => {
       ...chat,
     });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return next(error);
   }
 });
 
-app.post("/api/analyze", async (req, res) => {
+app.post("/api/analyze", async (req, res, next) => {
   const ticker = normalizeTicker(req.body?.ticker);
   if (!ticker) {
     return res.status(200).json(insufficientData("Invalid ticker format"));
@@ -707,11 +710,11 @@ app.post("/api/analyze", async (req, res) => {
     });
   } catch (error) {
     broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker });
-    return res.status(500).json({ error: error.message });
+    return next(error);
   }
 });
 
-Sentry.setupExpressErrorHandler(app);
+app.use("/api", notFoundHandler);
 
 app.get(/.*/, (req, res) => {
   res.sendFile("index.html", {
@@ -719,6 +722,9 @@ app.get(/.*/, (req, res) => {
     dotfiles: "deny",
   });
 });
+
+Sentry.setupExpressErrorHandler(app);
+app.use(errorHandler);
 
 if (require.main === module) {
   const server = http.createServer(app);
