@@ -13,12 +13,13 @@ function getUserId(req) {
 const { getScopedDb } = require('../db');
 const { supabaseConfigured } = require('../db/supabaseClient');
 const { normalizeTicker } = require('../common/format');
+const { BoundedMap } = require('../common/BoundedMap');
 const { fetchSparkline } = require('../services/marketData');
 
 const yahooFinance = new YahooFinance();
 
 // Simple sparkline cache
-const sparklineCache = new Map();
+const sparklineCache = new BoundedMap(200);
 const SPARKLINE_TTL = 60 * 60 * 1000; // 1 hour
 
 function runtimeInsufficientData(reason, extras = {}) {

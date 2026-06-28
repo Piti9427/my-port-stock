@@ -103,6 +103,7 @@ const {
   SOURCE_STOOQ,
   SOURCE_YAHOO,
 } = require("./src/common/constants");
+const { BoundedMap } = require("./src/common/BoundedMap");
 const { insufficientData, normalizeDecisionMode, normalizeTicker } = require("./src/common/format");
 const {
   buildFinnhubQuoteSource,
@@ -129,7 +130,7 @@ const { getScopedDb } = require("./src/db");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "127.0.0.1";
-const quoteCache = new Map();
+const quoteCache = new BoundedMap(200);
 const apiRateLimiters = createApiRateLimiters();
 
 if (process.env.NODE_ENV === "production") {
