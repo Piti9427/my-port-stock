@@ -110,10 +110,22 @@ router.get('/holdings', async (req, res) => {
   try {
     const { getUsdThbRate } = require('../services/marketData');
     const userDb = getScopedDb(userId);
-    const holdings = await userDb.getUserHoldings(userId);
+    const [holdings, trades] = await Promise.all([
+      userDb.getUserHoldings(userId),
+      userDb.getUserJournal(userId)
+    ]);
     const enriched = await enrichWithMarketData(holdings);
 
     const thbRate = await getUsdThbRate();
+
+    const openTradesByTicker = {};
+    for (const trade of trades || []) {
+      const status = String(trade.status || '').trim().toUpperCase();
+      if (status === 'OPEN' || status === 'ACTIVE') {
+        const ticker = String(trade.ticker || '').toUpperCase();
+        openTradesByTicker[ticker] = trade;
+      }
+    }
 
     const finalHoldings = enriched.map(item => {
       const price = item.price || item.avg_cost || 0;
@@ -138,12 +150,17 @@ router.get('/holdings', async (req, res) => {
         ageDays = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
       }
 
-      const isSwing = item.mode === 'Swing Trade' || true;
-      const timeStopLimit = isSwing ? 15 : 5;
+      const tickerKey = String(item.ticker || '').toUpperCase();
+      const activeTrade = openTradesByTicker[tickerKey];
+      const mode = activeTrade?.mode || item.mode || 'Long-Term/Core';
+      const isSwing = mode === 'Swing Trade';
+      const isQuick = mode === 'Quick Trade';
+      const timeStopLimit = isSwing ? 15 : (isQuick ? 5 : 9999);
       const timeStopHit = ageDays > timeStopLimit;
 
       return {
         ...item,
+        mode,
         beta,
         current_value_usd: currentValueUsd,
         pl_usd: plUsd,

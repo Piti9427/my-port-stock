@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS public.holdings (
     sector TEXT,
     notes TEXT,
     source_note TEXT,
+    opened_at TIMESTAMPTZ,
     is_deleted BOOLEAN DEFAULT FALSE NOT NULL
 );
 
@@ -95,6 +96,7 @@ CREATE TABLE IF NOT EXISTS public.journal (
     profit NUMERIC,
     notes TEXT,
     source_note TEXT,
+    cognitive_bias TEXT CHECK (cognitive_bias IN ('None', 'FOMO', 'Loss Aversion', 'Anchoring', 'Herd Behavior', 'Herd Mentality')),
     import_batch_id TEXT REFERENCES public.import_batches(import_batch_id),
     source_file TEXT,
     source_section TEXT,
@@ -172,9 +174,9 @@ DECLARE
   t_ticker TEXT;
   current_shares NUMERIC := 0;
   current_avg_cost NUMERIC := 0;
+  first_date TIMESTAMPTZ := NULL;
   has_holdings BOOLEAN := false;
 BEGIN
-  -- Determine target user_id and ticker (supporting DELETE/UPDATE as well)
   IF (TG_OP = 'DELETE') THEN
     t_user_id := OLD.user_id;
     t_ticker := OLD.ticker;
@@ -183,58 +185,66 @@ BEGIN
     t_ticker := NEW.ticker;
   END IF;
 
-  -- Replay all non-deleted journal entries for this user & ticker in chronological order
-  FOR r IN 
-    SELECT type, shares, price, date, created_at 
-    FROM public.journal 
+  FOR r IN
+    SELECT type, shares, price, date, created_at
+    FROM public.journal
     WHERE user_id = t_user_id AND ticker = t_ticker AND is_deleted = false
     ORDER BY date ASC, created_at ASC
   LOOP
     IF r.type = 'BUY' THEN
+      IF current_shares = 0 THEN
+        first_date := r.date;
+      END IF;
       IF (current_shares + r.shares) > 0 THEN
         current_avg_cost := ((current_shares * current_avg_cost) + (r.shares * r.price)) / (current_shares + r.shares);
       ELSE
         current_avg_cost := 0;
       END IF;
       current_shares := current_shares + r.shares;
-      
+
     ELSIF r.type = 'SELL' THEN
       current_shares := current_shares - r.shares;
       IF current_shares <= 0 THEN
         current_shares := 0;
         current_avg_cost := 0;
+        first_date := NULL;
       END IF;
-      
+
     ELSIF r.type = 'ADJUST' THEN
-      -- If ADJUST transaction contains values, apply them directly
+      IF current_shares = 0 AND r.shares > 0 THEN
+        first_date := r.date;
+      END IF;
       IF r.shares IS NOT NULL THEN
         current_shares := r.shares;
-      END IF;
+      END If;
       IF r.price IS NOT NULL THEN
         current_avg_cost := r.price;
+      END IF;
+      IF current_shares <= 0 THEN
+        current_shares := 0;
+        current_avg_cost := 0;
+        first_date := NULL;
       END IF;
     END IF;
   END LOOP;
 
-  -- Check if holdings entry already exists
   SELECT EXISTS(
     SELECT 1 FROM public.holdings WHERE user_id = t_user_id AND ticker = t_ticker
   ) INTO has_holdings;
 
   IF has_holdings THEN
-    -- Update existing holding
     UPDATE public.holdings
-    SET 
+    SET
       shares = current_shares,
       avg_cost = current_avg_cost,
+      opened_at = first_date,
       is_deleted = (current_shares <= 0),
       updated_at = timezone('utc'::text, now())
     WHERE user_id = t_user_id AND ticker = t_ticker;
   ELSE
-    -- Insert new holding (only if shares > 0)
     IF current_shares > 0 THEN
-      INSERT INTO public.holdings (user_id, ticker, shares, avg_cost, is_deleted)
-      VALUES (t_user_id, t_ticker, current_shares, current_avg_cost, false);
+      INSERT INTO public.holdings (user_id, ticker, shares, avg_cost, opened_at, is_deleted)
+      VALUES (t_user_id, t_ticker, current_shares, current_avg_cost, first_date, false);
     END IF;
   END IF;
 

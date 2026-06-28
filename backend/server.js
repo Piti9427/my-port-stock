@@ -516,7 +516,7 @@ async function buildManualVerifiedPacket(ticker, manualPrice, decisionMode, opti
     price_source_tiers: ["Tier 1"],
     quote_timestamp: new Date().toISOString(),
     market_session: "Regular",
-    current_price_acceptance_gate: "pass",
+    current_price_acceptance_gate: "pass_manual_override",
   };
 
   return buildRuntimeVerifiedPacket({

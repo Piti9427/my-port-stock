@@ -1,5 +1,14 @@
 const { normalizeDecisionMode } = require("../common/format");
 
+function isSpeculative(ticker) {
+  if (!ticker) return false;
+  const symbol = String(ticker).toUpperCase().split('.')[0];
+  const specSet = new Set([
+    "RKLB", "ALAB", "PLTR", "BE", "IREN", "ASTS", "LUNR", "ONDS", "IONQ", "PL", "BKSY", "IRDM", "GSAT"
+  ]);
+  return specSet.has(symbol);
+}
+
 const SCORE_WEIGHTS = {
   "Quick Trade": {
     fundamental: 0.2,
@@ -113,7 +122,7 @@ function isHeldOrRepeatTicker(packet) {
 function collectDecisionBlockers(packet, isHeldOrRepeat) {
   const blockers = [];
 
-  if (packet.current_price_acceptance_gate !== "pass") {
+  if (packet.current_price_acceptance_gate !== "pass" && packet.current_price_acceptance_gate !== "pass_manual_override") {
     blockers.push("Current Price Acceptance Gate failed");
   }
 
@@ -236,7 +245,7 @@ function evaluateDecision(packet, options = {}) {
     if (packet.portfolio_context?.is_held) {
       rawMode = "Existing Position / Exit Review";
     } else {
-      rawMode = "Swing Trade";
+      rawMode = "Long-Term/Core";
     }
   }
   const decisionMode = normalizeDecisionMode(rawMode);
@@ -282,8 +291,64 @@ function evaluateDecision(packet, options = {}) {
     }
   }
 
+  // 3.5 Speculative Allocation Cap Check (Hard Block - 15%)
+  const isCandidateSpeculative = isSpeculative(packet.ticker);
+  if (isCandidateSpeculative && holdingsRows.length > 0) {
+    let totalPortfolioValue = 0;
+    let specValue = 0;
+    for (const row of holdingsRows) {
+      const rowVal = (row.shares || 0) * (row.avg_cost || row.avgCost || 0);
+      totalPortfolioValue += rowVal;
+      if (isSpeculative(row.ticker)) {
+        specValue += rowVal;
+      }
+    }
+    
+    // Add the candidate position value if we are buying/adding
+    let candidateVal = 0;
+    if (finalRiskPlan && finalRiskPlan.shares && finalRiskPlan.entry) {
+      candidateVal = finalRiskPlan.shares * finalRiskPlan.entry;
+    }
+    
+    const nextTotalValue = totalPortfolioValue + candidateVal;
+    const nextSpecValue = specValue + candidateVal;
+    const specAllocationPct = nextTotalValue > 0 ? (nextSpecValue / nextTotalValue) * 100 : 0;
+    
+    if (specAllocationPct > 15) {
+      blockers.push(`Speculative allocation cap limit (15%) exceeded: speculative names would be ${specAllocationPct.toFixed(1)}% of portfolio`);
+    }
+  }
+
   // 4. Macro Market Regime Filter (Dynamic Risk Budgeting - reduce risk by 50%)
   let finalRiskPlan = options.riskPlan ? { ...options.riskPlan } : null;
+
+  if (!finalRiskPlan && isHeldOrRepeat) {
+    const activeTrades = packet.journal_context?.active_trade_rows || [];
+    if (activeTrades.length > 0) {
+      const lastActive = activeTrades[0];
+      const entry = lastActive.entry || lastActive.price || packet.last_price;
+      const stopLoss = lastActive.stop_loss;
+      const target = lastActive.target;
+      const shares = lastActive.shares || 0;
+      const hardRiskThb = lastActive.shares && lastActive.entry && lastActive.stop_loss
+        ? Number((lastActive.shares * (lastActive.entry - lastActive.stop_loss)).toFixed(2))
+        : null;
+      const rr = lastActive.risk_reward || (target && entry && stopLoss && (entry - stopLoss > 0)
+        ? Number(((target - entry) / (entry - stopLoss)).toFixed(2))
+        : null);
+
+      finalRiskPlan = {
+        entry,
+        stop_loss: stopLoss,
+        target,
+        shares,
+        hard_risk_thb: hardRiskThb,
+        rr_ratio: rr,
+        source: "database_journal"
+      };
+    }
+  }
+
   const isAboveEMA200 = oracle?.macro?.index_above_ema200;
   if (isAboveEMA200 === false && finalRiskPlan && finalRiskPlan.hard_risk_thb) {
     finalRiskPlan.original_hard_risk_thb = finalRiskPlan.hard_risk_thb;
@@ -352,12 +417,12 @@ function evaluateDecision(packet, options = {}) {
   }
 
   if (hasInsufficientSubAgent(agentResults)) {
-    warnings.push("At least one sub-agent returned INSUFFICIENT_DATA");
+    blockers.push("At least one sub-agent returned INSUFFICIENT_DATA (fail-closed analysis active)");
   }
 
   const riskPlanReady = hasExecutableRiskPlan(finalRiskPlan);
   if (!riskPlanReady) {
-    warnings.push("No executable stop-loss, R/R >= 1:2, and hard THB risk plan supplied");
+    blockers.push("No executable stop-loss, R/R >= 1:2 (Reward >= 2x Risk), and hard THB risk plan supplied");
   }
 
   let { verdict: initialVerdict, trafficLight } = resolveVerdict({
@@ -375,7 +440,7 @@ function evaluateDecision(packet, options = {}) {
   }
 
   const verdict =
-    packet.current_price_acceptance_gate === "pass" ? initialVerdict : "Wait";
+    (packet.current_price_acceptance_gate === "pass" || packet.current_price_acceptance_gate === "pass_manual_override") ? initialVerdict : "Wait";
 
   const gateStatus = blockers.length === 0 ? "pass" : "fail";
   const immediateNextAction =

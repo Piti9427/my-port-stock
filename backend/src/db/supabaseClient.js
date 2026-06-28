@@ -29,7 +29,14 @@ function createScopedClient(userId) {
     throw new Error('User ID is required to create a scoped Supabase client');
   }
 
-  const jwtSecret = process.env.SUPABASE_JWT_SECRET || 'default_fallback_secret_for_dev_myportstock_123';
+  const jwtSecret = process.env.SUPABASE_JWT_SECRET;
+  if (!jwtSecret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('SUPABASE_JWT_SECRET is required in production');
+    }
+    console.warn('[supabaseClient] SUPABASE_JWT_SECRET not set — scoped client cannot be created in dev mode');
+    return null;
+  }
 
   const token = jwt.sign(
     {

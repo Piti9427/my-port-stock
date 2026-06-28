@@ -55,7 +55,7 @@ test("Buy is blocked without executable risk plan", () => {
   });
 
   assert.equal(result.decision_snapshot.verdict, "Wait");
-  assert.match(result.adaptive_drilldown.warnings.join(" "), /No executable stop-loss/);
+  assert.match(result.adaptive_drilldown.blockers.join(" "), /No executable stop-loss/);
 });
 
 test("held or repeat ticker journal issue forces non-buy outcome", () => {
@@ -90,7 +90,7 @@ test("sub-agent insufficient data caps practical output at Wait", () => {
   });
 
   assert.equal(result.decision_snapshot.verdict, "Wait");
-  assert.match(result.adaptive_drilldown.warnings.join(" "), /INSUFFICIENT_DATA/);
+  assert.match(result.adaptive_drilldown.blockers.join(" "), /INSUFFICIENT_DATA/);
 });
 
 test("Mode Fit Poor caps sub-agent score at 5", () => {
