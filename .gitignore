@@ -21,6 +21,7 @@ artifacts/playwright-mcp/
 .impeccable/
 .gemini/
 .superpowers/
+.worktrees/
 
 # Supabase
 supabase/.temp/
