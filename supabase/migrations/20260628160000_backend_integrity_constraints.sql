@@ -51,6 +51,14 @@ BEGIN
   END IF;
 END $$;
 
+CREATE INDEX IF NOT EXISTS idx_watchlists_import_batch_id
+  ON public.watchlists(import_batch_id)
+  WHERE import_batch_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_journal_import_batch_id
+  ON public.journal(import_batch_id)
+  WHERE import_batch_id IS NOT NULL;
+
 DO $$
 BEGIN
   IF EXISTS (

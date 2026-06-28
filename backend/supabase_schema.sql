@@ -129,6 +129,8 @@ CREATE INDEX IF NOT EXISTS idx_watchlists_user_id ON public.watchlists(user_id);
 CREATE INDEX IF NOT EXISTS idx_journal_user_id ON public.journal(user_id);
 CREATE INDEX IF NOT EXISTS idx_journal_user_ticker ON public.journal(user_id, ticker);
 CREATE INDEX IF NOT EXISTS idx_import_batches_user_id ON public.import_batches(user_id);
+CREATE INDEX IF NOT EXISTS idx_watchlists_import_batch_id ON public.watchlists(import_batch_id) WHERE import_batch_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_journal_import_batch_id ON public.journal(import_batch_id) WHERE import_batch_id IS NOT NULL;
 
 -- 9. Enable Row Level Security (RLS)
 ALTER TABLE public.holdings ENABLE ROW LEVEL SECURITY;

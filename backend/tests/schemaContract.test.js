@@ -64,6 +64,14 @@ test("backend integrity migration adds guarded constraints without rewriting dat
   assert.match(migration, /IF NOT EXISTS[\s\S]+pg_constraint/i);
   assert.match(migration, /RAISE EXCEPTION 'Cannot add watchlists import batch foreign key/i);
   assert.match(migration, /ADD CONSTRAINT watchlists_import_batch_id_fkey/i);
+  assert.match(
+    migration,
+    /CREATE INDEX IF NOT EXISTS idx_watchlists_import_batch_id[\s\S]+ON public\.watchlists\s*\(import_batch_id\)/i,
+  );
+  assert.match(
+    migration,
+    /CREATE INDEX IF NOT EXISTS idx_journal_import_batch_id[\s\S]+ON public\.journal\s*\(import_batch_id\)/i,
+  );
 });
 
 test("canonical schema snapshots contain the backend integrity constraints", () => {
@@ -79,5 +87,7 @@ test("canonical schema snapshots contain the backend integrity constraints", () 
     assert.match(candidate, /CONSTRAINT holdings_avg_cost_nonnegative_check/i);
     assert.match(candidate, /CONSTRAINT watchlists_alert_type_allowed_check/i);
     assert.match(candidate, /CONSTRAINT watchlists_import_batch_id_fkey/i);
+    assert.match(candidate, /idx_watchlists_import_batch_id/i);
+    assert.match(candidate, /idx_journal_import_batch_id/i);
   }
 });
