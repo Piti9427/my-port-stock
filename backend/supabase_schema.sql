@@ -40,7 +40,9 @@ CREATE TABLE IF NOT EXISTS public.holdings (
     notes TEXT,
     source_note TEXT,
     opened_at TIMESTAMPTZ,
-    is_deleted BOOLEAN DEFAULT FALSE NOT NULL
+    is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
+    CONSTRAINT holdings_shares_nonnegative_check CHECK (shares >= 0),
+    CONSTRAINT holdings_avg_cost_nonnegative_check CHECK (avg_cost >= 0)
 );
 
 -- 4. Watchlists Table
@@ -62,7 +64,8 @@ CREATE TABLE IF NOT EXISTS public.watchlists (
     source_section TEXT,
     source_hash TEXT,
     imported_at TIMESTAMPTZ,
-    is_deleted BOOLEAN DEFAULT FALSE NOT NULL
+    is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
+    CONSTRAINT watchlists_alert_type_allowed_check CHECK (alert_type IN ('above', 'below'))
 );
 
 -- 5. Import Batches Table
@@ -76,6 +79,11 @@ CREATE TABLE IF NOT EXISTS public.import_batches (
     inserted_journal INTEGER DEFAULT 0 NOT NULL,
     inserted_watchlists INTEGER DEFAULT 0 NOT NULL
 );
+
+ALTER TABLE public.watchlists
+    ADD CONSTRAINT watchlists_import_batch_id_fkey
+    FOREIGN KEY (import_batch_id)
+    REFERENCES public.import_batches(import_batch_id);
 
 -- 6. Journal Table
 CREATE TABLE IF NOT EXISTS public.journal (
@@ -103,7 +111,9 @@ CREATE TABLE IF NOT EXISTS public.journal (
     source_section TEXT,
     source_hash TEXT,
     imported_at TIMESTAMPTZ,
-    is_deleted BOOLEAN DEFAULT FALSE NOT NULL
+    is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
+    CONSTRAINT journal_type_allowed_check CHECK (type IN ('BUY', 'SELL', 'ADJUST')),
+    CONSTRAINT journal_status_allowed_check CHECK (status IN ('OPEN', 'CLOSED'))
 );
 
 -- 7. Partial Unique Indexes (ensuring soft-deleted rows don't block adding back tickers)
@@ -120,6 +130,8 @@ CREATE INDEX IF NOT EXISTS idx_watchlists_user_id ON public.watchlists(user_id);
 CREATE INDEX IF NOT EXISTS idx_journal_user_id ON public.journal(user_id);
 CREATE INDEX IF NOT EXISTS idx_journal_user_ticker ON public.journal(user_id, ticker);
 CREATE INDEX IF NOT EXISTS idx_import_batches_user_id ON public.import_batches(user_id);
+CREATE INDEX IF NOT EXISTS idx_watchlists_import_batch_id ON public.watchlists(import_batch_id) WHERE import_batch_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_journal_import_batch_id ON public.journal(import_batch_id) WHERE import_batch_id IS NOT NULL;
 
 -- 9. Enable Row Level Security (RLS)
 ALTER TABLE public.holdings ENABLE ROW LEVEL SECURITY;

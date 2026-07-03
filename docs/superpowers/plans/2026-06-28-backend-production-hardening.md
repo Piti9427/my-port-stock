@@ -12,6 +12,8 @@
 
 **Context7 basis:** Express 5 rejected promises reach the final four-argument error handler automatically; error middleware must be mounted last. Behind one nginx reverse proxy, `trust proxy` must be exactly `1` so rate limiting sees the client IP.
 
+**Implementation status (2026-06-28):** Tasks 0–7 are implemented on `feature/backend-production-hardening`. Local verification passes with 79 backend tests, 130 frontend tests, production build, lint with zero errors, and production-mode loopback smoke. The user accepted this local exit gate for continued development and explicitly deferred Task 8 Steps 3–4 (the OCI/nginx path and confirmed non-production Supabase verification). Those checks remain mandatory before production deployment; this is not a production-readiness claim.
+
 ---
 
 ## Scope decisions
@@ -464,6 +466,8 @@ git commit -m "fix(backend): minimize telemetry and close gracefully"
 ```
 
 ## Task 8: Final Gate 0 verification
+
+**Sequencing note (2026-06-28):** Steps 1–2 and loopback production smoke have passed. The user chose to continue with Slice 1 while Steps 3–4 are deferred. Reopen both external checks before the first OCI deployment.
 
 - [ ] **Step 1: Run backend suite**
 

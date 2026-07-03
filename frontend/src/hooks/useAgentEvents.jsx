@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import { useAuth } from '../auth/clerkAdapter.jsx';
+import { fetchWithAuth } from '../lib/api.js';
 
 const AgentEventsContext = createContext(null);
 
@@ -10,6 +12,7 @@ const WS_URL = (() => {
 })();
 
 export function AgentEventsProvider({ children }) {
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const [agentStates, setAgentStates] = useState({
     cio: { state: 'IDLE', message: null },
     'fundamental-auditor': { state: 'IDLE', message: null },
@@ -25,11 +28,20 @@ export function AgentEventsProvider({ children }) {
   const reconnectTimer = useRef(null);
 
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return undefined;
+
     let disposed = false;
 
-    const connect = () => {
+    const scheduleReconnect = (connect) => {
+      if (!disposed) reconnectTimer.current = setTimeout(connect, 3000);
+    };
+
+    const connect = async () => {
       try {
-        const ws = new WebSocket(WS_URL);
+        const { ticket } = await fetchWithAuth('/api/ws-ticket', getToken, { method: 'POST' });
+        if (disposed) return;
+
+        const ws = new WebSocket(`${WS_URL}?ticket=${encodeURIComponent(ticket)}`);
         wsRef.current = ws;
 
         ws.onopen = () => {
@@ -66,13 +78,13 @@ export function AgentEventsProvider({ children }) {
 
         ws.onclose = () => {
           setConnected(false);
-          if (!disposed) reconnectTimer.current = setTimeout(connect, 3000);
+          scheduleReconnect(connect);
         };
 
         ws.onerror = () => ws.close();
       } catch (connectError) {
         console.debug('WebSocket connect failed, retrying:', connectError);
-        if (!disposed) reconnectTimer.current = setTimeout(connect, 3000);
+        scheduleReconnect(connect);
       }
     };
 
@@ -82,7 +94,7 @@ export function AgentEventsProvider({ children }) {
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
       if (wsRef.current) wsRef.current.close();
     };
-  }, []);
+  }, [getToken, isLoaded, isSignedIn]);
 
   const resetAnalysis = useCallback(() => {
     setAnalysisResult(null);

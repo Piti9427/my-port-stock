@@ -4,7 +4,9 @@ const Sentry = require("@sentry/node");
 const express = require("express");
 const http = require("node:http");
 const path = require("node:path");
+const { z } = require("zod");
 const { createAgentEventBus, broadcast } = require("./src/ws/agentEventBus");
+const { WsTicketStore } = require("./src/ws/wsTicketStore");
 const { execFile } = require("node:child_process");
 const { analyzeTicker, chatWithVerifiedContext } = require("./src/services/aiAnalyst");
 const { clerkMiddleware } = require('@clerk/express');
@@ -12,6 +14,12 @@ const {
   applyDevUiAuthBypass,
   getRequestUserId,
 } = require("./src/auth/requestAuth");
+const {
+  createApiRateLimiters,
+  requestContext,
+  securityHeaders,
+} = require("./src/http/appMiddleware");
+const { errorHandler, notFoundHandler } = require("./src/http/errors");
 
 const DECISION_MODE_AGENT_MAP = {
   'Quick Trade': ['catalyst-hunter', 'quant-technician'],
@@ -97,6 +105,7 @@ const {
   SOURCE_STOOQ,
   SOURCE_YAHOO,
 } = require("./src/common/constants");
+const { BoundedMap } = require("./src/common/BoundedMap");
 const { insufficientData, normalizeDecisionMode, normalizeTicker } = require("./src/common/format");
 const {
   buildFinnhubQuoteSource,
@@ -123,8 +132,24 @@ const { getScopedDb } = require("./src/db");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "127.0.0.1";
-const quoteCache = new Map();
+const quoteCache = new BoundedMap(200);
+const apiRateLimiters = createApiRateLimiters();
+const wsTicketStore = new WsTicketStore();
+const ChatMessageSchema = z.string()
+  .trim()
+  .min(1)
+  .max(1000)
+  .refine((message) => !/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(message));
 
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+app.disable("x-powered-by");
+app.use(requestContext);
+app.use(securityHeaders);
+app.use(apiRateLimiters.ordinary);
+app.use(["/api/quote", "/api/packet"], apiRateLimiters.quote);
+app.use(["/api/analyze", "/api/chat"], apiRateLimiters.ai);
 app.use(express.json({ limit: "256kb" }));
 if (process.env.CLERK_SECRET_KEY) {
   const clerkAuth = clerkMiddleware({
@@ -447,6 +472,17 @@ app.get("/health", (req, res) => {
   });
 });
 
+app.post("/api/ws-ticket", (req, res) => {
+  const userId = getRequestUserId(req);
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+  const issued = wsTicketStore.issue(userId);
+  return res.status(200).json({
+    ticket: issued.ticket,
+    expires_in_seconds: issued.expiresInSeconds,
+  });
+});
+
 app.get("/api/quote/:ticker", async (req, res) => {
   const ticker = normalizeTicker(req.params.ticker);
   if (!ticker) {
@@ -497,13 +533,13 @@ app.get("/api/packet/:ticker", async (req, res) => {
   return res.status(200).json(packet);
 });
 
-function broadcastAnalyzeKickoff(ticker, agents, totalAgents) {
-  broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'TYPING', ticker, message: `Dispatching ${totalAgents} sub-agents for ${ticker}...` });
-  agents.forEach((agent) => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SPAWNED', ticker }));
+function broadcastAnalyzeKickoff(ticker, agents, totalAgents, userId) {
+  broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'TYPING', ticker, message: `Dispatching ${totalAgents} sub-agents for ${ticker}...` }, { userId });
+  agents.forEach((agent) => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SPAWNED', ticker }, { userId }));
   agents.forEach((agent, idx) => {
-    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'WALKING', ticker }), idx * 400);
-    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SITTING', ticker }), idx * 400 + 600);
-    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'TYPING', ticker, message: getAgentWorkingMessage(agent, ticker) }), idx * 400 + 900);
+    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'WALKING', ticker }, { userId }), idx * 400);
+    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'SITTING', ticker }, { userId }), idx * 400 + 600);
+    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'TYPING', ticker, message: getAgentWorkingMessage(agent, ticker) }, { userId }), idx * 400 + 900);
   });
 }
 
@@ -571,15 +607,15 @@ function mergeGeminiAnalysis(analysis, geminiData) {
   }
 }
 
-function broadcastAnalyzeCompletion(ticker, agents, totalAgents, analysis) {
+function broadcastAnalyzeCompletion(ticker, agents, totalAgents, analysis, userId) {
   let completed = 0;
   agents.forEach((agent, idx) => {
     setTimeout(() => {
       completed++;
-      broadcast({ type: 'ANALYSIS_PROGRESS', agent, ticker, payload: { progress: completed, total: totalAgents } });
-      broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'PRESENTING', ticker });
-      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'DONE', ticker }), 800);
-      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'EXITED', ticker }), 1500);
+      broadcast({ type: 'ANALYSIS_PROGRESS', agent, ticker, payload: { progress: completed, total: totalAgents } }, { userId });
+      broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'PRESENTING', ticker }, { userId });
+      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'DONE', ticker }, { userId }), 800);
+      setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent, state: 'EXITED', ticker }, { userId }), 1500);
     }, (totalAgents - idx) * 600 + 1000);
   });
 
@@ -589,9 +625,9 @@ function broadcastAnalyzeCompletion(ticker, agents, totalAgents, analysis) {
       agent: 'cio',
       ticker,
       payload: { verdict: analysis.decision_snapshot?.verdict || 'Complete', analysis },
-    });
-    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'PRESENTING', ticker, message: `Analysis complete for ${ticker}` });
-    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }), 2000);
+    }, { userId });
+    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'PRESENTING', ticker, message: `Analysis complete for ${ticker}` }, { userId });
+    setTimeout(() => broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }, { userId }), 2000);
   }, totalAgents * 600 + 2500);
 }
 
@@ -611,16 +647,17 @@ function buildInsufficientAnalyzeResponse(packet, ticker, decisionMode) {
   };
 }
 
-app.post("/api/chat", async (req, res) => {
+app.post("/api/chat", async (req, res, next) => {
   const ticker = normalizeTicker(req.body?.ticker);
   if (!ticker) {
     return res.status(200).json(insufficientData("Invalid ticker format"));
   }
 
-  const message = String(req.body?.message || "").trim();
-  if (!message || message.length > 1000) {
+  const parsedMessage = ChatMessageSchema.safeParse(req.body?.message);
+  if (!parsedMessage.success) {
     return res.status(400).json({ error: "Message must be 1-1000 characters" });
   }
+  const message = parsedMessage.data;
 
   const userId = getRequestUserId(req);
   if (!userId) {
@@ -655,11 +692,11 @@ app.post("/api/chat", async (req, res) => {
       ...chat,
     });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return next(error);
   }
 });
 
-app.post("/api/analyze", async (req, res) => {
+app.post("/api/analyze", async (req, res, next) => {
   const ticker = normalizeTicker(req.body?.ticker);
   if (!ticker) {
     return res.status(200).json(insufficientData("Invalid ticker format"));
@@ -668,11 +705,10 @@ app.post("/api/analyze", async (req, res) => {
   const decisionMode = normalizeDecisionMode(req.body.decision_mode);
   const agents = getAgentsForMode(decisionMode);
   const totalAgents = agents.length;
+  const userId = getRequestUserId(req);
 
   try {
-    broadcastAnalyzeKickoff(ticker, agents, totalAgents);
-
-    const userId = getRequestUserId(req);
+    broadcastAnalyzeKickoff(ticker, agents, totalAgents, userId);
     const manualPrice = req.body.manual_price ? Number.parseFloat(req.body.manual_price) : null;
     const packet =
       manualPrice && !Number.isNaN(manualPrice) && manualPrice > 0 && manualPrice < 1000000
@@ -680,7 +716,7 @@ app.post("/api/analyze", async (req, res) => {
         : await getVerifiedPacket(ticker, decisionMode, { userId });
 
     if (packet.status === "INSUFFICIENT_DATA") {
-      broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker });
+      broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }, { userId });
       return res.status(200).json(buildInsufficientAnalyzeResponse(packet, ticker, decisionMode));
     }
 
@@ -698,7 +734,7 @@ app.post("/api/analyze", async (req, res) => {
     mergeGeminiAnalysis(analysis, geminiData);
     analysis.deep_analysis = buildDeepAnalysisPayload(oracleData, geminiData);
 
-    broadcastAnalyzeCompletion(ticker, agents, totalAgents, analysis);
+    broadcastAnalyzeCompletion(ticker, agents, totalAgents, analysis, userId);
 
     return res.status(200).json({
       as_of: new Date().toISOString(),
@@ -706,29 +742,85 @@ app.post("/api/analyze", async (req, res) => {
       ...analysis,
     });
   } catch (error) {
-    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker });
-    return res.status(500).json({ error: error.message });
+    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }, { userId });
+    return next(error);
   }
 });
 
-Sentry.setupExpressErrorHandler(app);
+app.use("/api", notFoundHandler);
 
 app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
+  res.sendFile("index.html", {
+    root: path.join(__dirname, "../frontend/dist"),
+    dotfiles: "deny",
+  });
 });
 
-if (require.main === module) {
+Sentry.setupExpressErrorHandler(app);
+app.use(errorHandler);
+
+function closeHttpServer(server) {
+  return new Promise((resolve, reject) => {
+    server.close((error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
+
+function createGracefulShutdown({
+  eventBus,
+  server,
+  timeoutMs = 10_000,
+  forceExit = (code) => process.exit(code),
+}) {
+  let shutdownPromise = null;
+
+  return function shutdown(signal = "shutdown") {
+    if (shutdownPromise) return shutdownPromise;
+
+    shutdownPromise = (async () => {
+      const forceExitTimer = setTimeout(() => {
+        console.error(`Forced exit after ${timeoutMs}ms during ${signal}`);
+        forceExit(1);
+      }, timeoutMs);
+      forceExitTimer.unref?.();
+
+      try {
+        await eventBus.close();
+        await closeHttpServer(server);
+      } finally {
+        clearTimeout(forceExitTimer);
+      }
+    })();
+
+    return shutdownPromise;
+  };
+}
+
+function startServer({ port = PORT, host = HOST } = {}) {
   const server = http.createServer(app);
+  const eventBus = createAgentEventBus(server, { ticketStore: wsTicketStore });
+  const shutdown = createGracefulShutdown({ eventBus, server });
 
   server.on("error", (error) => {
-    console.error(`Investment Agent failed to listen on ${HOST}:${PORT}: ${error.message}`);
+    console.error(`Investment Agent failed to listen on ${host}:${port}: ${error.message}`);
     process.exit(1);
   });
 
-  server.listen(PORT, HOST, () => {
-    console.log(`Investment Agent listening on http://${HOST}:${PORT}`);
+  server.listen(port, host, () => {
+    const address = server.address();
+    const activePort = typeof address === "object" && address ? address.port : port;
+    console.log(`Investment Agent listening on http://${host}:${activePort}`);
   });
-  createAgentEventBus(server);
+
+  return { eventBus, server, shutdown };
+}
+
+if (require.main === module) {
+  const runtime = startServer();
+  process.once("SIGTERM", () => void runtime.shutdown("SIGTERM"));
+  process.once("SIGINT", () => void runtime.shutdown("SIGINT"));
 }
 
 module.exports = {
@@ -743,6 +835,7 @@ module.exports = {
   buildDeepAnalysisPayload,
   buildAuthenticatedAnalysisContext,
   buildRuntimeVerifiedPacket,
+  createGracefulShutdown,
   getNewYorkMarketSession,
   getQuotePacket,
   getVerifiedPacket,
@@ -753,4 +846,5 @@ module.exports = {
   parseMoney,
   parseSimpleCsv,
   quoteCache,
+  startServer,
 };

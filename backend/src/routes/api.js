@@ -13,12 +13,13 @@ function getUserId(req) {
 const { getScopedDb } = require('../db');
 const { supabaseConfigured } = require('../db/supabaseClient');
 const { normalizeTicker } = require('../common/format');
+const { BoundedMap } = require('../common/BoundedMap');
 const { fetchSparkline } = require('../services/marketData');
 
 const yahooFinance = new YahooFinance();
 
 // Simple sparkline cache
-const sparklineCache = new Map();
+const sparklineCache = new BoundedMap(200);
 const SPARKLINE_TTL = 60 * 60 * 1000; // 1 hour
 
 function runtimeInsufficientData(reason, extras = {}) {
@@ -98,9 +99,10 @@ const JournalSchema = z.object({
   source_note: z.string().trim().optional(),
   cognitive_bias: z.string().trim().nullable().optional(),
 });
+const JournalIdSchema = z.string().uuid();
 
 // Holdings Routes
-router.get('/holdings', async (req, res) => {
+router.get('/holdings', async (req, res, next) => {
   if (!supabaseConfigured) {
     return res.status(200).json([]);
   }
@@ -173,12 +175,12 @@ router.get('/holdings', async (req, res) => {
 
     res.json(finalHoldings);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // Watchlist Routes
-router.get('/watchlists', async (req, res) => {
+router.get('/watchlists', async (req, res, next) => {
   if (!supabaseConfigured) {
     return res.status(200).json(runtimeInsufficientData("Supabase is not configured", { watchlists: [] }));
   }
@@ -191,11 +193,11 @@ router.get('/watchlists', async (req, res) => {
     const enriched = await enrichWithMarketData(watchlists);
     res.json(enriched);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
-router.post('/watchlists', async (req, res) => {
+router.post('/watchlists', async (req, res, next) => {
   if (!supabaseConfigured) {
     return res.status(503).json(runtimeInsufficientData("Supabase is not configured"));
   }
@@ -250,11 +252,14 @@ router.post('/watchlists', async (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors.map(e => e.message).join(', ') });
     }
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
-router.delete('/watchlists/:ticker', async (req, res) => {
+router.delete('/watchlists/:ticker', async (req, res, next) => {
+  const ticker = normalizeTicker(req.params.ticker);
+  if (!ticker) return res.status(400).json({ error: 'Invalid ticker format' });
+
   if (!supabaseConfigured) {
     return res.status(503).json(runtimeInsufficientData("Supabase is not configured"));
   }
@@ -262,7 +267,6 @@ router.delete('/watchlists/:ticker', async (req, res) => {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    const ticker = req.params.ticker.trim().toUpperCase();
     const scopedSupabase = require('../db/supabaseClient').createScopedClient(userId);
 
     const { data, error } = await scopedSupabase
@@ -275,12 +279,12 @@ router.delete('/watchlists/:ticker', async (req, res) => {
     if (error) throw error;
     res.status(200).json({ message: `${ticker} removed from watchlist`, data });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // Journal Routes
-router.get('/journal', async (req, res) => {
+router.get('/journal', async (req, res, next) => {
   if (!supabaseConfigured) {
     return res.status(200).json(runtimeInsufficientData("Supabase is not configured", { trades: [] }));
   }
@@ -292,11 +296,11 @@ router.get('/journal', async (req, res) => {
     const trades = await userDb.getUserJournal(userId);
     res.status(200).json({ trades });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
-router.get('/journal/:ticker', async (req, res) => {
+router.get('/journal/:ticker', async (req, res, next) => {
   const ticker = normalizeTicker(req.params.ticker);
   if (!ticker) return res.status(400).json({ error: 'Invalid ticker format' });
 
@@ -311,11 +315,11 @@ router.get('/journal/:ticker', async (req, res) => {
     const trades = await userDb.getUserJournalByTicker(userId, ticker);
     res.status(200).json({ trades });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
-router.post('/journal', async (req, res) => {
+router.post('/journal', async (req, res, next) => {
   if (!supabaseConfigured) {
     return res.status(503).json(runtimeInsufficientData("Supabase is not configured"));
   }
@@ -331,11 +335,14 @@ router.post('/journal', async (req, res) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors.map(e => e.message).join(', ') });
     }
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
-router.delete('/journal/:id', async (req, res) => {
+router.delete('/journal/:id', async (req, res, next) => {
+  const parsedId = JournalIdSchema.safeParse(req.params.id);
+  if (!parsedId.success) return res.status(400).json({ error: 'Invalid journal ID' });
+
   if (!supabaseConfigured) {
     return res.status(503).json(runtimeInsufficientData("Supabase is not configured"));
   }
@@ -343,7 +350,7 @@ router.delete('/journal/:id', async (req, res) => {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    const { id } = req.params;
+    const id = parsedId.data;
     const scopedSupabase = require('../db/supabaseClient').createScopedClient(userId);
 
     const { data, error } = await scopedSupabase
@@ -356,12 +363,12 @@ router.delete('/journal/:id', async (req, res) => {
     if (error) throw error;
     res.status(200).json({ message: 'Journal entry soft-deleted successfully', data });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // Watchlist Scanner Route
-router.get('/watchlist/scan', async (req, res) => {
+router.get('/watchlist/scan', async (req, res, next) => {
   if (!supabaseConfigured) {
     return res.status(200).json(runtimeInsufficientData("Supabase is not configured", { alerts: [] }));
   }
@@ -396,7 +403,7 @@ router.get('/watchlist/scan', async (req, res) => {
 
     res.json({ alerts });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
