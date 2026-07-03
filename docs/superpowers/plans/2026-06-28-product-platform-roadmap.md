@@ -30,7 +30,7 @@ Do not write detailed plans for all remaining slices at once. A later plan that 
 | Dark-terminal component system, responsive shell, route states | `docs/plans/ux_ui_refactor_plan.md`                                                                                     | Implemented; reuse components and tests                    |
 | Verified price packet and hard decision gates                  | `backend/src/gates/priceGate.js`, `backend/src/packets/verifiedDataPacket.js`, `backend/src/decision/decisionEngine.js` | Implemented; do not bypass                                 |
 | Command Center / deep analysis                                 | `docs/superpowers/specs/2026-06-16-deep-analysis-sop-design.md`                                                         | Implemented baseline; Slice 4 reshapes workflow            |
-| Backend hardening                                              | `docs/superpowers/specs/2026-06-21-backend-hardening-design.md`                                                         | Design only; Gate 0 required                               |
+| Backend hardening                                              | `docs/superpowers/plans/2026-06-28-backend-production-hardening.md`                                                     | Implemented locally; external deployment checks deferred   |
 | PWA and verified alerts                                        | `docs/plans/webapp-pwa-implementation-plan.md`                                                                          | Detailed Slice 3 plan revised to the approved product spec |
 
 ## Delivery sequence
@@ -47,7 +47,7 @@ Do not write detailed plans for all remaining slices at once. A later plan that 
 
 **Outcome:** New users choose reporting currency and disclosure level once; preferences sync across devices and Settings no longer claims durable per-user values are browser-only.
 
-**Detailed plan:** Write after Gate 0 against the hardened route/error structure.
+**Detailed plan:** `docs/superpowers/plans/2026-06-28-per-user-onboarding-preferences.md`
 
 **Scope:** UX preferences only. Canonical investment hard gates remain server policy and cannot be weakened by user settings.
 
@@ -110,8 +110,8 @@ Every slice must prove:
 | Item                  | Status                                                       |
 | :-------------------- | :----------------------------------------------------------- |
 | Master product design | Complete — commit `08a0035`                                  |
-| Gate 0 detailed plan  | Implemented locally; pending nginx and Supabase verification |
-| Slice 1 detailed plan | Pending Gate 0 environment verification                      |
+| Gate 0 detailed plan  | Local exit accepted; OCI/nginx and live Supabase checks deferred until deployment |
+| Slice 1 detailed plan | Ready for review                                               |
 | Slice 2 detailed plan | Pending Slice 1 completion                                   |
 | Slice 3 detailed plan | Revised to approved product contract; pending dependencies   |
 | Slice 4 detailed plan | Pending Slice 3 completion                                   |

@@ -33,9 +33,9 @@
 ### 2026-06-28 - Gate 0 Backend Hardening Local Implementation
 
 - Keywords: `backend-hardening`, `request-id`, `rate-limit`, `websocket-auth`, `integrity-constraints`
-- Decision: Gate 0 Tasks 0–7 are implemented on `feature/backend-production-hardening`; do not mark the gate complete until the real one-hop nginx path and an explicitly confirmed non-production Supabase target pass verification.
+- Decision: Gate 0 Tasks 0–7 are implemented on `feature/backend-production-hardening`; the local exit gate is accepted for continued slice development, while real one-hop OCI/nginx and confirmed non-production Supabase verification are explicitly deferred and still block production deployment.
 - Evidence: 79 backend tests and 130 frontend tests pass; production build succeeds; lint has zero errors; local production smoke returns health `200`, API JSON `404`, SPA `200`, security/rate headers, anonymous WebSocket `401`, and graceful shutdown exit `0`.
-- Action: Confirm the linked Supabase project, run migration preflight/advisors and RLS verification, then verify nginx client IP/header behavior before planning Slice 1.
+- Action: Proceed with the reviewed Slice 1 plan; before the first OCI deployment, confirm the linked Supabase project, run migration preflight/advisors and RLS verification, then verify nginx client IP/header behavior.
 - Source: `docs/superpowers/plans/2026-06-28-backend-production-hardening.md`, `supabase/migrations/20260628160000_backend_integrity_constraints.sql`
 
 ### 2026-06-27 - Clerk User Isolation and RLS in Supabase (ADR 0002)
