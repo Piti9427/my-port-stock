@@ -42,6 +42,7 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
     stopLoss: '',
     target: '',
     capital: '',
+    cognitiveBias: 'None',
     thesis: '',
   });
   const [error, setError] = useState('');
@@ -77,6 +78,7 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
           target: optionalNumber(form.target),
           stop_loss: optionalNumber(form.stopLoss),
           risk_reward: calculation.rr ? Number(calculation.rr.toFixed(2)) : undefined,
+          cognitive_bias: form.cognitiveBias === 'None' ? null : form.cognitiveBias,
           notes: form.thesis.trim(),
         },
       });
@@ -97,44 +99,83 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
             <option key={ticker} value={ticker} />
           ))}
         </datalist>
-        <label>
-          <span>Ticker</span>
-          <input list="journal-ticker-suggestions" value={form.ticker} onChange={(event) => update('ticker', event.target.value.toUpperCase())} />
-        </label>
+        <div className="journal-drawer-type" role="radiogroup" aria-label="Trade type">
+          {['BUY', 'SELL', 'ADJUST'].map((value) => (
+            <button
+              key={value}
+              className={form.type === value ? 'active' : ''}
+              type="button"
+              role="radio"
+              aria-checked={form.type === value}
+              onClick={() => update('type', value)}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
+          <label htmlFor="journal-ticker-input">Ticker</label>
+          <input
+            id="journal-ticker-input"
+            list="journal-ticker-suggestions"
+            value={form.ticker}
+            onChange={(event) => update('ticker', event.target.value.toUpperCase())}
+          />
+        </div>
         <div className="journal-drawer-grid">
-          <label>
-            <span>Trade Mode</span>
-            <select value={form.mode} onChange={(event) => update('mode', event.target.value)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label htmlFor="journal-mode-select">Trade Mode</label>
+            <select id="journal-mode-select" value={form.mode} onChange={(event) => update('mode', event.target.value)}>
               {MODES.map((mode) => (
                 <option key={mode} value={mode}>
                   {mode}
                 </option>
               ))}
             </select>
-          </label>
-          <label>
-            <span>Status</span>
-            <select value={form.status} onChange={(event) => update('status', event.target.value)}>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label htmlFor="journal-status-select">Status</label>
+            <select id="journal-status-select" value={form.status} onChange={(event) => update('status', event.target.value)}>
               <option value="OPEN">Active</option>
               <option value="CLOSED">Closed</option>
             </select>
-          </label>
-          <label>
-            <span>Entry Price</span>
-            <input inputMode="decimal" value={form.entry} onChange={(event) => update('entry', event.target.value)} />
-          </label>
-          <label>
-            <span>Stop Loss</span>
-            <input inputMode="decimal" value={form.stopLoss} onChange={(event) => update('stopLoss', event.target.value)} />
-          </label>
-          <label>
-            <span>Target</span>
-            <input inputMode="decimal" value={form.target} onChange={(event) => update('target', event.target.value)} />
-          </label>
-          <label>
-            <span>Capital Allocated</span>
-            <input inputMode="decimal" value={form.capital} onChange={(event) => update('capital', event.target.value)} />
-          </label>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label htmlFor="journal-entry-input">Entry Price</label>
+            <input
+              id="journal-entry-input"
+              inputMode="decimal"
+              value={form.entry}
+              onChange={(event) => update('entry', event.target.value)}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label htmlFor="journal-stoploss-input">Stop Loss</label>
+            <input
+              id="journal-stoploss-input"
+              inputMode="decimal"
+              value={form.stopLoss}
+              onChange={(event) => update('stopLoss', event.target.value)}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label htmlFor="journal-target-input">Target</label>
+            <input
+              id="journal-target-input"
+              inputMode="decimal"
+              value={form.target}
+              onChange={(event) => update('target', event.target.value)}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label htmlFor="journal-capital-input">Capital Allocated</label>
+            <input
+              id="journal-capital-input"
+              inputMode="decimal"
+              value={form.capital}
+              onChange={(event) => update('capital', event.target.value)}
+            />
+          </div>
         </div>
         <div className="journal-quick-fill" aria-label="Capital quick fill">
           {[5000, 10000, 25000].map((amount) => (
@@ -143,11 +184,26 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
             </button>
           ))}
         </div>
-        <label>
-          <span>Thesis</span>
-          <textarea value={form.thesis} onChange={(event) => update('thesis', event.target.value)} />
-        </label>
-        <div className="journal-risk-summary">
+        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label htmlFor="journal-bias-select">Cognitive Bias Tag</label>
+          <select
+            id="journal-bias-select"
+            value={form.cognitiveBias}
+            onChange={(event) => update('cognitiveBias', event.target.value)}
+            style={{ background: '#18181b', color: '#f4f4f5', border: '1px solid #27272a', padding: '8px', borderRadius: '4px', fontFamily: 'monospace' }}
+          >
+            {['None', 'FOMO', 'Loss Aversion', 'Anchoring', 'Herd Behavior'].map((bias) => (
+              <option key={bias} value={bias}>
+                {bias}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label htmlFor="journal-thesis-input">Thesis</label>
+          <textarea id="journal-thesis-input" value={form.thesis} onChange={(event) => update('thesis', event.target.value)} />
+        </div>
+        <div className="journal-risk-summary font-mono">
           <span>R/R {calculation.rr ? calculation.rr.toFixed(2) : '—'}</span>
           <span>Risk {formatCurrency(calculation.risk)}</span>
           <span>Size {calculation.shares ? calculation.shares.toFixed(2) : '—'} sh</span>

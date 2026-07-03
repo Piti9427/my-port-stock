@@ -20,6 +20,8 @@ artifacts/playwright-mcp/
 .vscode/
 .impeccable/
 .gemini/
+.superpowers/
+.worktrees/
 
 # Supabase
 supabase/.temp/

@@ -4,6 +4,7 @@ import { BellOff, Trash2, Plus, TrendingUp, TrendingDown, Minus, RotateCcw, Cloc
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/clerkAdapter';
 import { fetchWithAuth } from '../lib/api';
+import { EmptyState } from '../components/ui/EmptyState';
 
 const SIGNAL_META = {
   'buy-zone': {
@@ -13,8 +14,8 @@ const SIGNAL_META = {
   },
   accumulate: {
     label: 'Accumulate',
-    color: '#34d399',
-    bg: 'rgba(var(--status-success-rgb),0.12)',
+    color: 'var(--fin-profit)',
+    bg: 'var(--fin-profit-dim)',
   },
   wait: {
     label: 'Wait',
@@ -117,22 +118,56 @@ export default function WatchlistPage() {
   const signals = ['All', 'buy-zone', 'accumulate', 'wait', 'monitor'];
   const filtered = signalFilter === 'All' ? watchlist : watchlist.filter((s) => s.aiSignal === signalFilter);
 
-  // Soft-delete with undo
+  // Soft-delete with undo (synced to Supabase)
   const removeFromWatchlist = (ticker) => {
     const item = watchlist.find((s) => s.ticker === ticker);
     if (!item) return;
-    setWatchlist((w) => w.filter((s) => s.ticker !== ticker));
-    clearTimeout(toastTimerRef.current);
-    setToast({ ticker, item, message: 'Removed locally. Supabase delete endpoint not connected yet.' });
+
+    fetchWithAuth(`/api/watchlists/${encodeURIComponent(ticker)}`, getToken, {
+      method: 'DELETE',
+    })
+      .then(() => {
+        setWatchlist((w) => w.filter((s) => s.ticker !== ticker));
+        clearTimeout(toastTimerRef.current);
+        setToast({ ticker, item, message: `${ticker} removed from watchlist.` });
+        
+        toastTimerRef.current = setTimeout(() => {
+          setToast(null);
+        }, 5000);
+      })
+      .catch((err) => {
+        console.error(err);
+        alert(`Failed to remove ${ticker}: ${err.message}`);
+      });
   };
 
   const handleUndo = () => {
     if (!toast) return;
-    setWatchlist((w) => {
-      if (w.some((s) => s.ticker === toast.ticker)) return w;
-      return [...w, toast.item];
-    });
-    setToast(null);
+    const { item } = toast;
+    
+    fetchWithAuth('/api/watchlists', getToken, {
+      method: 'POST',
+      body: {
+        ticker: item.ticker,
+        name: item.name || item.ticker,
+        sector: item.sector || 'Unknown',
+        setup: item.setup || 'Restored',
+        alert_price: item.alertPrice || 0,
+        alert_type: item.alertType || 'above',
+        ai_signal: item.aiSignal || 'monitor',
+      },
+    })
+      .then(() => {
+        setWatchlist((w) => {
+          if (w.some((s) => s.ticker === item.ticker)) return w;
+          return [...w, item];
+        });
+        setToast(null);
+      })
+      .catch((err) => {
+        console.error(err);
+        alert(`Failed to restore ${item.ticker}: ${err.message}`);
+      });
   };
 
   const dismissToast = () => setToast(null);
@@ -154,26 +189,43 @@ export default function WatchlistPage() {
       setAddError(`${normalizedTicker} is already in your watchlist.`);
       return;
     }
-    setWatchlist((w) => [
-      ...w,
-      {
-        ticker: normalizedTicker,
-        name: normalizedTicker,
-        last: 0,
-        change: 0,
-        changePct: 0,
-        volume: '—',
-        alertPrice: 0,
-        alertType: 'above',
-        aiSignal: 'monitor',
-        setup: 'Newly added — run AI analysis to generate a setup.',
-        sector: 'Unknown',
-      },
-    ]);
-    setShowAddModal(false);
-    setNewTicker('');
-    setAddError('');
-  }, [newTicker, watchlist]);
+
+    const payload = {
+      ticker: normalizedTicker,
+      name: normalizedTicker,
+      sector: 'Unknown',
+      setup: 'Newly added — run AI analysis to generate a setup.',
+      alert_price: 0,
+      alert_type: 'above',
+      ai_signal: 'monitor',
+    };
+
+    fetchWithAuth('/api/watchlists', getToken, {
+      method: 'POST',
+      body: payload,
+    })
+      .then((res) => {
+        const newItem = {
+          ...payload,
+          last: 0,
+          change: 0,
+          changePct: 0,
+          volume: '—',
+          alertPrice: 0,
+          alertType: 'above',
+          aiSignal: 'monitor',
+          ...res,
+        };
+        setWatchlist((w) => [...w, newItem]);
+        setShowAddModal(false);
+        setNewTicker('');
+        setAddError('');
+      })
+      .catch((err) => {
+        console.error(err);
+        setAddError(`Failed to save: ${err.message}`);
+      });
+  }, [newTicker, watchlist, getToken]);
 
   const handleModalKeyDown = useCallback(
     (e) => {
@@ -221,13 +273,12 @@ export default function WatchlistPage() {
       return (
         <tr>
           <td colSpan={8} style={{ padding: 0 }}>
-            <div className="empty-state">
-              <div className="empty-title">Insufficient data</div>
-              <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
-              <button className="btn-secondary" onClick={loadData}>
-                Retry
-              </button>
-            </div>
+            <EmptyState
+              title="Insufficient data"
+              description="Connect Supabase data or run analysis before this panel can calculate."
+              action="Retry"
+              onAction={loadData}
+            />
           </td>
         </tr>
       );
@@ -235,14 +286,13 @@ export default function WatchlistPage() {
     if (filtered.length === 0) {
       return (
         <tr>
-          <td colSpan={8}>
-            <div className="empty-state">
-              <BellOff size={28} aria-hidden="true" style={{ opacity: 0.3 }} />
-              <div>No tickers match this filter.</div>
-              <button className="btn-secondary" style={{ width: 'auto', marginTop: 4 }} onClick={() => setSignalFilter('All')}>
-                Show all
-              </button>
-            </div>
+          <td colSpan={8} style={{ padding: 0 }}>
+            <EmptyState
+              icon={<BellOff size={24} style={{ opacity: 0.4 }} />}
+              title="No tickers match this filter"
+              action="Show all"
+              onAction={() => setSignalFilter('All')}
+            />
           </td>
         </tr>
       );
@@ -393,7 +443,7 @@ export default function WatchlistPage() {
                 {watchlist.length} tickers tracked · AI signals refreshed on analysis
                 <span className="data-stamp">
                   <Clock size={10} aria-hidden="true" />
-                  {DATA_STAMP}
+                  <span>{DATA_STAMP}</span>
                 </span>
               </p>
             </div>
@@ -462,23 +512,13 @@ export default function WatchlistPage() {
 
             {/* Watchlist fully empty state */}
             {watchlist.length === 0 && (
-              <div className="empty-state" style={{ padding: '48px 24px' }}>
-                <BellOff size={32} aria-hidden="true" style={{ opacity: 0.25 }} />
-                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Your watchlist is empty</div>
-                <div
-                  style={{
-                    fontSize: '0.8rem',
-                    color: 'var(--text-muted)',
-                    maxWidth: '28ch',
-                    textAlign: 'center',
-                  }}
-                >
-                  Add tickers to track signals, alerts, and setups.
-                </div>
-                <button className="btn-analyze" style={{ width: 'auto', marginTop: 8 }} onClick={() => setShowAddModal(true)}>
-                  <Plus size={14} aria-hidden="true" /> Add first ticker
-                </button>
-              </div>
+              <EmptyState
+                icon={<BellOff size={32} style={{ opacity: 0.3 }} />}
+                title="Your watchlist is empty"
+                description="Add tickers to track signals, alerts, and setups."
+                action="Add first ticker"
+                onAction={() => setShowAddModal(true)}
+              />
             )}
           </div>
         </div>
@@ -499,10 +539,10 @@ export default function WatchlistPage() {
             )}
           </div>
           {alerts.length === 0 ? (
-            <div className="empty-state">
-              <BellOff size={28} aria-hidden="true" style={{ opacity: 0.3 }} />
-              <div>No active alerts</div>
-            </div>
+            <EmptyState
+              icon={<BellOff size={24} style={{ opacity: 0.3 }} />}
+              title="No active alerts"
+            />
           ) : (
             <ul className="alerts-list">
               {alerts.map((al) => (

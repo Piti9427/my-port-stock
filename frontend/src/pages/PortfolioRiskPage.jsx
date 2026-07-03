@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Clock, ShieldAlert } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 import { useAuth } from '../auth/clerkAdapter';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { DEFAULT_SECTOR_LIMIT, buildPortfolioRisk } from '../components/risk/riskCalculations';
-
-const DATA_STAMP = 'Supabase holdings + market data gateway';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { Progress } from '../components/ui/progress';
+import { EmptyState } from '../components/ui/EmptyState';
 
 function sectorDrilldownSubtitle(sector) {
   if (sector.weight > sector.limit) return 'Highest breach risk';
@@ -36,7 +37,7 @@ function riskBudgetTone(risk) {
 export default function PortfolioRiskPage() {
   const { getToken } = useAuth();
   const [selectedSector, setSelectedSector] = useState(null);
-  const { holdings, isStale, loading, status, refetch } = usePortfolio({ getToken });
+  const { holdings, loading, status, refetch } = usePortfolio({ getToken });
 
   const risk = useMemo(() => buildPortfolioRisk(holdings), [holdings]);
 
@@ -52,28 +53,25 @@ export default function PortfolioRiskPage() {
   const sectorTreemapContent = (() => {
     if (loading) {
       return (
-        <div className="empty-state" style={{ padding: '48px 24px' }}>
-          Loading portfolio risk...
-        </div>
+        <EmptyState title="Loading portfolio risk..." />
       );
     }
     if (unavailable) {
       return (
-        <div className="empty-state">
-          <div className="empty-title">Insufficient data</div>
-          <div className="empty-copy">Connect Supabase data or run analysis before this panel can calculate.</div>
-          <button className="btn-secondary" onClick={refetch}>
-            Retry
-          </button>
-        </div>
+        <EmptyState
+          title="Insufficient data"
+          description="Connect Supabase data or run analysis before this panel can calculate."
+          action="Retry"
+          onAction={refetch}
+        />
       );
     }
     if (risk.sectors.length === 0) {
       return (
-        <div className="empty-state">
-          <div className="empty-title">เพิ่มหุ้นในพอร์ตเพื่อดูความเสี่ยง</div>
-          <div className="empty-copy">ยังไม่มี Supabase holdings สำหรับบัญชีนี้ จึงยังคำนวณ sector, stop-loss, และ risk budget ไม่ได้</div>
-        </div>
+        <EmptyState
+          title="เพิ่มหุ้นในพอร์ตเพื่อดูความเสี่ยง"
+          description="ยังไม่มี Supabase holdings สำหรับบัญชีนี้ จึงยังคำนวณ sector, stop-loss, และ risk budget ไม่ได้"
+        />
       );
     }
     return (
@@ -115,24 +113,17 @@ export default function PortfolioRiskPage() {
   return (
     <div className="risk-page">
       {risk.overLimit.length > 0 && (
-        <div className="risk-alert-banner" role="alert">
-          <ShieldAlert size={16} aria-hidden="true" className="alert-icon-glyph" />
-          <span>
+        <Alert variant="destructive" className="mb-4">
+          <ShieldAlert className="h-4 w-4" />
+          <AlertDescription>
             คำเตือนสัดส่วนการลงทุน: <strong>{risk.overLimit.map((s) => s.sector).join(', ')}</strong> เกินเพดานที่ตั้งไว้
-          </span>
-        </div>
+          </AlertDescription>
+        </Alert>
       )}
 
       <div className="risk-kpi-row">
-        <div className="glass-panel risk-kpi-card" style={{ position: 'relative' }}>
-          <div className="kpi-label">
-            {'มูลค่าพอร์ต '}
-            <span className="data-stamp" style={{ position: 'absolute', top: 24, right: 24 }}>
-              <Clock size={10} aria-hidden="true" />
-              {DATA_STAMP}
-              {isStale && <span aria-label="Stale data"> / Stale</span>}
-            </span>
-          </div>
+        <div className="glass-panel risk-kpi-card">
+          <div className="kpi-label">มูลค่าพอร์ต</div>
           <div className="kpi-value kpi-neutral">{risk.totalValue > 0 ? formatCurrency(risk.totalValue) : '—'}</div>
           <div className="kpi-sub">{holdings.length} สถานะจาก Supabase</div>
         </div>
@@ -142,21 +133,22 @@ export default function PortfolioRiskPage() {
           <div className="kpi-sub">เพดานเริ่มต้น {DEFAULT_SECTOR_LIMIT}% ต่อ sector</div>
         </div>
         <div className="glass-panel risk-kpi-card risk-budget-card">
-          <div className="kpi-label">Risk Budget</div>
+          <div className="kpi-label">Risk Budget Used</div>
           <div className={`kpi-value ${riskBudgetTone(risk)}`}>
-            Known risk {formatCurrency(risk.knownRisk)} / {formatCurrency(risk.riskBudget)}
+            {formatCurrency(risk.knownRisk)}
           </div>
-          <div
-            className="risk-budget-track"
+          <Progress
+            value={Math.min(risk.riskBudgetPct, 100)}
+            className="my-3 h-1.5"
             role="progressbar"
             aria-label="Risk budget used"
             aria-valuemin={0}
             aria-valuenow={Math.round(risk.knownRisk)}
             aria-valuemax={risk.riskBudget}
-          >
-            <div className="risk-budget-fill" style={{ transform: `scaleX(${risk.riskBudgetPct / 100})` }} />
+          />
+          <div className="kpi-sub">
+            งบประมาณ {formatCurrency(risk.riskBudget)} ({risk.riskBudgetPct.toFixed(0)}%) • {missingStopCopy(risk.missingStopCount)}
           </div>
-          <div className="kpi-sub">{missingStopCopy(risk.missingStopCount)}</div>
         </div>
       </div>
 
@@ -183,17 +175,34 @@ export default function PortfolioRiskPage() {
                     <th>Weight%</th>
                     <th>Stop Distance</th>
                     <th>THB Risk</th>
+                    <th>P/L THB</th>
+                    <th>Age</th>
                     <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {activeSector.holdings.map((holding) => (
-                    <tr key={holding.id || holding.ticker} className={holding.thbRisk === null ? 'risk-row-missing' : ''}>
-                      <td>{holding.ticker}</td>
+                    <tr key={holding.id || holding.ticker} className={`${holding.thbRisk === null ? 'risk-row-missing' : ''} ${holding.time_stop_hit ? 'time-stop-breached' : ''}`}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {holding.ticker}
+                          {holding.time_stop_hit && (
+                            <span style={{ fontSize: '0.65rem', background: '#3f1a1a', color: 'var(--fin-loss)', padding: '2px 4px', borderRadius: '4px', border: '1px solid #7f1d1d', fontFamily: 'monospace' }} title="Time Stop limit exceeded. Recycling of capital recommended.">
+                              ⏰ Time Stop
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td>{formatCurrency(holding.value)}</td>
                       <td>{formatPercent(holding.weight)}</td>
                       <td>{holding.stopDistancePct === null ? 'Unknown' : formatPercent(holding.stopDistancePct)}</td>
                       <td>{holding.thbRisk === null ? 'Unknown' : formatCurrency(holding.thbRisk)}</td>
+                      <td className={holding.pl_thb >= 0 ? 'semantic-positive' : 'semantic-negative'}>
+                        {holding.pl_thb !== undefined ? `${holding.pl_thb >= 0 ? '+' : ''}${Number(holding.pl_thb).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}
+                      </td>
+                      <td style={{ color: holding.time_stop_hit ? 'var(--fin-loss)' : 'inherit' }}>
+                        {holding.age_days !== undefined ? `${holding.age_days} วัน` : '—'}
+                      </td>
                       <td>{holding.status}</td>
                     </tr>
                   ))}

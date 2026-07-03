@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Drawer } from './ui/Drawer.jsx';
+import { currencySymbol } from '../lib/format';
 
 function numeric(value) {
   const parsed = Number.parseFloat(value);
@@ -125,9 +126,9 @@ function ScenarioPlannerContent({ open, ticker, holding, onClose, onLogTrade }) 
                 {rows.map((row) => (
                   <tr key={row.key}>
                     <td>{row.label}</td>
-                    <td>฿{row.entry.toFixed(2)}</td>
+                    <td>{currencySymbol(ticker)}{row.entry.toFixed(2)}</td>
                     <td>{row.addedShares}</td>
-                    <td>฿{row.newAverage.toFixed(2)}</td>
+                    <td>{currencySymbol(ticker)}{row.newAverage.toFixed(2)}</td>
                     <td>{row.rr == null ? '—' : `1:${row.rr.toFixed(1)}`}</td>
                   </tr>
                 ))}

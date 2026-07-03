@@ -68,3 +68,21 @@
     color: var(--text-primary);
   }
 }
+
+@keyframes alert-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.drawdown-banner,
+.risk-alert-banner,
+.command-inline-error,
+.journal-risk-warning {
+  animation: alert-fade-in 0.22s var(--ease-out-quart);
+}

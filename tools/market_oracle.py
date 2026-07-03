@@ -242,6 +242,72 @@ def get_latest_past_earnings_date(ticker):
     except Exception:
         return None
 
+def get_next_earnings_date(ticker):
+    try:
+        import datetime
+        import pytz
+        df = ticker.earnings_dates
+        if df is None or df.empty:
+            return None
+            
+        now = datetime.datetime.now(pytz.utc)
+        future_dates = []
+        for idx in df.index:
+            dt = idx.to_pydatetime()
+            if dt.tzinfo is not None:
+                dt = dt.astimezone(pytz.utc)
+            else:
+                dt = pytz.utc.localize(dt)
+            if dt >= now:
+                future_dates.append(dt)
+                
+        if not future_dates:
+            return None
+            
+        return min(future_dates)
+    except Exception:
+        return None
+
+def get_sp500_macro():
+    try:
+        sp = yf.Ticker("^GSPC")
+        hist = sp.history(period="5y", interval="1wk")
+        if hist.empty:
+            return {
+                "index_ticker": "^GSPC",
+                "index_above_ema200": None,
+                "index_last_price": None,
+                "index_ema200": None
+            }
+        close = hist["Close"]
+        ema200 = close.ewm(span=200, adjust=False).mean()
+        last_price = close.iloc[-1]
+        last_ema200 = ema200.iloc[-1]
+        return {
+            "index_ticker": "^GSPC",
+            "index_above_ema200": bool(last_price > last_ema200),
+            "index_last_price": clean_number(last_price),
+            "index_ema200": clean_number(last_ema200)
+        }
+    except Exception:
+        return {
+            "index_ticker": "^GSPC",
+            "index_above_ema200": None,
+            "index_last_price": None,
+            "index_ema200": None
+        }
+
+def get_usd_thb_rate():
+    try:
+        rate_ticker = yf.Ticker("USDTHB=X")
+        hist = rate_ticker.history(period="1d")
+        if not hist.empty:
+            return clean_number(hist["Close"].iloc[-1], 4)
+        return None
+    except Exception:
+        return None
+
+
 def calculate_anchored_vwap(history, anchor_date):
     if history is None or history.empty or anchor_date is None:
         return None
@@ -451,6 +517,7 @@ def analyze_stock(ticker_symbol):
         roce = calculate_roce(financials, balance_sheet, curr_col) if curr_col else None
         
         latest_past_earnings_date = get_latest_past_earnings_date(t)
+        next_earnings_date = get_next_earnings_date(t)
         avwap = calculate_anchored_vwap(hist, latest_past_earnings_date)
         
         # Technicals
@@ -481,9 +548,15 @@ def analyze_stock(ticker_symbol):
         pass_peg = "Pass" if peg is not None and peg < 1.5 else ("Fail" if peg is not None else "N/A")
         price_vs_50ma = "Above" if last_price > ma50 else "Below"
 
+        macro_data = get_sp500_macro()
+        fx_rate = get_usd_thb_rate()
+        beta = clean_number(info.get("beta"), 2)
+
         return {
             "ticker": ticker_symbol,
             "last_price": clean_number(last_price),
+            "beta": beta,
+            "fx_rate_thb_usd": fx_rate,
             "financials": build_financials(t),
             "balance_sheet": build_balance_sheet(t),
             "weekly_technicals": build_weekly_technicals(weekly_hist),
@@ -502,6 +575,8 @@ def analyze_stock(ticker_symbol):
             "roce": clean_number(roce, 4),
             "anchored_vwap": clean_number(avwap, 2),
             "latest_past_earnings_date": latest_past_earnings_date.date().isoformat() if hasattr(latest_past_earnings_date, "date") else (latest_past_earnings_date.isoformat() if latest_past_earnings_date else None),
+            "next_earnings_date": next_earnings_date.date().isoformat() if hasattr(next_earnings_date, "date") else (next_earnings_date.isoformat() if next_earnings_date else None),
+            "macro": macro_data,
             "gates": {
                 "peg_gate": pass_peg,
                 "trend_50ma": price_vs_50ma

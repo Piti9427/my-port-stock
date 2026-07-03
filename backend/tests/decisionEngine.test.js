@@ -55,7 +55,7 @@ test("Buy is blocked without executable risk plan", () => {
   });
 
   assert.equal(result.decision_snapshot.verdict, "Wait");
-  assert.match(result.adaptive_drilldown.warnings.join(" "), /No executable stop-loss/);
+  assert.match(result.adaptive_drilldown.blockers.join(" "), /No executable stop-loss/);
 });
 
 test("held or repeat ticker journal issue forces non-buy outcome", () => {
@@ -90,7 +90,7 @@ test("sub-agent insufficient data caps practical output at Wait", () => {
   });
 
   assert.equal(result.decision_snapshot.verdict, "Wait");
-  assert.match(result.adaptive_drilldown.warnings.join(" "), /INSUFFICIENT_DATA/);
+  assert.match(result.adaptive_drilldown.blockers.join(" "), /INSUFFICIENT_DATA/);
 });
 
 test("Mode Fit Poor caps sub-agent score at 5", () => {
@@ -291,3 +291,28 @@ test("Swing Buy is blocked when ZVR ratio is below 1.5", () => {
   assert.equal(result.decision_snapshot.verdict, "Wait");
   assert.match(result.decision_snapshot.immediate_next_action, /ZVR ratio 1.2 is below required 1.5/);
 });
+
+test("Speculative allocation cap check for speculative ticker with holdings", () => {
+  const result = evaluateDecision(
+    packet({
+      ticker: "ASTS",
+      portfolio_context: {
+        is_held: true,
+        holdings_rows: [
+          { ticker: "ASTS", shares: 100, avg_cost: 10, sector: "Technology" }
+        ]
+      }
+    }),
+    {
+      riskPlan: { stop_loss: 9, hard_risk_thb: 100, rr_ratio: 2.5, shares: 10, entry: 12 },
+      agentResults: {
+        fundamental: { status: "PASS", score: 8, mode_fit: "Strong" },
+        technical: { status: "PASS", score: 8, mode_fit: "Strong" },
+        macro_flow: { status: "PASS", score: 8, mode_fit: "Strong" },
+      },
+    }
+  );
+
+  assert.ok(result);
+});
+

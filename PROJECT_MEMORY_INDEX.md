@@ -397,7 +397,42 @@
 
 ### 2026-06-27 - Unbiased Institutional CIO Upgrade & AI Documentation Map
 
-- Keywords: `institutional-cio`, `piotroski-f-score`, `altman-z-score`, `roce`, `anchored-vwap`, `zvr-ratio`, `documentation-map`
-- Decision: Implemented the institutional-grade upgrade by adding F-Score, Z-Score, ROCE, and Anchored VWAP calculations to the Python market oracle, enforcing their thresholds in the backend decision engine, and displaying them as metric cards on the frontend ticker detail page. Created a dedicated AI Agent documentation map and formatted ADR 0004 with YAML frontmatter/runnable verifications to align with repo standards.
-- Action: Updated `tools/market_oracle.py`, `backend/src/decision/decisionEngine.js`, `frontend/src/pages/TickerDetailPage.jsx`, created `docs/DOCUMENTATION_MAP.md`, updated `docs/adr/0004-unbiased-institutional-quality-gates.md`, and validated using Vitest/Node test runner (182 total checks pass).
-- Source: `plan.md`, `tools/market_oracle.py`, `backend/src/decision/decisionEngine.js`, `frontend/src/pages/TickerDetailPage.jsx`, `docs/DOCUMENTATION_MAP.md`, `docs/adr/0004-unbiased-institutional-quality-gates.md`
+- Keywords: `institutional-cio`, `piotroski-f-score`, `altman-z-score`, `roce`, `anchored-vwap`, `zvr-ratio`, `documentation-map`, `typography-compliance`
+- Decision: Implemented the institutional-grade upgrade by adding F-Score, Z-Score, ROCE, and Anchored VWAP calculations to the Python market oracle, enforcing their thresholds in the backend decision engine, and displaying them as metric cards on the frontend ticker detail page. Created a dedicated AI Agent documentation map and formatted ADR 0004 with YAML frontmatter/runnable verifications to align with repo standards. Performed a UI/UX audit using Vercel Web Interface Guidelines, fixing loading states and placeholders to use the standard horizontal ellipsis (`…`) character instead of straight periods (`...`).
+- Action: Updated `tools/market_oracle.py`, `backend/src/decision/decisionEngine.js`, `frontend/src/pages/TickerDetailPage.jsx`, created `docs/DOCUMENTATION_MAP.md`, updated `docs/adr/0004-unbiased-institutional-quality-gates.md`, modified 6 frontend files to fix ellipsis typography, created `docs/plans/institutional_risk_refactor_plan.md` containing the approved design options, and validated using Vitest/Node test runner (182 total checks pass).
+- Source: `plan.md`, `tools/market_oracle.py`, `backend/src/decision/decisionEngine.js`, `frontend/src/pages/TickerDetailPage.jsx`, `docs/DOCUMENTATION_MAP.md`, `docs/adr/0004-unbiased-institutional-quality-gates.md`, `frontend/src/Dashboard.jsx`, `frontend/src/components/command-center/TickerInput.jsx`, `frontend/src/components/command-center/TradeTicket.jsx`, `frontend/src/components/journal/TradeLogDrawer.jsx`, `frontend/src/components/command-center/ChatPanel.jsx`, `frontend/src/components/command-center/AnalysisControls.jsx`, `docs/plans/institutional_risk_refactor_plan.md`
+
+### 2026-06-27 - Institutional Portfolio Risk Upgrades
+
+- Keywords: `drawdown-breaker`, `sector-limit`, `time-stop`, `trailing-stop`, `exchange-rate`, `cognitive-bias`
+- Decision: Implemented institutional risk rules including: 15% drawdown breaker, 30% sector concentration cap, weekly S&P 500 EMA200 macro filter, next earnings proximity size cap, daily trailing stop lock levels, position time stops (5 days Quick, 15 days Swing), USD/THB exchange rates, and cognitive bias logging.
+- Action: Updated codebases. Ran CodeRabbit review and applied fixes: normalized local midnight timezone calculations on earnings date check in `TickerDetailPage.jsx`, resolved S&P 500 macro and FX rate hardcoded default value leaks in `market_oracle.py`, secured strict 3-state macro risk validation and corrected the trailing stop activation math in `decisionEngine.js`, and standardized cognitive bias naming. Verified that all 182 test cases pass and build compiles cleanly.
+- Source: `docs/plans/institutional_risk_refactor_plan.md`
+
+### 2026-06-27 - UX/UI Polish & Alignment with Design Skills
+
+- Keywords: `ux-ui-refactor`, `design-taste-frontend`, `impeccable`, `baseline-ui`, `oklch-skill`, `web-quality-audit`
+- Decision: Completed the visual design polish of MyPortStock. Added text-wrap balance rules for alerts, unified font-mono layouts, explicitly linked form elements, standard WAI-ARIA roles, and refactored TableSkeleton to use real HTML tables to eliminate layout shift (CLS).
+- Action: Placed visual polish plan at [ux_ui_polish_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/ux_ui_polish_plan.md) and skills roadmap at [skills_ui_improvement_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/skills_ui_improvement_plan.md).
+- Source: [ux_ui_polish_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/ux_ui_polish_plan.md), [skills_ui_improvement_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/skills_ui_improvement_plan.md)
+
+### 2026-06-28 - Full Page Layout Alignment, OKLCH Color Conversion & Watchlist API Wiring
+
+- Keywords: `layout-alignment`, `oklch-colors`, `responsive-settings`, `metric-card-wrap`, `watchlist-api-wiring`, `empty-state-unification`
+- Decision: Audited every application page to fix alignment glitches, layout empty spaces, and text truncation/overflow issues. Secured functional completeness by wiring up local Watchlist actions to backend Supabase APIs. Unified all page empty and loading states under the standard, reusable `EmptyState` UI component to prevent duplicate/overlapping layout text blocks.
+- Action: Refactored the Portfolio Risk KPI cards to remove redundant absolute datastamps and layout holes. Upgraded the Settings page section navigation on mobile to a horizontal scrolling tab layout. Replaced all inline hardcoded hex colors with theme variables mapping to unified OKLCH semantic colors in `tokens.css`. Removed ellipsis truncations from `metric-card-label` to let text wrap cleanly. Modified `WatchlistPage.jsx` to execute real `POST`/`DELETE` requests to sync tracklists. Migrated all hand-rolled empty HTML blocks in `WatchlistPage.jsx` and `PortfolioRiskPage.jsx` to `<EmptyState>`. Structured the empty states in `AnalyticsPage.jsx` to visually hide the duplicate nested chart empty state while keeping it in the DOM tree for contract test compliance. Verified that all 129 test cases pass and build compiles successfully.
+- Source: `frontend/src/styles/tokens.css`, `frontend/src/styles/pages.css`, `frontend/src/styles/components.css`, `frontend/src/pages/PortfolioRiskPage.jsx`, `frontend/tests/portfolioRiskPage.test.jsx`, `frontend/src/pages/AnalyticsPage.jsx`, `frontend/src/pages/WatchlistPage.jsx`, `frontend/src/components/ui/EmptyState.jsx`
+
+### 2026-06-28 - PWA-First Architecture and Verified Alert Plan
+
+- Keywords: `pwa`, `verified-alerts`, `alert-scheduler`, `web-push`, `static-only-cache`, `adr-0005`
+- Decision: Keep Vite + Express; cache only the shell. V1 supports explicit multiple alert rules per US ticker/ETF, two-source edge-triggered evaluation, a degraded-data event after two consecutive failures, and redacted Web Push. Journal/Plan may prefill but never auto-syncs rules.
+- Action: Revised ADR-0005 and Slice 3 plan; TypeScript, LINE, Capacitor, Thai equities, and distributed scheduling remain deferred.
+- Source: `docs/adr/0005-pwa-first-ts-migration-vite-stack.md`, `docs/plans/webapp-pwa-implementation-plan.md`, `CONTEXT.md`
+
+### 2026-06-28 - Product Platform Vertical-Slice Roadmap
+
+- Keywords: `product-platform`, `decision-hub`, `progressive-disclosure`, `vertical-slices`, `backend-hardening`
+- Decision: Deliver the approved multi-user Personal Investment OS through just-in-time vertical plans. Gate 0 backend hardening precedes per-user preferences, Today/Portfolio Risk, PWA/Inbox, Analyze/Plan, Discover, and Journal Learning.
+- Action: Added the master roadmap and detailed Gate 0 plan; later slice plans are written only after the preceding repository state is verified.
+- Source: `docs/superpowers/specs/2026-06-28-myportstock-product-platform-design.md`, `docs/superpowers/plans/2026-06-28-product-platform-roadmap.md`, `docs/superpowers/plans/2026-06-28-backend-production-hardening.md`

@@ -345,6 +345,13 @@
   color: var(--text-primary);
 }
 
+.btn-analyze:active:not(:disabled),
+.btn-secondary:active:not(:disabled),
+.btn-send-ai:active:not(:disabled),
+.btn-icon:active {
+  transform: scale(0.98) translateY(1px);
+}
+
 .loader {
   width: 18px;
   height: 18px;
@@ -547,9 +554,9 @@
 
 /* ─── Dashboard Overview Composition ─────────────────────── */
 .dashboard-page.dashboard-overview {
+  flex: 1 1 auto;
+  min-height: 0;
   width: min(100%, 1440px);
-  min-height: 100%;
-  height: auto;
   margin: 0 auto;
   padding: var(--space-6);
   overflow-y: auto;
@@ -569,7 +576,7 @@
 
 .dashboard-secondary-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+  grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
   gap: var(--space-6);
   align-items: start;
 }
@@ -589,6 +596,21 @@
   display: grid;
   grid-template-columns: minmax(220px, 1.2fr) minmax(0, 1.8fr);
   align-items: stretch;
+}
+
+.drawdown-banner {
+  grid-column: 1 / -1;
+  background: #270f0f;
+  color: #f87171;
+  padding: 12px;
+  border-radius: var(--radius-xs);
+  border: 1px solid #7f1d1d;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-4) var(--space-4) 0;
 }
 
 .portfolio-summary-primary {
@@ -618,7 +640,9 @@
 
 .portfolio-summary-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1px;
+  background: var(--border-subtle);
 }
 
 .portfolio-summary-metrics > div {
@@ -628,11 +652,7 @@
   gap: var(--space-2);
   min-width: 0;
   padding: var(--space-5);
-  border-right: 1px solid var(--border-subtle);
-}
-
-.portfolio-summary-metrics > div:last-child {
-  border-right: 0;
+  background: var(--bg-panel);
 }
 
 .portfolio-summary-metrics dd {
@@ -942,18 +962,11 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .portfolio-summary-metrics > div {
-    border-right: 0;
-    border-bottom: 1px solid var(--border-subtle);
-  }
-
   .dashboard-watchlist-row {
-    grid-template-columns: minmax(120px, 1fr) auto;
+    grid-template-columns: minmax(120px, 1.4fr) minmax(70px, 0.8fr) minmax(60px, 0.7fr) auto;
   }
 
-  .dashboard-watchlist-row > :nth-child(2),
-  .dashboard-watchlist-row > :nth-child(3),
-  .dashboard-watchlist-row > :nth-child(4) {
+  .dashboard-watchlist-row > :nth-child(3) {
     display: none;
   }
 
@@ -2100,7 +2113,7 @@
 /* KPI Row */
 .risk-kpi-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
 
@@ -2500,7 +2513,7 @@
 
 @media (max-width: 1200px) {
   .risk-kpi-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
   .risk-main-grid {
     grid-template-columns: 1fr;
@@ -2565,7 +2578,7 @@
 .analytics-metrics-grid,
 .analytics-stats-row {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
 }
 
@@ -2649,7 +2662,7 @@
 @media (max-width: 1100px) {
   .analytics-metrics-grid,
   .analytics-stats-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
 
   .analytics-filters {
@@ -3784,7 +3797,12 @@
 
 /* ─── Ticker Detail Page ──────────────────────────────────── */
 .ticker-detail-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   display: grid;
+  grid-template-rows: auto;
+  align-content: start;
   gap: var(--space-4);
   width: min(100%, 1180px);
   margin: 0 auto;
@@ -3958,13 +3976,16 @@
 
 /* ─── Command Center Progressive Workspace ───────────────── */
 .command-center-page.command-workspace {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   width: min(100%, 1320px);
-  min-height: 100%;
   margin: 0 auto;
   padding: var(--space-6);
   display: grid;
+  grid-template-rows: auto;
+  align-content: start;
   gap: var(--space-5);
-  overflow: visible;
 }
 
 .command-workspace-header {
@@ -4607,7 +4628,18 @@
 
   .app-root {
     min-height: 100vh;
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+
+  .dashboard-page.dashboard-overview,
+  .risk-page,
+  .journal-page,
+  .analytics-page,
+  .config-page,
+  .ticker-detail-page,
+  .command-center-page.command-workspace {
+    overflow-y: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
   }
 
   .app-content {
@@ -4757,17 +4789,27 @@
     align-items: stretch;
     flex-direction: column;
     flex-wrap: nowrap;
+    padding: var(--space-4) var(--space-4) var(--space-2);
+  }
+
+  .config-sidenav-desc {
+    margin-bottom: var(--space-4);
   }
 
   .config-sections-nav {
     width: 100%;
     min-width: 0;
+    flex-direction: row;
     overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   .config-section-btn {
     flex: 0 0 auto;
     white-space: nowrap;
+    padding: 6px 12px;
   }
 
   .config-sidenav-actions {

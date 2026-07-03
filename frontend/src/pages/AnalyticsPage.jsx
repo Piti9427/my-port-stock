@@ -64,6 +64,23 @@ export default function AnalyticsPage() {
   const tickerOptions = useMemo(() => uniqueSorted(sortedClosedTrades.map((trade) => normalizeTicker(trade.ticker))), [sortedClosedTrades]);
   const modeOptions = useMemo(() => uniqueSorted(sortedClosedTrades.map((trade) => trade.mode)), [sortedClosedTrades]);
 
+  const biasStats = useMemo(() => {
+    const groups = {};
+    for (const trade of filteredClosedTrades) {
+      const bias = trade.cognitive_bias || 'None / Not tagged';
+      if (!groups[bias]) {
+        groups[bias] = { bias, count: 0, profit: 0, winCount: 0 };
+      }
+      groups[bias].count += 1;
+      const profit = Number(trade.profit || 0);
+      groups[bias].profit += profit;
+      if (profit > 0) {
+        groups[bias].winCount += 1;
+      }
+    }
+    return Object.values(groups).sort((a, b) => a.profit - b.profit);
+  }, [filteredClosedTrades]);
+
   const setParam = (key, value, defaultValue = 'ALL') => {
     setSearchParams((current) => {
       const next = new URLSearchParams(current);
@@ -112,13 +129,52 @@ export default function AnalyticsPage() {
         />
       ) : filteredClosedTrades.length === 0 ? (
         <div className="analytics-empty-stack">
-          <EmptyState title="Insufficient data" description={emptyCopy} />
-          <EquityCurve trades={[]} />
+          <div className="glass-panel" style={{ padding: '32px var(--space-6)' }}>
+            <EmptyState title="Insufficient data" description={emptyCopy} />
+          </div>
+          <div style={{ display: 'none' }} aria-hidden="true">
+            <EquityCurve trades={[]} />
+          </div>
         </div>
       ) : (
         <>
           <AnalyticsMetricCards stats={stats} />
           <EquityCurve trades={filteredClosedTrades} />
+
+          <section className="glass-panel analytics-biases" style={{ marginTop: 'var(--space-4)', marginBottom: 'var(--space-4)' }} aria-labelledby="analytics-biases-title">
+            <div className="panel-header">
+              <span id="analytics-biases-title" className="panel-heading">
+                🧠 Cognitive Bias Analysis
+              </span>
+            </div>
+            <div className="watchlist-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Bias Tag</th>
+                    <th>Trade Count</th>
+                    <th>Win Ratio</th>
+                    <th>Net Return</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {biasStats.map((stat) => (
+                    <tr key={stat.bias} className="watchlist-row">
+                      <td style={{ fontWeight: 'bold', color: stat.bias === 'None / Not tagged' ? '#a1a1aa' : '#fb923c' }}>
+                        {stat.bias}
+                      </td>
+                      <td>{stat.count} trades</td>
+                      <td>{stat.count > 0 ? ((stat.winCount / stat.count) * 100).toFixed(0) : 0}%</td>
+                      <td className={stat.profit >= 0 ? 'kpi-profit price-mono' : 'kpi-loss price-mono'} style={{ color: stat.profit >= 0 ? 'var(--fin-profit)' : 'var(--fin-loss)' }}>
+                        {formatMoney(stat.profit, { sign: true })} Net
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
           <section className="glass-panel analytics-history" aria-labelledby="analytics-history-title">
             <div className="panel-header">
               <span id="analytics-history-title" className="panel-heading">

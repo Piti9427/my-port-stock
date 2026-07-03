@@ -8,8 +8,12 @@ function numberValue(value) {
 function formatMoney(value, { signed = false } = {}) {
   if (!Number.isFinite(value)) return '—';
   const absolute = Math.abs(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
-  if (!signed) return value > 0 ? `฿${absolute}` : '—';
-  return `${value >= 0 ? '+' : '-'}฿${absolute}`;
+  if (signed) {
+    const sign = value > 0 ? '+' : value < 0 ? '-' : '';
+    return `${sign}฿${absolute}`;
+  }
+  const sign = value < 0 ? '-' : '';
+  return `${sign}฿${absolute}`;
 }
 
 export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', timestamp, stale = false }) {
@@ -19,19 +23,35 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
       const price = numberValue(holding.price);
       const averageCost = numberValue(holding.avg_cost ?? holding.avgCost);
       const change = numberValue(holding.change);
+      const val = shares * price;
 
-      result.totalValue += shares * price;
+      result.totalValue += val;
       result.totalCost += shares * averageCost;
       result.dayPl += shares * change;
+
+      const beta = numberValue(holding.beta ?? 1.0);
+      result.totalWeightedBeta += beta * val;
+      result.totalBetaWeight += val;
+
       return result;
     },
-    { totalValue: 0, totalCost: 0, dayPl: 0 }
+    { totalValue: 0, totalCost: 0, dayPl: 0, totalWeightedBeta: 0, totalBetaWeight: 0 }
   );
+
   const totalPl = metrics.totalValue - metrics.totalCost;
   const dayPlPct = metrics.totalValue > 0 ? (metrics.dayPl / metrics.totalValue) * 100 : null;
+  const portfolioBeta = metrics.totalBetaWeight > 0 ? metrics.totalWeightedBeta / metrics.totalBetaWeight : 1.0;
+
+  const drawdownPct = metrics.totalCost > 0 && totalPl < 0 ? (Math.abs(totalPl) / metrics.totalCost) * 100 : 0;
+  const isDrawdownBreached = drawdownPct >= 15;
 
   return (
     <section className="portfolio-summary" role="region" aria-label="Portfolio summary">
+      {isDrawdownBreached && (
+        <div className="drawdown-banner">
+          <span>🛑 DRAWDOWN LIMIT HIT — New buys suspended ({drawdownPct.toFixed(1)}% / 15%)</span>
+        </div>
+      )}
       <div className="portfolio-summary-primary">
         <span className="portfolio-summary-label">มูลค่ารวมพอร์ต</span>
         <strong className="portfolio-summary-value">{formatMoney(metrics.totalValue)}</strong>
@@ -48,6 +68,12 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
         <div>
           <dt>กำไร/ขาดทุนรวม</dt>
           <dd className={totalPl >= 0 ? 'semantic-positive' : 'semantic-negative'}>{formatMoney(totalPl, { signed: true })}</dd>
+        </div>
+        <div>
+          <dt>Portfolio Beta</dt>
+          <dd style={{ color: portfolioBeta > 1.2 ? 'var(--fin-loss)' : (portfolioBeta < 0.8 ? 'var(--accent-primary)' : 'var(--fin-profit)') }}>
+            {portfolioBeta.toFixed(2)}
+          </dd>
         </div>
         <div>
           <dt>จำนวนสถานะ</dt>

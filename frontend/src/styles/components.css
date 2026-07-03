@@ -207,12 +207,11 @@
 }
 
 .metric-card-label {
-  overflow: hidden;
   color: var(--text-secondary);
   font-size: 0.75rem;
   font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  line-height: 1.25;
 }
 
 .metric-card-value {
@@ -722,4 +721,19 @@
   color: var(--text-secondary);
   padding: 24px 12px;
   text-align: center;
+}
+
+.risk-alert-banner,
+.earnings-proximity-banner,
+.command-inline-error,
+.journal-risk-warning,
+.ui-alert-description,
+.metric-card-label {
+  text-wrap: balance;
+}
+
+p,
+.panel-subtext,
+.command-trade-warning {
+  text-wrap: pretty;
 }

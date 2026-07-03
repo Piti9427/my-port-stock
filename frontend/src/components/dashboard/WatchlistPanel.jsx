@@ -1,3 +1,4 @@
+import { formatCurrency } from '../../lib/format.js';
 import { EmptyState } from '../ui/EmptyState.jsx';
 import { Skeleton } from '../ui/Skeleton.jsx';
 
@@ -41,6 +42,11 @@ export function WatchlistPanel({ items = [], loading = false, status = 'OK', onO
           {items.slice(0, 6).map((item) => {
             const changePct = Number(item.changePct ?? item.change_pct);
             const positive = Number.isFinite(changePct) && changePct >= 0;
+            
+            const alertPrice = Number(item.alert_price ?? item.alertPrice);
+            const price = Number(item.price);
+            const isTriggered = price > 0 && alertPrice > 0 && Math.abs(price - alertPrice) / alertPrice <= 0.01;
+
             return (
               <div className="dashboard-watchlist-row" key={item.ticker}>
                 <button
@@ -49,12 +55,19 @@ export function WatchlistPanel({ items = [], loading = false, status = 'OK', onO
                   aria-label={`Open ${item.ticker} detail`}
                   onClick={() => onOpenTicker?.(item.ticker)}
                 >
-                  <strong>{item.ticker}</strong>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <strong>{item.ticker}</strong>
+                    {isTriggered && (
+                      <span style={{ fontSize: '0.7rem', background: '#3f220f', color: '#fb923c', padding: '2px 6px', borderRadius: '4px', border: '1px solid #7c2d12', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                        🔔 Entry Zone
+                      </span>
+                    )}
+                  </div>
                   <span>{item.name || item.sector || 'Tracked ticker'}</span>
                 </button>
-                <span className="dashboard-watchlist-price">{Number.isFinite(Number(item.price)) ? `฿${Number(item.price).toFixed(2)}` : '—'}</span>
+                <span className="dashboard-watchlist-price font-mono">{formatCurrency(price, item.ticker)}</span>
                 <Sparkline data={item.spark} positive={positive} />
-                <span className={positive ? 'semantic-positive' : 'semantic-negative'}>
+                <span className={`${positive ? 'semantic-positive' : 'semantic-negative'} font-mono`}>
                   {Number.isFinite(changePct) ? `${positive ? '+' : ''}${changePct.toFixed(2)}%` : '—'}
                 </span>
                 <button className="btn-secondary" type="button" onClick={() => onAnalyze?.(item.ticker)} aria-label={`วิเคราะห์ ${item.ticker}`}>

@@ -1,5 +1,14 @@
 const { normalizeDecisionMode } = require("../common/format");
 
+function isSpeculative(ticker) {
+  if (!ticker) return false;
+  const symbol = String(ticker).toUpperCase().split('.')[0];
+  const specSet = new Set([
+    "RKLB", "ALAB", "PLTR", "BE", "IREN", "ASTS", "LUNR", "ONDS", "IONQ", "PL", "BKSY", "IRDM", "GSAT"
+  ]);
+  return specSet.has(symbol);
+}
+
 const SCORE_WEIGHTS = {
   "Quick Trade": {
     fundamental: 0.2,
@@ -113,7 +122,7 @@ function isHeldOrRepeatTicker(packet) {
 function collectDecisionBlockers(packet, isHeldOrRepeat) {
   const blockers = [];
 
-  if (packet.current_price_acceptance_gate !== "pass") {
+  if (packet.current_price_acceptance_gate !== "pass" && packet.current_price_acceptance_gate !== "pass_manual_override") {
     blockers.push("Current Price Acceptance Gate failed");
   }
 
@@ -230,7 +239,17 @@ function resolveVerdict({
 }
 
 function evaluateDecision(packet, options = {}) {
-  const decisionMode = normalizeDecisionMode(packet.decision_mode || options.decisionMode);
+  // 1. Decision Mode Auto-Resolution
+  let rawMode = packet.decision_mode || options.decisionMode;
+  if (!rawMode) {
+    if (packet.portfolio_context?.is_held) {
+      rawMode = "Existing Position / Exit Review";
+    } else {
+      rawMode = "Long-Term/Core";
+    }
+  }
+  const decisionMode = normalizeDecisionMode(rawMode);
+  
   const agentResults = options.agentResults || buildDefaultAgentResults(packet);
   const scoreResult = calculateConvictionScore(decisionMode, agentResults);
   const isHeldOrRepeat = isHeldOrRepeatTicker(packet);
@@ -242,6 +261,128 @@ function evaluateDecision(packet, options = {}) {
   const altman = oracle?.altman_z_score;
   const roce = oracle?.roce;
   const zvr = oracle?.daily_technicals?.zvr_ratio;
+
+  // 2. Portfolio Drawdown Circuit Breaker (Hard Gate)
+  const maxDrawdown = Number(options.maxPortfolioDrawdownPct ?? packet.portfolio_context?.maxPortfolioDrawdownPct ?? 15);
+  const currentDrawdown = Number(options.currentPortfolioDrawdownPct ?? packet.portfolio_context?.currentPortfolioDrawdownPct ?? 0);
+  if (currentDrawdown >= maxDrawdown) {
+    blockers.push(`Portfolio drawdown limit exceeded (Drawdown Circuit Breaker active: ${currentDrawdown}% >= ${maxDrawdown}%)`);
+  }
+
+  // 3. Sector Concentration Limit (Soft Block & Warning)
+  const holdingsRows = packet.portfolio_context?.holdings_rows || [];
+  const candidateSector = packet.portfolio_context?.sector || oracle?.balance_sheet?.sector || options.sector || null;
+  if (candidateSector && holdingsRows.length > 0) {
+    let totalPortfolioValue = 0;
+    let sectorValue = 0;
+    for (const row of holdingsRows) {
+      const rowVal = (row.shares || 0) * (row.avg_cost || 0);
+      totalPortfolioValue += rowVal;
+      if (row.sector === candidateSector) {
+        sectorValue += rowVal;
+      }
+    }
+    const sectorAllocationPct = totalPortfolioValue > 0 ? (sectorValue / totalPortfolioValue) * 100 : 0;
+    if (sectorAllocationPct > 30) {
+      warnings.push(`Sector concentration limit (30%) exceeded: ${candidateSector} is ${sectorAllocationPct.toFixed(1)}% of portfolio`);
+      if (scoreResult.score > 5.0) {
+        scoreResult.score = 5.0;
+      }
+    }
+  }
+
+  // 4. Macro Market Regime Filter (Dynamic Risk Budgeting - reduce risk by 50%) - Prep Plan First
+  let finalRiskPlan = options.riskPlan ? { ...options.riskPlan } : null;
+
+  if (!finalRiskPlan && isHeldOrRepeat) {
+    const activeTrades = packet.journal_context?.active_trade_rows || [];
+    if (activeTrades.length > 0) {
+      const lastActive = activeTrades[0];
+      const entry = lastActive.entry || lastActive.price || packet.last_price;
+      const stopLoss = lastActive.stop_loss;
+      const target = lastActive.target;
+      const shares = lastActive.shares || 0;
+      const hardRiskThb = lastActive.shares && lastActive.entry && lastActive.stop_loss
+        ? Number((lastActive.shares * (lastActive.entry - lastActive.stop_loss)).toFixed(2))
+        : null;
+      const rr = lastActive.risk_reward || (target && entry && stopLoss && (entry - stopLoss > 0)
+        ? Number(((target - entry) / (entry - stopLoss)).toFixed(2))
+        : null);
+
+      finalRiskPlan = {
+        entry,
+        stop_loss: stopLoss,
+        target,
+        shares,
+        hard_risk_thb: hardRiskThb,
+        rr_ratio: rr,
+        source: "database_journal"
+      };
+    }
+  }
+
+  // 3.5 Speculative Allocation Cap Check (Hard Block - 15%)
+  const isCandidateSpeculative = isSpeculative(packet.ticker);
+  if (isCandidateSpeculative && holdingsRows.length > 0) {
+    let totalPortfolioValue = 0;
+    let specValue = 0;
+    for (const row of holdingsRows) {
+      const rowVal = (row.shares || 0) * (row.avg_cost || row.avgCost || 0);
+      totalPortfolioValue += rowVal;
+      if (isSpeculative(row.ticker)) {
+        specValue += rowVal;
+      }
+    }
+    
+    // Add the candidate position value if we are buying/adding
+    let candidateVal = 0;
+    if (finalRiskPlan && finalRiskPlan.shares && finalRiskPlan.entry) {
+      candidateVal = finalRiskPlan.shares * finalRiskPlan.entry;
+    }
+    
+    const nextTotalValue = totalPortfolioValue + candidateVal;
+    const nextSpecValue = specValue + candidateVal;
+    const specAllocationPct = nextTotalValue > 0 ? (nextSpecValue / nextTotalValue) * 100 : 0;
+    
+    if (specAllocationPct > 15) {
+      blockers.push(`Speculative allocation cap limit (15%) exceeded: speculative names would be ${specAllocationPct.toFixed(1)}% of portfolio`);
+    }
+  }
+
+  const isAboveEMA200 = oracle?.macro?.index_above_ema200;
+  if (isAboveEMA200 === false && finalRiskPlan && finalRiskPlan.hard_risk_thb) {
+    finalRiskPlan.original_hard_risk_thb = finalRiskPlan.hard_risk_thb;
+    finalRiskPlan.hard_risk_thb = finalRiskPlan.hard_risk_thb / 2;
+    warnings.push("Macro bearish regime - individual trade risk limit halved");
+  } else if (isAboveEMA200 !== true) {
+    warnings.push("Macro regime unavailable - verify index trend before sizing risk");
+  }
+
+  // 5. Earnings Proximity Gate (Cap position size if earnings <= 5 days away)
+  const nextEarningsStr = oracle?.next_earnings_date;
+  if (nextEarningsStr) {
+    const nextEarningsDate = new Date(nextEarningsStr);
+    const today = new Date();
+    const diffTime = nextEarningsDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays >= 0 && diffDays <= 5) {
+      warnings.push(`Earnings proximity gate: Next earnings in ${diffDays} days (≤ 5 days). Position size capped to ไม้ 1 (30% max).`);
+    }
+  }
+
+  // 6. Trailing Stop Calculation (ATR-based dynamic stop loss after Target 1 is hit)
+  const atr = oracle?.atr_14 || oracle?.daily_technicals?.atr_14;
+  const lastPrice = packet.last_price || oracle?.last_price;
+  let calculatedTrailingStop = null;
+  if (lastPrice && atr && finalRiskPlan && finalRiskPlan.stop_loss) {
+    const entry = finalRiskPlan.entry || finalRiskPlan.price || lastPrice;
+    const stopLoss = finalRiskPlan.stop_loss;
+    const riskPerShare = entry - stopLoss;
+    const t1Target = entry + 2 * riskPerShare;
+    if (lastPrice >= t1Target) {
+      calculatedTrailingStop = Number((lastPrice - (atr * 1.5)).toFixed(2));
+    }
+  }
 
   if (decisionMode === "Long-Term/Core") {
     if (piotroski === null || piotroski === undefined) {
@@ -276,12 +417,12 @@ function evaluateDecision(packet, options = {}) {
   }
 
   if (hasInsufficientSubAgent(agentResults)) {
-    warnings.push("At least one sub-agent returned INSUFFICIENT_DATA");
+    blockers.push("At least one sub-agent returned INSUFFICIENT_DATA (fail-closed analysis active)");
   }
 
-  const riskPlanReady = hasExecutableRiskPlan(options.riskPlan);
+  const riskPlanReady = hasExecutableRiskPlan(finalRiskPlan);
   if (!riskPlanReady) {
-    warnings.push("No executable stop-loss, R/R >= 1:2, and hard THB risk plan supplied");
+    blockers.push("No executable stop-loss, R/R >= 1:2 (Reward >= 2x Risk), and hard THB risk plan supplied");
   }
 
   let { verdict: initialVerdict, trafficLight } = resolveVerdict({
@@ -299,7 +440,7 @@ function evaluateDecision(packet, options = {}) {
   }
 
   const verdict =
-    packet.current_price_acceptance_gate === "pass" ? initialVerdict : "Wait";
+    (packet.current_price_acceptance_gate === "pass" || packet.current_price_acceptance_gate === "pass_manual_override") ? initialVerdict : "Wait";
 
   const gateStatus = blockers.length === 0 ? "pass" : "fail";
   const immediateNextAction =
@@ -334,10 +475,11 @@ function evaluateDecision(packet, options = {}) {
         portfolio_context: packet.portfolio_context,
         journal_context: packet.journal_context,
       },
-      risk_plan: options.riskPlan || {
+      risk_plan: finalRiskPlan || {
         status: "MISSING",
         requirement: "Need stop-loss, R/R >= 1:2, and hard THB risk before Buy/Add",
       },
+      calculated_trailing_stop: calculatedTrailingStop,
       agent_scores: scoreResult.agent_results,
       blockers,
       warnings,

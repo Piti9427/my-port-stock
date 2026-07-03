@@ -87,6 +87,11 @@ export default function CommandCenterPage() {
         ticker={state.ticker}
         decisionMode={state.decisionMode}
         quotePrice={Number(state.quote?.last_price) || undefined}
+        currentHolding={
+          state.analysis?.adaptive_drilldown?.portfolio_journal?.portfolio_context?.holdings_rows?.[0] ||
+          state.analysis?.packet?.portfolio_context?.holdings_rows?.[0] ||
+          null
+        }
         onClose={() => state.setTradeOpen(false)}
         onSubmit={state.recordTrade}
         saving={state.tradeSaving}
