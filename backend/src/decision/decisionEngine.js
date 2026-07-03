@@ -291,35 +291,7 @@ function evaluateDecision(packet, options = {}) {
     }
   }
 
-  // 3.5 Speculative Allocation Cap Check (Hard Block - 15%)
-  const isCandidateSpeculative = isSpeculative(packet.ticker);
-  if (isCandidateSpeculative && holdingsRows.length > 0) {
-    let totalPortfolioValue = 0;
-    let specValue = 0;
-    for (const row of holdingsRows) {
-      const rowVal = (row.shares || 0) * (row.avg_cost || row.avgCost || 0);
-      totalPortfolioValue += rowVal;
-      if (isSpeculative(row.ticker)) {
-        specValue += rowVal;
-      }
-    }
-    
-    // Add the candidate position value if we are buying/adding
-    let candidateVal = 0;
-    if (finalRiskPlan && finalRiskPlan.shares && finalRiskPlan.entry) {
-      candidateVal = finalRiskPlan.shares * finalRiskPlan.entry;
-    }
-    
-    const nextTotalValue = totalPortfolioValue + candidateVal;
-    const nextSpecValue = specValue + candidateVal;
-    const specAllocationPct = nextTotalValue > 0 ? (nextSpecValue / nextTotalValue) * 100 : 0;
-    
-    if (specAllocationPct > 15) {
-      blockers.push(`Speculative allocation cap limit (15%) exceeded: speculative names would be ${specAllocationPct.toFixed(1)}% of portfolio`);
-    }
-  }
-
-  // 4. Macro Market Regime Filter (Dynamic Risk Budgeting - reduce risk by 50%)
+  // 4. Macro Market Regime Filter (Dynamic Risk Budgeting - reduce risk by 50%) - Prep Plan First
   let finalRiskPlan = options.riskPlan ? { ...options.riskPlan } : null;
 
   if (!finalRiskPlan && isHeldOrRepeat) {
@@ -346,6 +318,34 @@ function evaluateDecision(packet, options = {}) {
         rr_ratio: rr,
         source: "database_journal"
       };
+    }
+  }
+
+  // 3.5 Speculative Allocation Cap Check (Hard Block - 15%)
+  const isCandidateSpeculative = isSpeculative(packet.ticker);
+  if (isCandidateSpeculative && holdingsRows.length > 0) {
+    let totalPortfolioValue = 0;
+    let specValue = 0;
+    for (const row of holdingsRows) {
+      const rowVal = (row.shares || 0) * (row.avg_cost || row.avgCost || 0);
+      totalPortfolioValue += rowVal;
+      if (isSpeculative(row.ticker)) {
+        specValue += rowVal;
+      }
+    }
+    
+    // Add the candidate position value if we are buying/adding
+    let candidateVal = 0;
+    if (finalRiskPlan && finalRiskPlan.shares && finalRiskPlan.entry) {
+      candidateVal = finalRiskPlan.shares * finalRiskPlan.entry;
+    }
+    
+    const nextTotalValue = totalPortfolioValue + candidateVal;
+    const nextSpecValue = specValue + candidateVal;
+    const specAllocationPct = nextTotalValue > 0 ? (nextSpecValue / nextTotalValue) * 100 : 0;
+    
+    if (specAllocationPct > 15) {
+      blockers.push(`Speculative allocation cap limit (15%) exceeded: speculative names would be ${specAllocationPct.toFixed(1)}% of portfolio`);
     }
   }
 

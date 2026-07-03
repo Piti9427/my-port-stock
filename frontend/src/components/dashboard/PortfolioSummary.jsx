@@ -17,9 +17,6 @@ function formatMoney(value, { signed = false } = {}) {
 }
 
 export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', timestamp, stale = false }) {
-  let totalWeightedBeta = 0;
-  let totalBetaWeight = 0;
-
   const metrics = holdings.reduce(
     (result, holding) => {
       const shares = numberValue(holding.shares);
@@ -33,17 +30,17 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
       result.dayPl += shares * change;
 
       const beta = numberValue(holding.beta ?? 1.0);
-      totalWeightedBeta += beta * val;
-      totalBetaWeight += val;
+      result.totalWeightedBeta += beta * val;
+      result.totalBetaWeight += val;
 
       return result;
     },
-    { totalValue: 0, totalCost: 0, dayPl: 0 }
+    { totalValue: 0, totalCost: 0, dayPl: 0, totalWeightedBeta: 0, totalBetaWeight: 0 }
   );
 
   const totalPl = metrics.totalValue - metrics.totalCost;
   const dayPlPct = metrics.totalValue > 0 ? (metrics.dayPl / metrics.totalValue) * 100 : null;
-  const portfolioBeta = totalBetaWeight > 0 ? totalWeightedBeta / totalBetaWeight : 1.0;
+  const portfolioBeta = metrics.totalBetaWeight > 0 ? metrics.totalWeightedBeta / metrics.totalBetaWeight : 1.0;
 
   const drawdownPct = metrics.totalCost > 0 && totalPl < 0 ? (Math.abs(totalPl) / metrics.totalCost) * 100 : 0;
   const isDrawdownBreached = drawdownPct >= 15;

@@ -1,13 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Clock, ShieldAlert } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 import { useAuth } from '../auth/clerkAdapter';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { DEFAULT_SECTOR_LIMIT, buildPortfolioRisk } from '../components/risk/riskCalculations';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Progress } from '../components/ui/progress';
 import { EmptyState } from '../components/ui/EmptyState';
-
-const DATA_STAMP = 'Supabase holdings + market data gateway';
 
 function sectorDrilldownSubtitle(sector) {
   if (sector.weight > sector.limit) return 'Highest breach risk';
@@ -39,7 +37,7 @@ function riskBudgetTone(risk) {
 export default function PortfolioRiskPage() {
   const { getToken } = useAuth();
   const [selectedSector, setSelectedSector] = useState(null);
-  const { holdings, isStale, loading, status, refetch } = usePortfolio({ getToken });
+  const { holdings, loading, status, refetch } = usePortfolio({ getToken });
 
   const risk = useMemo(() => buildPortfolioRisk(holdings), [holdings]);
 

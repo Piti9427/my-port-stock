@@ -1,3 +1,4 @@
+-- Active: 1781273475772@@192.168.7.19@1521
 -- MyPortStock runtime schema.
 -- No sample rows here. Production data is per-user and must be imported from
 -- real portfolio/journal sources or entered through the app.
