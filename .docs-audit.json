@@ -1,0 +1,7 @@
+{
+  "scan_roots": ["docs", ".agents", ".claude", ".codex"],
+  "scan_root_files_only": ["."],
+  "exclude_scan_roots": ["docs/archive"],
+  "scan_files": [],
+  "skip_dirs": [".venv", "node_modules", "bin", "obj", "tmp"]
+}
