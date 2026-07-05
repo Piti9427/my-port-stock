@@ -23,15 +23,19 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
       const price = numberValue(holding.price);
       const averageCost = numberValue(holding.avg_cost ?? holding.avgCost);
       const change = numberValue(holding.change);
-      const val = shares * price;
 
-      result.totalValue += val;
-      result.totalCost += shares * averageCost;
-      result.dayPl += shares * change;
+      const rate = numberValue(holding.fx_rate || 1.0);
+      const valThb = numberValue(holding.value_thb || (shares * price * rate));
+      const costThb = numberValue(holding.cost_thb || (shares * averageCost * rate));
+      const dayPlThb = numberValue(holding.day_pl_thb || (shares * change * rate));
+
+      result.totalValue += valThb;
+      result.totalCost += costThb;
+      result.dayPl += dayPlThb;
 
       const beta = numberValue(holding.beta ?? 1.0);
-      result.totalWeightedBeta += beta * val;
-      result.totalBetaWeight += val;
+      result.totalWeightedBeta += beta * valThb;
+      result.totalBetaWeight += valThb;
 
       return result;
     },

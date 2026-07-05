@@ -58,7 +58,7 @@ function isEmptyNotes(notes) {
 
 // ─── Portfolio pulse ─────────────────────────────────────────────────────────
 
-function buildPulse(enrichedHoldings, prefs) {
+function buildPulse(enrichedHoldings, prefs, thbRate = 35.0) {
   const maxDrawdownPct = num(prefs?.max_portfolio_drawdown_pct) || DEFAULT_MAX_DRAWDOWN_PCT;
 
   let totalCost = 0;
@@ -70,9 +70,13 @@ function buildPulse(enrichedHoldings, prefs) {
     const avgCost = num(h.avg_cost);
     const price = num(h.price) || avgCost;
     const beta = num(h.beta) || 1.0;
-    totalCost += shares * avgCost;
-    totalValue += shares * price;
-    totalWeightedBeta += beta * shares * price;
+
+    const isUsd = !String(h.ticker || '').toUpperCase().endsWith('.BK');
+    const rate = isUsd ? thbRate : 1.0;
+
+    totalCost += shares * avgCost * rate;
+    totalValue += shares * price * rate;
+    totalWeightedBeta += beta * shares * price * rate;
   }
 
   const totalPl = totalValue - totalCost;
@@ -85,7 +89,9 @@ function buildPulse(enrichedHoldings, prefs) {
   const sectorMap = new Map();
   for (const h of enrichedHoldings) {
     const sector = h.sector || 'Unknown';
-    const val = num(h.shares) * (num(h.price) || num(h.avg_cost));
+    const isUsd = !String(h.ticker || '').toUpperCase().endsWith('.BK');
+    const rate = isUsd ? thbRate : 1.0;
+    const val = num(h.shares) * (num(h.price) || num(h.avg_cost)) * rate;
     sectorMap.set(sector, (sectorMap.get(sector) || 0) + val);
   }
   const sectorBreaches = [];
@@ -365,12 +371,14 @@ router.get('/', async (req, res, next) => {
       getPrefsForUser(userId).catch(() => null),
     ]);
 
-    const [enrichedHoldings, enrichedWatchlists] = await Promise.all([
+    const { getUsdThbRate } = require('../services/marketData');
+    const [enrichedHoldings, enrichedWatchlists, thbRate] = await Promise.all([
       enrichWithMarketData(rawHoldings),
       enrichWithMarketData(rawWatchlists),
+      getUsdThbRate(),
     ]);
 
-    const pulse = buildPulse(enrichedHoldings, prefs);
+    const pulse = buildPulse(enrichedHoldings, prefs, thbRate);
     const { items: protectItems, missingStopCount } = buildProtectItems(enrichedHoldings, allJournal, pulse);
     pulse.missingStopCount = missingStopCount;
 

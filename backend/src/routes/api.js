@@ -120,6 +120,13 @@ router.get('/holdings', async (req, res, next) => {
         ...item,
         mode,
         beta,
+        fx_rate: rate,
+        value_usd: isUsd ? currentValueUsd : currentValueUsd / thbRate,
+        value_thb: isUsd ? currentValueUsd * thbRate : currentValueUsd,
+        cost_usd: isUsd ? costValueUsd : costValueUsd / thbRate,
+        cost_thb: isUsd ? costValueUsd * thbRate : costValueUsd,
+        day_pl_usd: isUsd ? shares * (item.change || 0) : (shares * (item.change || 0)) / thbRate,
+        day_pl_thb: isUsd ? (shares * (item.change || 0)) * thbRate : shares * (item.change || 0),
         current_value_usd: currentValueUsd,
         pl_usd: plUsd,
         pl_thb: plUsd * rate,
@@ -129,7 +136,10 @@ router.get('/holdings', async (req, res, next) => {
       };
     });
 
-    res.json(finalHoldings);
+    res.json({
+      holdings: finalHoldings,
+      usd_thb_rate: thbRate,
+    });
   } catch (err) {
     next(err);
   }
