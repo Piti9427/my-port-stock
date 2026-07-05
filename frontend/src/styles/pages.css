@@ -164,7 +164,7 @@
 .ticker-icon {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -588,9 +588,10 @@
 .dashboard-watchlist,
 .dashboard-ai-quick {
   min-width: 0;
-  border-top: 1px solid var(--border-subtle);
-  border-bottom: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   background: var(--bg-panel);
+  overflow: hidden;
 }
 
 .portfolio-summary {
@@ -1625,6 +1626,8 @@
 .journal-table-wrap {
   min-height: 0;
   overflow: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
 }
 
 .journal-table {
@@ -1674,6 +1677,7 @@
   min-height: 24px;
   padding: 0 9px;
   border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
   color: var(--text-secondary);
   font-size: 0.72rem;
   font-weight: 800;
@@ -2132,6 +2136,9 @@
 
 .risk-kpi-card {
   padding: 16px 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
 }
 
 /* Main grid */
@@ -2145,10 +2152,7 @@
 
 /* Treemap Panel */
 .risk-treemap-panel {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
+  padding: var(--space-5);
 }
 
 .risk-treemap-panel .panel-header {
@@ -2202,7 +2206,7 @@
   min-width: 40px;
   position: relative;
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   overflow: hidden;
   cursor: pointer;
   display: flex;
@@ -2371,12 +2375,9 @@
 }
 
 .risk-drilldown {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
   margin-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 20px;
 }
 
 .risk-budget-card {
@@ -2841,7 +2842,7 @@
 
 .panel {
   background-color: var(--bg-panel);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   padding: 24px;
   display: flex;
@@ -4022,6 +4023,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xs);
   background: var(--bg-panel-solid);
+  overflow: hidden;
 }
 
 .command-mode-toggle button,
@@ -4071,12 +4073,12 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-2);
-  padding-left: var(--space-3);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xs);
   background: var(--bg-panel-solid);
   color: var(--text-secondary);
+  padding-left: var(--space-3);
+  overflow: hidden;
 }
 
 .command-ticker-row:focus-within {
@@ -4106,8 +4108,10 @@
 }
 
 .command-ticker-row .btn-analyze {
-  min-height: 42px;
+  min-height: 44px;
   margin: 0;
+  border: 0;
+  border-left: 1px solid var(--border-subtle);
   border-radius: 0;
   white-space: nowrap;
 }
@@ -4133,9 +4137,10 @@
 .command-panel {
   min-width: 0;
   padding: var(--space-5);
-  border-top: 1px solid var(--border-subtle);
-  border-bottom: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   background: var(--bg-panel);
+  overflow: hidden;
 }
 
 .command-panel-heading {
@@ -4208,6 +4213,7 @@
   margin-top: var(--space-4);
   padding: var(--space-3);
   border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
   font-size: 0.76rem;
   line-height: 1.45;
 }
@@ -4250,8 +4256,15 @@
   text-align: left;
 }
 
+.command-mode-list button:first-child {
+  border-top-left-radius: var(--radius-xs);
+  border-top-right-radius: var(--radius-xs);
+}
+
 .command-mode-list button:last-child {
   border-bottom: 0;
+  border-bottom-left-radius: var(--radius-xs);
+  border-bottom-right-radius: var(--radius-xs);
 }
 
 .command-field textarea {
@@ -4286,6 +4299,8 @@
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
 }
 
 .command-agent-panel {
@@ -4310,7 +4325,7 @@
   background: var(--bg-panel-solid);
   border: 1px solid var(--border-subtle);
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: 999px;
   font-weight: 600;
 }
 
@@ -5079,7 +5094,7 @@
 .today-card {
   background: var(--bg-shell);
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -5342,7 +5357,7 @@
 .today-pulse-container {
   background: var(--bg-shell);
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 24px;
   display: flex;
   flex-direction: column;
