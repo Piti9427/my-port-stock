@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS public.holdings CASCADE;
 DROP TABLE IF EXISTS public.watchlists CASCADE;
 DROP TABLE IF EXISTS public.journal CASCADE;
 DROP TABLE IF EXISTS public.import_batches CASCADE;
+DROP TABLE IF EXISTS public.user_preferences CASCADE;
 
 CREATE SCHEMA IF NOT EXISTS private;
 REVOKE ALL ON SCHEMA private FROM PUBLIC;
@@ -24,6 +25,17 @@ $$ LANGUAGE SQL STABLE;
 
 REVOKE ALL ON FUNCTION public.requesting_user_id() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.requesting_user_id() TO authenticated, service_role;
+
+-- 2.5 User Preferences Table
+CREATE TABLE IF NOT EXISTS public.user_preferences (
+    user_id TEXT PRIMARY KEY DEFAULT requesting_user_id(),
+    reporting_currency TEXT NOT NULL DEFAULT 'THB' CONSTRAINT user_preferences_currency_check CHECK (reporting_currency IN ('THB', 'USD')),
+    disclosure_level TEXT NOT NULL DEFAULT 'beginner' CONSTRAINT user_preferences_disclosure_check CHECK (disclosure_level IN ('beginner', 'advanced')),
+    theme TEXT NOT NULL DEFAULT 'light' CONSTRAINT user_preferences_theme_check CHECK (theme IN ('dark', 'light', 'system')),
+    onboarding_completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 
 -- 3. Holdings Table
 CREATE TABLE IF NOT EXISTS public.holdings (
@@ -135,6 +147,7 @@ ALTER TABLE public.holdings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.watchlists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.journal ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.import_batches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_preferences ENABLE ROW LEVEL SECURITY;
 
 -- 10. RLS Policies
 -- Users can SELECT their own holdings (read-only for user, updated via trigger)
@@ -163,16 +176,34 @@ ON public.import_batches FOR ALL
 USING (requesting_user_id() = user_id)
 WITH CHECK (requesting_user_id() = user_id);
 
+-- Users can select their own preferences
+DROP POLICY IF EXISTS select_own_preferences ON public.user_preferences;
+CREATE POLICY select_own_preferences ON public.user_preferences
+    FOR SELECT TO authenticated USING (user_id = requesting_user_id());
+
+-- Users can insert their own preferences
+DROP POLICY IF EXISTS insert_own_preferences ON public.user_preferences;
+CREATE POLICY insert_own_preferences ON public.user_preferences
+    FOR INSERT TO authenticated WITH CHECK (user_id = requesting_user_id());
+
+-- Users can update their own preferences
+DROP POLICY IF EXISTS update_own_preferences ON public.user_preferences;
+CREATE POLICY update_own_preferences ON public.user_preferences
+    FOR UPDATE TO authenticated USING (user_id = requesting_user_id()) WITH CHECK (user_id = requesting_user_id());
+
 -- 11. Explicit Data API Grants
 REVOKE ALL ON TABLE public.holdings FROM anon, authenticated;
 REVOKE ALL ON TABLE public.watchlists FROM anon, authenticated;
 REVOKE ALL ON TABLE public.journal FROM anon, authenticated;
 REVOKE ALL ON TABLE public.import_batches FROM anon, authenticated;
+REVOKE ALL ON TABLE public.user_preferences FROM anon, authenticated;
 GRANT SELECT ON TABLE public.holdings TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.watchlists TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.journal TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON TABLE public.import_batches TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.holdings, public.watchlists, public.journal, public.import_batches TO service_role;
+GRANT SELECT, INSERT, UPDATE ON public.user_preferences TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.holdings, public.watchlists, public.journal, public.import_batches, public.user_preferences TO service_role;
+
 
 -- 12. Database Function & Trigger to automatically synchronize holdings from journal entries
 DROP FUNCTION IF EXISTS public.recalculate_holdings();
