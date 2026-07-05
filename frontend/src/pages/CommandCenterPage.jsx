@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { AgentResults } from '../components/command-center/AgentResults.jsx';
 import { AnalysisControls } from '../components/command-center/AnalysisControls.jsx';
 import { ChatPanel } from '../components/command-center/ChatPanel.jsx';
@@ -11,6 +12,20 @@ import { useCommandCenter } from '../hooks/useCommandCenter.js';
 export default function CommandCenterPage() {
   const state = useCommandCenter();
   const snapshot = state.analysis?.decision_snapshot || {};
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName) || event.target.isContentEditable) {
+        return;
+      }
+      if (event.key.toLowerCase() === 't' && !state.tradeOpen) {
+        event.preventDefault();
+        state.setTradeOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [state.tradeOpen, state.setTradeOpen]);
 
   return (
     <div className="command-center-page command-workspace">
