@@ -1628,6 +1628,25 @@
   overflow: auto;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
+  padding-bottom: 6px;
+}
+
+.journal-table-wrap::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.journal-table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.journal-table-wrap::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 999px;
+}
+
+.journal-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
 }
 
 .journal-table {
@@ -2402,6 +2421,25 @@
 .risk-table-wrap {
   overflow-x: auto;
   margin-top: 16px;
+  padding-bottom: 6px;
+}
+
+.risk-table-wrap::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.risk-table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.risk-table-wrap::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 999px;
+}
+
+.risk-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
 }
 
 .risk-holdings-table {
