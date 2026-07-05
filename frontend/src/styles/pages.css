@@ -1069,7 +1069,7 @@
   height: 32px;
   background: rgba(var(--text-inverse-rgb), 0.06);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   color: var(--text-secondary);
   cursor: pointer;
   display: flex;
@@ -1401,7 +1401,7 @@
   position: absolute;
   background: var(--bg-panel);
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 8px 12px;
   max-width: 200px;
   font-size: 0.75rem;
