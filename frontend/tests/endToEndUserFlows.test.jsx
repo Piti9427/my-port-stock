@@ -193,7 +193,7 @@ beforeEach(() => {
 });
 
 test('new dev-signed-in user can analyze, log a first trade, then inspect journal, analytics, and risk states', async () => {
-  renderAppAt('/');
+  renderAppAt('/dashboard');
 
   expect(await screen.findByText('เริ่มต้นโดยเพิ่มหุ้นในพอร์ต')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'วิเคราะห์หุ้น' }));
@@ -228,7 +228,7 @@ test('new dev-signed-in user can analyze, log a first trade, then inspect journa
 
 test('returning dev-signed-in user can drill into a holding, run analysis, plan risk, and append a journal trade', async () => {
   resetStore(true);
-  renderAppAt('/');
+  renderAppAt('/dashboard');
 
   expect(await screen.findByRole('row', { name: /NVDA/i })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('row', { name: /NVDA/i }));

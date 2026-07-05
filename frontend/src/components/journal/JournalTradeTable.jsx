@@ -69,7 +69,9 @@ export function JournalTradeTable({ emptyAction, emptyDescription, expandedTrade
                     }
                   }}
                 >
-                  <td className="font-mono" data-label="Date">{formatDate(trade.date || trade.created_at)}</td>
+                  <td className="font-mono" data-label="Date">
+                    {formatDate(trade.date || trade.created_at)}
+                  </td>
                   <td data-label="Ticker">
                     <Link className="ticker-detail-inline-link" to={`/ticker/${trade.ticker}`} onClick={(event) => event.stopPropagation()}>
                       {trade.ticker}
@@ -78,7 +80,9 @@ export function JournalTradeTable({ emptyAction, emptyDescription, expandedTrade
                   <td data-label="Type">
                     <span className={`journal-type ${String(trade.type).toLowerCase()}`}>{trade.type || 'TRADE'}</span>
                   </td>
-                  <td className="font-mono" data-label="Shares">{trade.shares ?? '—'}</td>
+                  <td className="font-mono" data-label="Shares">
+                    {trade.shares ?? '—'}
+                  </td>
                   <td className="price-mono" data-label="Price">
                     {formatCurrency(trade.price ?? trade.entry)}
                   </td>
@@ -102,7 +106,18 @@ export function JournalTradeTable({ emptyAction, emptyDescription, expandedTrade
                           {trade.cognitive_bias && (
                             <div style={{ marginTop: '12px' }}>
                               <strong>Cognitive Bias Tag: </strong>
-                              <span style={{ background: '#271c0c', color: '#fb923c', padding: '2px 6px', borderRadius: '4px', border: '1px solid #7c2d12', fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                              <span
+                                style={{
+                                  background: '#271c0c',
+                                  color: '#fb923c',
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                  border: '1px solid #7c2d12',
+                                  fontFamily: 'monospace',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 'bold',
+                                }}
+                              >
                                 🧠 {trade.cognitive_bias}
                               </span>
                             </div>

@@ -71,7 +71,7 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
         </div>
         <div>
           <dt>Portfolio Beta</dt>
-          <dd style={{ color: portfolioBeta > 1.2 ? 'var(--fin-loss)' : (portfolioBeta < 0.8 ? 'var(--accent-primary)' : 'var(--fin-profit)') }}>
+          <dd style={{ color: portfolioBeta > 1.2 ? 'var(--fin-loss)' : portfolioBeta < 0.8 ? 'var(--accent-primary)' : 'var(--fin-profit)' }}>
             {portfolioBeta.toFixed(2)}
           </dd>
         </div>

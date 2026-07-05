@@ -77,8 +77,8 @@ test('Analytics first-run state requires at least one closed trade', async () =>
 });
 
 test('Risk first-run empty state explains holdings are required before risk can be calculated', async () => {
-  render(<PortfolioRiskPage />);
+  renderRoute('/risk', <PortfolioRiskPage />);
 
   await waitFor(() => expect(fetchWithAuth).toHaveBeenCalledWith('/api/holdings', expect.any(Function), expect.any(Object)));
-  expect(await screen.findByText('เพิ่มหุ้นในพอร์ตเพื่อดูความเสี่ยง')).toBeInTheDocument();
+  expect(await screen.findByText('ยังไม่มีพอร์ตการลงทุน 📈')).toBeInTheDocument();
 });

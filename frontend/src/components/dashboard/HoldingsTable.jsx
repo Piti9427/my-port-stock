@@ -43,7 +43,14 @@ export function HoldingsTable({ holdings = [], loading = false, status = 'OK', o
   const columns = useMemo(
     () => [
       { key: 'ticker', label: 'Ticker', mono: true, sortable: true },
-      { key: 'shares', label: 'Shares', mono: true, align: 'right', sortable: true, render: (row) => row.shares.toLocaleString(undefined, { maximumFractionDigits: 4 }) },
+      {
+        key: 'shares',
+        label: 'Shares',
+        mono: true,
+        align: 'right',
+        sortable: true,
+        render: (row) => row.shares.toLocaleString(undefined, { maximumFractionDigits: 4 }),
+      },
       { key: 'avgCost', label: 'Avg Cost', mono: true, align: 'right', sortable: true, render: (row) => formatCurrency(row.avgCost, row.ticker) },
       { key: 'price', label: 'Current', mono: true, align: 'right', sortable: true, render: (row) => formatCurrency(row.price, row.ticker) },
       { key: 'value', label: 'Value', mono: true, align: 'right', sortable: true, render: (row) => formatCurrency(row.value, row.ticker) },
@@ -58,7 +65,8 @@ export function HoldingsTable({ holdings = [], loading = false, status = 'OK', o
           const val = Number.isFinite(Number(row.pnlPct)) ? Number(row.pnlPct) : 0;
           return (
             <span className={val > 0 ? 'semantic-positive' : val < 0 ? 'semantic-negative' : 'semantic-neutral'}>
-              {val >= 0 ? '+' : ''}{val.toFixed(2)}%
+              {val >= 0 ? '+' : ''}
+              {val.toFixed(2)}%
             </span>
           );
         },

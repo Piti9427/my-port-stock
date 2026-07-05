@@ -1,13 +1,6 @@
 const { normalizeDecisionMode } = require("../common/format");
+const { isSpeculative } = require("../common/portfolio");
 
-function isSpeculative(ticker) {
-  if (!ticker) return false;
-  const symbol = String(ticker).toUpperCase().split('.')[0];
-  const specSet = new Set([
-    "RKLB", "ALAB", "PLTR", "BE", "IREN", "ASTS", "LUNR", "ONDS", "IONQ", "PL", "BKSY", "IRDM", "GSAT"
-  ]);
-  return specSet.has(symbol);
-}
 
 const SCORE_WEIGHTS = {
   "Quick Trade": {

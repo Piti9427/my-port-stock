@@ -42,7 +42,7 @@ export function WatchlistPanel({ items = [], loading = false, status = 'OK', onO
           {items.slice(0, 6).map((item) => {
             const changePct = Number(item.changePct ?? item.change_pct);
             const positive = Number.isFinite(changePct) && changePct >= 0;
-            
+
             const alertPrice = Number(item.alert_price ?? item.alertPrice);
             const price = Number(item.price);
             const isTriggered = price > 0 && alertPrice > 0 && Math.abs(price - alertPrice) / alertPrice <= 0.01;
@@ -58,7 +58,18 @@ export function WatchlistPanel({ items = [], loading = false, status = 'OK', onO
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <strong>{item.ticker}</strong>
                     {isTriggered && (
-                      <span style={{ fontSize: '0.7rem', background: '#3f220f', color: '#fb923c', padding: '2px 6px', borderRadius: '4px', border: '1px solid #7c2d12', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                      <span
+                        style={{
+                          fontSize: '0.7rem',
+                          background: '#3f220f',
+                          color: '#fb923c',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          border: '1px solid #7c2d12',
+                          fontFamily: 'monospace',
+                          fontWeight: 'bold',
+                        }}
+                      >
                         🔔 Entry Zone
                       </span>
                     )}

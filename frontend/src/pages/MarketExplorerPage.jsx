@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Search, TrendingUp, TrendingDown, Zap, ChevronRight, X, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { usePreferences } from '../hooks/usePreferences';
 
 /* ─── Default ticker universe ─────────────────────────────── */
 const TICKERS = [
@@ -229,12 +230,14 @@ function normalizeDisplayQuote(payload) {
 
 /* ─── TradingView Widget ──────────────────────────────────── */
 function TradingViewChart({ symbol }) {
+  const { preferences } = usePreferences();
+  const theme = preferences?.theme || 'dark';
   const config = {
     autosize: true,
     symbol,
     interval: 'D',
     timezone: 'Asia/Bangkok',
-    theme: 'dark',
+    theme,
     style: '1',
     locale: 'en',
     allow_symbol_change: false,

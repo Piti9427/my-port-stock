@@ -22,8 +22,6 @@ function normalizeSymbol(symbol) {
     .slice(0, 10);
 }
 
-
-
 function formatPercent(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return '—';
@@ -104,10 +102,10 @@ export default function TickerDetailPage() {
     const month = parseInt(parts[1], 10) - 1;
     const day = parseInt(parts[2], 10);
     const targetDate = new Date(year, month, day);
-    
+
     const today = new Date();
     const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    
+
     const diffTime = targetDate.getTime() - todayMidnight.getTime();
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
     if (diffDays >= 0 && diffDays <= 5) {
@@ -164,7 +162,19 @@ export default function TickerDetailPage() {
       </header>
 
       {!loading && earningsProximityWarning && (
-        <div className="earnings-proximity-banner" style={{ background: '#271c0c', color: '#fb923c', padding: '12px', borderRadius: '4px', marginTop: '16px', border: '1px solid #7c2d12', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+        <div
+          className="earnings-proximity-banner"
+          style={{
+            background: '#271c0c',
+            color: '#fb923c',
+            padding: '12px',
+            borderRadius: '4px',
+            marginTop: '16px',
+            border: '1px solid #7c2d12',
+            fontFamily: 'monospace',
+            fontSize: '0.85rem',
+          }}
+        >
           {earningsProximityWarning}
         </div>
       )}
@@ -202,7 +212,12 @@ export default function TickerDetailPage() {
 
       {!loading && (
         <section className="ticker-detail-grid">
-          <MetricCard label="Last Price" value={formatCurrency(quotePayload.last_price || packetPayload.last_price, symbol)} dataStamp="Display-only quote" mono />
+          <MetricCard
+            label="Last Price"
+            value={formatCurrency(quotePayload.last_price || packetPayload.last_price, symbol)}
+            dataStamp="Display-only quote"
+            mono
+          />
           <MetricCard label="Position" value={holding ? 'Held' : 'Not held'} dataStamp="Supabase holdings" />
           <MetricCard label="Journal Rows" value={String(trades.length)} dataStamp="Supabase journal" mono />
         </section>
@@ -219,29 +234,19 @@ export default function TickerDetailPage() {
           <MetricCard
             label="Altman Z-Score"
             value={altman !== null && altman !== undefined ? altman.toFixed(2) : '—'}
-            change={altman !== null && altman < 1.81 ? 'DISTRESS' : (altman > 2.99 ? 'SAFE' : 'GRAY')}
-            changeType={altman !== null && altman < 1.81 ? 'negative' : (altman > 2.99 ? 'positive' : 'neutral')}
+            change={altman !== null && altman < 1.81 ? 'DISTRESS' : altman > 2.99 ? 'SAFE' : 'GRAY'}
+            changeType={altman !== null && altman < 1.81 ? 'negative' : altman > 2.99 ? 'positive' : 'neutral'}
             dataStamp="Oracle Z-Score"
             mono
           />
-          <MetricCard
-            label="ROCE"
-            value={formatPercent(roce)}
-            dataStamp="Capital efficiency"
-            mono
-          />
+          <MetricCard label="ROCE" value={formatPercent(roce)} dataStamp="Capital efficiency" mono />
         </section>
       )}
 
-      {!loading && (avwap !== null || (analysis?.adaptive_drilldown?.calculated_trailing_stop)) && (
+      {!loading && (avwap !== null || analysis?.adaptive_drilldown?.calculated_trailing_stop) && (
         <section className="ticker-detail-grid" style={{ marginTop: 'var(--space-4)' }}>
           {avwap !== null && (
-            <MetricCard
-              label="Anchored VWAP"
-              value={formatCurrency(avwap, symbol)}
-              dataStamp={`Anchored from earnings ${earningsDate || ''}`}
-              mono
-            />
+            <MetricCard label="Anchored VWAP" value={formatCurrency(avwap, symbol)} dataStamp={`Anchored from earnings ${earningsDate || ''}`} mono />
           )}
           {analysis?.adaptive_drilldown?.calculated_trailing_stop && (
             <MetricCard

@@ -223,9 +223,8 @@ describe('TickerDetailPage', () => {
     );
 
     renderTickerDetail();
-    await screen.findByRole('heading', { level: 2, name: /\$NVDA/ });
-
-    fireEvent.click(screen.getByRole('button', { name: /เปิด Scenario Planner/i }));
+    const plannerBtn = await screen.findByRole('button', { name: /เปิด Scenario Planner/i });
+    fireEvent.click(plannerBtn);
 
     expect(screen.getByRole('dialog', { name: /NVDA Scenario Planner/i })).toBeInTheDocument();
     expect(screen.getByLabelText('จำนวนหุ้นที่มี')).toHaveValue(2);

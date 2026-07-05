@@ -130,7 +130,7 @@ export default function WatchlistPage() {
         setWatchlist((w) => w.filter((s) => s.ticker !== ticker));
         clearTimeout(toastTimerRef.current);
         setToast({ ticker, item, message: `${ticker} removed from watchlist.` });
-        
+
         toastTimerRef.current = setTimeout(() => {
           setToast(null);
         }, 5000);
@@ -144,7 +144,7 @@ export default function WatchlistPage() {
   const handleUndo = () => {
     if (!toast) return;
     const { item } = toast;
-    
+
     fetchWithAuth('/api/watchlists', getToken, {
       method: 'POST',
       body: {
@@ -539,10 +539,7 @@ export default function WatchlistPage() {
             )}
           </div>
           {alerts.length === 0 ? (
-            <EmptyState
-              icon={<BellOff size={24} style={{ opacity: 0.3 }} />}
-              title="No active alerts"
-            />
+            <EmptyState icon={<BellOff size={24} style={{ opacity: 0.3 }} />} title="No active alerts" />
           ) : (
             <ul className="alerts-list">
               {alerts.map((al) => (

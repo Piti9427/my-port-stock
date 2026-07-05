@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, expect, test, vi } from 'vitest';
 import PortfolioRiskPage from '../src/pages/PortfolioRiskPage.jsx';
 
@@ -46,7 +47,7 @@ beforeEach(() => {
 });
 
 test('Portfolio Risk sector buttons are accessible, selectable, and do not refetch on unstable auth wrapper identity', async () => {
-  render(<PortfolioRiskPage />);
+  render(<MemoryRouter><PortfolioRiskPage /></MemoryRouter>);
 
   const semiconductorButton = await screen.findByRole('button', {
     name: /Semiconductors: 71\.4 percent of portfolio, limit 35 percent, Over limit/i,
@@ -68,7 +69,7 @@ test('Portfolio Risk sector buttons are accessible, selectable, and do not refet
 });
 
 test('Portfolio Risk shows position-level value, weight, stop distance, THB risk, and missing stop status', async () => {
-  render(<PortfolioRiskPage />);
+  render(<MemoryRouter><PortfolioRiskPage /></MemoryRouter>);
 
   expect(await screen.findByRole('columnheader', { name: 'Ticker' })).toBeInTheDocument();
   expect(screen.getByRole('columnheader', { name: 'Value' })).toBeInTheDocument();
@@ -90,7 +91,7 @@ test('Portfolio Risk shows position-level value, weight, stop distance, THB risk
 });
 
 test('Portfolio Risk renders known-risk budget gauge and missing-stop summary', async () => {
-  render(<PortfolioRiskPage />);
+  render(<MemoryRouter><PortfolioRiskPage /></MemoryRouter>);
 
   expect(await screen.findByText('฿90')).toBeInTheDocument();
   expect(screen.getByText(/งบประมาณ ฿50,000/)).toBeInTheDocument();

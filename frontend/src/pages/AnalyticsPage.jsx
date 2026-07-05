@@ -141,7 +141,11 @@ export default function AnalyticsPage() {
           <AnalyticsMetricCards stats={stats} />
           <EquityCurve trades={filteredClosedTrades} />
 
-          <section className="glass-panel analytics-biases" style={{ marginTop: 'var(--space-4)', marginBottom: 'var(--space-4)' }} aria-labelledby="analytics-biases-title">
+          <section
+            className="glass-panel analytics-biases"
+            style={{ marginTop: 'var(--space-4)', marginBottom: 'var(--space-4)' }}
+            aria-labelledby="analytics-biases-title"
+          >
             <div className="panel-header">
               <span id="analytics-biases-title" className="panel-heading">
                 🧠 Cognitive Bias Analysis
@@ -160,12 +164,13 @@ export default function AnalyticsPage() {
                 <tbody>
                   {biasStats.map((stat) => (
                     <tr key={stat.bias} className="watchlist-row">
-                      <td style={{ fontWeight: 'bold', color: stat.bias === 'None / Not tagged' ? '#a1a1aa' : '#fb923c' }}>
-                        {stat.bias}
-                      </td>
+                      <td style={{ fontWeight: 'bold', color: stat.bias === 'None / Not tagged' ? '#a1a1aa' : '#fb923c' }}>{stat.bias}</td>
                       <td>{stat.count} trades</td>
                       <td>{stat.count > 0 ? ((stat.winCount / stat.count) * 100).toFixed(0) : 0}%</td>
-                      <td className={stat.profit >= 0 ? 'kpi-profit price-mono' : 'kpi-loss price-mono'} style={{ color: stat.profit >= 0 ? 'var(--fin-profit)' : 'var(--fin-loss)' }}>
+                      <td
+                        className={stat.profit >= 0 ? 'kpi-profit price-mono' : 'kpi-loss price-mono'}
+                        style={{ color: stat.profit >= 0 ? 'var(--fin-profit)' : 'var(--fin-loss)' }}
+                      >
                         {formatMoney(stat.profit, { sign: true })} Net
                       </td>
                     </tr>

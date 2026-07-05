@@ -20,6 +20,7 @@ vi.mock('../src/components/CommandPalette', () => ({
   default: ({ open }) => (open ? <div role="dialog" aria-label="Command Palette" /> : null),
 }));
 
+vi.mock('../src/pages/TodayPage', () => ({ default: () => <div>Today Route</div> }));
 vi.mock('../src/pages/DashboardPage', () => ({ default: () => <div>Dashboard Route</div> }));
 vi.mock('../src/pages/CommandCenterPage', () => ({ default: () => <div>Command Center Route</div> }));
 vi.mock('../src/pages/JournalPage', () => ({ default: () => <div>Journal Route</div> }));
@@ -40,8 +41,8 @@ test('authenticated shell groups navigation, keeps config as utility, and expose
   expect(screen.getByText('INSIGHTS')).toBeInTheDocument();
   expect(screen.queryByText('SETTINGS')).not.toBeInTheDocument();
   expect(screen.getByRole('link', { name: /ตั้งค่าระบบ/i })).toHaveAttribute('href', '/config');
-  expect(screen.getByRole('heading', { level: 1, name: 'แดชบอร์ด' })).toBeInTheDocument();
-  expect(screen.getByText(/Supabase holdings/i)).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 1, name: 'วันนี้' })).toBeInTheDocument();
+  expect(screen.getByText(/Queue/i)).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('button', { name: /Collapse sidebar/i }));
   expect(nav).toHaveClass('collapsed');

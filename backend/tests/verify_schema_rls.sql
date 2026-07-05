@@ -14,7 +14,7 @@ SELECT
 -- Mimic a logged-in Clerk user in JWT claims
 SELECT set_config('request.jwt.claims', json_build_object('sub', (SELECT user_id FROM _verify_ctx LIMIT 1))::text, true);
 
--- Verification 1: Insert watchlist & journal entries
+-- Verification 1: Insert watchlist & journal entries & user preferences
 INSERT INTO public.watchlists (user_id, ticker, name, sector)
 SELECT user_id, ticker, 'Apple Inc.', sector FROM _verify_ctx;
 
@@ -23,6 +23,9 @@ SELECT user_id, ticker, 'BUY', 10, 150 FROM _verify_ctx;
 
 INSERT INTO public.import_batches (import_batch_id, user_id, source_hash, source_files, status)
 SELECT 'test-batch-123', user_id, 'test-hash', ARRAY['stock_portfolio.md'], 'pending' FROM _verify_ctx;
+
+INSERT INTO public.user_preferences (user_id, reporting_currency, disclosure_level, theme)
+SELECT user_id, 'THB', 'beginner', 'light' FROM _verify_ctx;
 
 -- Verification 2: RLS blocks direct INSERT into holdings
 -- Standard user should not be able to write to holdings (only SELECT is permitted)
@@ -76,7 +79,7 @@ SELECT id, ticker, is_deleted
 FROM public.watchlists
 WHERE user_id = (SELECT user_id FROM _verify_ctx LIMIT 1);
 
--- Verification 5: RLS keeps another user's import audit rows hidden
+-- Verification 5: RLS keeps another user's preferences and import audit rows hidden
 SELECT set_config(
   'request.jwt.claims',
   json_build_object('sub', (SELECT other_user_id FROM _verify_ctx LIMIT 1))::text,
@@ -85,6 +88,25 @@ SELECT set_config(
 SELECT import_batch_id
 FROM public.import_batches
 WHERE user_id = (SELECT user_id FROM _verify_ctx LIMIT 1);
+
+SELECT theme
+FROM public.user_preferences
+WHERE user_id = (SELECT user_id FROM _verify_ctx LIMIT 1);
+
+-- Verification 6: Invalid theme constraint check (must fail)
+DO $$
+DECLARE
+  v_user_id TEXT;
+BEGIN
+  SELECT other_user_id INTO v_user_id FROM _verify_ctx LIMIT 1;
+  BEGIN
+    INSERT INTO public.user_preferences (user_id, reporting_currency, disclosure_level, theme)
+    VALUES (v_user_id, 'THB', 'beginner', 'rainbow');
+    RAISE EXCEPTION 'FAIL: Invalid theme value rainbow was allowed!';
+  EXCEPTION WHEN check_violation THEN
+    RAISE NOTICE '✅ Pass: Check constraint blocked invalid theme value!';
+  END;
+END $$;
 
 -- Roll back all changes so we leave the database clean
 ROLLBACK;
@@ -96,7 +118,7 @@ SELECT
 FROM information_schema.tables
 JOIN pg_class ON pg_class.relname = information_schema.tables.table_name
 WHERE table_schema = 'public'
-  AND table_name IN ('holdings', 'journal', 'watchlists', 'import_batches');
+  AND table_name IN ('holdings', 'journal', 'watchlists', 'import_batches', 'user_preferences');
 
 SELECT
   tablename,
@@ -105,7 +127,7 @@ SELECT
   cmd
 FROM pg_policies
 WHERE schemaname = 'public'
-  AND tablename IN ('holdings', 'journal', 'watchlists', 'import_batches')
+  AND tablename IN ('holdings', 'journal', 'watchlists', 'import_batches', 'user_preferences')
 ORDER BY tablename ASC, policyname ASC;
 
 SELECT
