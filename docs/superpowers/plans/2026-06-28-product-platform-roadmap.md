@@ -55,7 +55,7 @@ Do not write detailed plans for all remaining slices at once. A later plan that 
 
 **Outcome:** `/` becomes the deterministic Today queue ordered Protect → Prepare → Opportunity → Learn, with a compact portfolio pulse and direct review actions.
 
-**Detailed plan:** Write after Slice 1.
+**Detailed plan:** Completed 2026-07-04. Verified with TDD route and component tests, 231 tests green.
 
 **Reuse:** Existing Dashboard, Risk, Journal, `DataStamp`, `StatusBadge`, `MetricCard`, loading/error/empty states, and responsive shell.
 

@@ -142,4 +142,65 @@
       auto;
     background-attachment: fixed;
   }
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--bg-panel) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23a1a1aa' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") no-repeat right 10px center / 1.2rem;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    padding: 8px 32px 8px 12px !important;
+    border-radius: var(--radius-xs, 6px);
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+  }
+}
+
+[data-theme="light"] {
+  --background: #fafafa;
+  --foreground: #09090b;
+  --surface: #ffffff;
+  --surface-hover: #f4f4f5;
+  --border: #e4e4e7;
+  --border-hover: #d4d4d8;
+
+  --bg-void: #f4f4f5;
+  --bg-shell: #fafafa;
+  --bg-panel: #ffffff;
+  --bg-panel-hover: #f4f4f5;
+  --bg-panel-solid: #ffffff;
+  --border-subtle: #e4e4e7;
+  --border-medium: #d4d4d8;
+  --border-strong: #a1a1aa;
+  --border-color: var(--border-subtle);
+
+  --text-primary: #09090b;
+  --text-secondary: #71717a;
+  --text-muted: #a1a1aa;
+  --text-inverse: #ffffff;
+
+  --brand-primary: #059669;
+  --brand-dark: #047857;
+
+  --fin-profit-oklch: oklch(62% 0.16 145);
+  --fin-profit: var(--fin-profit-oklch);
+  --fin-success: var(--fin-profit);
+  --fin-profit-dim: oklch(62% 0.16 145 / 0.1);
+
+  --fin-loss-oklch: oklch(58% 0.18 20);
+  --fin-loss: var(--fin-loss-oklch);
+  --fin-danger: var(--fin-loss);
+  --fin-loss-dim: oklch(58% 0.18 20 / 0.1);
+
+  --fin-warning-oklch: oklch(68% 0.16 85);
+  --fin-warning: var(--fin-warning-oklch);
+  --fin-warning-dim: oklch(68% 0.16 85 / 0.1);
+}
+
+[data-theme="light"] body {
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    radial-gradient(ellipse at 20% 0%, rgba(var(--brand-rgb), 0.04) 0%, transparent 42%);
 }

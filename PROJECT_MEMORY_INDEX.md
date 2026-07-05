@@ -444,3 +444,22 @@
 - Decision: Deliver the approved multi-user Personal Investment OS through just-in-time vertical plans. Gate 0 backend hardening precedes per-user preferences, Today/Portfolio Risk, PWA/Inbox, Analyze/Plan, Discover, and Journal Learning.
 - Action: Added the master roadmap and detailed Gate 0 plan; later slice plans are written only after the preceding repository state is verified.
 - Source: `docs/superpowers/specs/2026-06-28-myportstock-product-platform-design.md`, `docs/superpowers/plans/2026-06-28-product-platform-roadmap.md`, `docs/superpowers/plans/2026-06-28-backend-production-hardening.md`
+
+### 2026-07-03 - Per-User Onboarding, Visual Themes & RLS Constraints
+
+- Keywords: `user-preferences`, `light-mode`, `onboarding-flow`, `rls-preferences`, `tradingview-theme`, `smooth-transitions`
+- Decision: Implemented database RLS-scoped user preferences with light-mode default, REST APIs, frontend Context, dynamic theme class toggling, and Onboarding page. Dynamic theme settings sync to the TradingView chart widget. Implemented smooth, global CSS color transitions using custom ease-out cubic-bezier curves for a luxurious theme-toggle experience.
+- Action: Created schema migration, preference repositories/validators/controllers, frontend provider, custom hook, onboarding view, theme toggle button, animations stylesheet transitions, and visual/contract/E2E test verification.
+- Source: `supabase/migrations/20260703160000_user_preferences.sql`, `backend/tests/preferencesRoutes.test.js`, `frontend/src/preferences/PreferencesContext.jsx`, `frontend/src/styles/animations.css`, `frontend/tests/onboardingPreferences.test.jsx`
+
+### 2026-07-04 - Slice 2: Today Decision Hub and Portfolio Risk
+- Keywords: `today-page`, `portfolio-pulse`, `deterministic-priority`, `card-dismissal`, `motion-entrance`, `purity-guardrails`
+- Decision: Replaced default authenticated route `/` with a rule-based Today action queue sorted Protect -> Prepare -> Opportunity -> Learn, accompanied by a dynamic Portfolio Pulse sidebar. Implemented card dismissal with local expiry rules, mobile responsive card prev/next navigation, and compliance with strict linter purity checks.
+- Action: Created backend `/api/today` route and tests, frontend `useToday` hook, `TodayPage` component, Vitest test suite, shared utility refactoring, and CSS animations.
+- Source: `backend/src/routes/today.js`, `frontend/src/pages/TodayPage.jsx`, `frontend/tests/todayPage.test.jsx`, `backend/tests/todayRoutes.test.js`, `frontend/src/styles/pages.css`
+
+### 2026-07-04 - Spacing Polish & System Theme Support
+- Keywords: `spacing-polish`, `system-theme`, `layout-unification`, `clerk-avatar`, `empty-states`, `resolved-theme`, `select-chevron`, `config-layout`, `global-select-rules`, `inline-style-cleanups`
+- Decision: Unified layout spacing and margins to horizontal 28px across all pages. Cleaned up duplicate headers and resolved Clerk avatar centering. Extended visual theme settings to support System Mode colors matching the OS's prefers-color-scheme setting. Solved the select dropdown chevron indicator removal glitch and constrained the config page max-width to prevent input stretching on desktop. Created global select stylesheet rules with token-aware background variables to unify select dropdown designs and removed hardcoded inline styles in form drawer inputs.
+- Action: Updated database schema constraints, backend validators, route tests, pages/layout stylesheets, and onboarding/config layouts. Wrap user avatar button in center-aligned container wrappers, add custom SVG chevron asset to select dropdowns globally, and clean up inline CSS blocks in TradeTicket.jsx and TradeLogDrawer.jsx.
+- Source: `supabase/migrations/20260704170000_add_system_theme.sql`, `frontend/src/preferences/PreferencesContext.jsx`, `frontend/src/styles/pages.css`, `frontend/src/styles/layout.css`, `frontend/tests/portfolioRiskPage.test.jsx`, `frontend/src/pages/TodayPage.jsx`, `frontend/src/styles/tokens.css`, `frontend/src/components/command-center/TradeTicket.jsx`, `frontend/src/components/journal/TradeLogDrawer.jsx`
