@@ -4,7 +4,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "DEV_UI_AUTH_BYPASS=true PORT=8080 node server.js",
+    "dev": "DEV_UI_AUTH_BYPASS=false PORT=8080 node server.js",
     "import:markdown": "node scripts/import-markdown-snapshot.js",
     "import:markdown:write": "node scripts/import-markdown-snapshot.js --write",
     "test": "CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k CLERK_SECRET_KEY=sk_test_123 node --check server.js && CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k CLERK_SECRET_KEY=sk_test_123 node --test tests/*.test.js"
