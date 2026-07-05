@@ -164,7 +164,7 @@ export default function AnalyticsPage() {
                 <tbody>
                   {biasStats.map((stat) => (
                     <tr key={stat.bias} className="watchlist-row">
-                      <td style={{ fontWeight: 'bold', color: stat.bias === 'None / Not tagged' ? '#a1a1aa' : '#fb923c' }}>{stat.bias}</td>
+                      <td style={{ fontWeight: 'bold', color: stat.bias === 'None / Not tagged' ? 'var(--color-bias-none)' : 'var(--color-bias-tag)' }}>{stat.bias}</td>
                       <td>{stat.count} trades</td>
                       <td>{stat.count > 0 ? ((stat.winCount / stat.count) * 100).toFixed(0) : 0}%</td>
                       <td

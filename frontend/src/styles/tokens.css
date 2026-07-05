@@ -49,6 +49,9 @@
     --text-muted: #737373;
     --text-inverse: #0a0a0a;
 
+    --color-bias-tag: #fb923c;
+    --color-bias-none: #a3a3a3;
+
     --brand-rgb: 16, 185, 129;
     --brand-primary-oklch: oklch(72.7% 0.165 155.6);
     --brand-primary: #10b981;
@@ -179,6 +182,9 @@
   --text-secondary: #71717a;
   --text-muted: #a1a1aa;
   --text-inverse: #ffffff;
+
+  --color-bias-tag: #c2410c;
+  --color-bias-none: #71717a;
 
   --brand-primary: #059669;
   --brand-dark: #047857;

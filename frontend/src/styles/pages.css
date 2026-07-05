@@ -1585,11 +1585,23 @@
   min-width: 0;
   width: 100%;
   border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs, 6px);
   background-color: var(--bg-panel);
   color: var(--text-primary);
   padding: 10px 12px;
   font: inherit;
   font-size: 0.82rem;
+  transition: border-color 0.15s var(--ease-out-quart), box-shadow 0.15s var(--ease-out-quart);
+}
+
+.journal-filters select:focus,
+.journal-filters input:focus,
+.journal-trade-drawer input:focus,
+.journal-trade-drawer select:focus,
+.journal-trade-drawer textarea:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(var(--brand-rgb), 0.12);
+  outline: none;
 }
 
 .journal-filters .btn-secondary {
@@ -4026,6 +4038,7 @@
   font: inherit;
   font-size: 0.78rem;
   font-weight: 700;
+  transition: background-color 0.15s var(--ease-out-quart), color 0.15s var(--ease-out-quart);
 }
 
 .command-mode-toggle button:last-child,
@@ -4290,7 +4303,17 @@
   margin-bottom: var(--space-4);
 }
 
-.command-agent-score,
+.command-agent-score {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  background: var(--bg-panel-solid);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
 .command-agent-fit {
   color: var(--text-primary);
   font-family: var(--font-mono);
