@@ -91,3 +91,20 @@ test("canonical schema snapshots contain the backend integrity constraints", () 
     assert.match(candidate, /idx_journal_import_batch_id/i);
   }
 });
+
+test("canonical schema snapshots contain user_preferences table, RLS, and grants", () => {
+  const rootSchema = fs.readFileSync(
+    path.join(__dirname, "../../supabase/schema.sql"),
+    "utf8",
+  );
+
+  for (const candidate of [schema, rootSchema]) {
+    assert.match(candidate, /CREATE TABLE IF NOT EXISTS public\.user_preferences/i);
+    assert.match(candidate, /CONSTRAINT user_preferences_currency_check\s+CHECK\s*\(reporting_currency\s+IN\s*\('THB',\s*'USD'\)\)/i);
+    assert.match(candidate, /CONSTRAINT user_preferences_disclosure_check\s+CHECK\s*\(disclosure_level\s+IN\s*\('beginner',\s*'advanced'\)\)/i);
+    assert.match(candidate, /CONSTRAINT user_preferences_theme_check\s+CHECK\s*\(theme\s+IN\s*\('dark',\s*'light',\s*'system'\)\)/i);
+    assert.match(candidate, /ALTER TABLE public\.user_preferences ENABLE ROW LEVEL SECURITY/i);
+    assert.match(candidate, /GRANT SELECT, INSERT, UPDATE ON public\.user_preferences TO authenticated/i);
+  }
+});
+

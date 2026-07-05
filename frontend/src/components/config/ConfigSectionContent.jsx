@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { NumberField, SliderField, ToggleField } from './ConfigFields.jsx';
+import { usePreferences } from '../../hooks/usePreferences';
 
 function SectionFrame({ title, description, children, dirty, onSave }) {
   return (
@@ -28,6 +29,8 @@ SectionFrame.propTypes = {
 };
 
 function GeneralSection({ config, update, dirty, onSave }) {
+  const { preferences, savePreferences } = usePreferences();
+
   return (
     <SectionFrame title="General" description="Display preferences and common decision modes." dirty={dirty} onSave={onSave}>
       <div className="config-field">
@@ -48,6 +51,22 @@ function GeneralSection({ config, update, dirty, onSave }) {
         <select id="density" className="mode-select" value={config.density} onChange={(event) => update('density')(event.target.value)}>
           <option value="comfortable">Comfortable</option>
           <option value="compact">Compact</option>
+        </select>
+      </div>
+      <div className="config-field">
+        <label className="config-field-label" htmlFor="theme">
+          Visual theme
+        </label>
+        <p className="config-field-desc">Choose between Light (default), Dark (terminal UI), or System theme.</p>
+        <select
+          id="theme"
+          className="mode-select"
+          value={preferences.theme || 'light'}
+          onChange={(event) => savePreferences({ theme: event.target.value })}
+        >
+          <option value="light">Light Mode (Default)</option>
+          <option value="dark">Dark Mode</option>
+          <option value="system">System Mode</option>
         </select>
       </div>
       <div className="config-field">

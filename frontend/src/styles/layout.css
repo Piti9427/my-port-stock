@@ -246,3 +246,16 @@
 .side-nav.collapsed .side-nav-live {
   justify-content: center;
 }
+
+/* User Button Wrapper */
+.side-nav-user-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 4px 12px;
+  margin-top: 4px;
+}
+
+.side-nav.collapsed .side-nav-user-wrapper {
+  justify-content: center;
+  padding: 4px 0;
+}
