@@ -27,11 +27,11 @@ Do not write detailed plans for all remaining slices at once. A later plan that 
 | Capability                                                     | Source                                                                                                                  | State                                                      |
 | :------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------- |
 | Per-user Supabase runtime data and RLS                         | `docs/superpowers/plans/2026-06-17-per-user-markdown-runtime-data.md`                                                   | Implemented; preserve                                      |
-| Dark-terminal component system, responsive shell, route states | `docs/plans/ux_ui_refactor_plan.md`                                                                                     | Implemented; reuse components and tests                    |
+| Dark-terminal component system, responsive shell, route states | `docs/plans/2026-06-20-ux-ui-refactor-plan.md`                                                                                     | Implemented; reuse components and tests                    |
 | Verified price packet and hard decision gates                  | `backend/src/gates/priceGate.js`, `backend/src/packets/verifiedDataPacket.js`, `backend/src/decision/decisionEngine.js` | Implemented; do not bypass                                 |
 | Command Center / deep analysis                                 | `docs/superpowers/specs/2026-06-16-deep-analysis-sop-design.md`                                                         | Implemented baseline; Slice 4 reshapes workflow            |
 | Backend hardening                                              | `docs/superpowers/plans/2026-06-28-backend-production-hardening.md`                                                     | Implemented locally; external deployment checks deferred   |
-| PWA and verified alerts                                        | `docs/plans/webapp-pwa-implementation-plan.md`                                                                          | Detailed Slice 3 plan revised to the approved product spec |
+| PWA and verified alerts                                        | `docs/plans/2026-06-28-webapp-pwa-implementation-plan.md`                                                                          | Detailed Slice 3 plan revised to the approved product spec |
 
 ## Delivery sequence
 
@@ -63,7 +63,7 @@ Do not write detailed plans for all remaining slices at once. A later plan that 
 
 **Outcome:** Installable static-only PWA, explicit multiple alert rules per ticker, verified edge-triggered evaluation, Inbox, redacted Web Push, and one degraded-data push after two consecutive quote-verification failures.
 
-**Detailed plan:** `docs/plans/webapp-pwa-implementation-plan.md`
+**Detailed plan:** `docs/plans/2026-06-28-webapp-pwa-implementation-plan.md`
 
 **Dependencies:** Gate 0, Slice 1 identity/preferences, and Slice 2 Inbox/Today integration points.
 

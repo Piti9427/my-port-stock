@@ -1,7 +1,7 @@
 ---
 status: Stable
 audience: Human Developer & AI Agent
-associated_plan: file:///Users/nopparuj/my-agents/MyPortStock/docs/plans/webapp-pwa-implementation-plan.md
+associated_plan: file:///Users/nopparuj/my-agents/MyPortStock/docs/plans/2026-06-28-webapp-pwa-implementation-plan.md
 primary_tests: "npm test && npm run build"
 ---
 
