@@ -468,6 +468,10 @@
 ### 2026-07-07 - Celestica & Vertiv 7-Dimension SOP Deep Dive
 - Keywords: `cls-vrt-deep-dive`, `datacenter-hardware`, `liquid-cooling`, `customer-concentration`
 - Decision: Performed a full 7-Dimension SOP & SWOT audit on Celestica (CLS) and Vertiv (VRT) following user scoping. Both are set to WAIT due to short-term technical pullbacks.
-- Action: Documented deep dive notes in the workspace notes folder.
-- Source: `notes/2026-07-07-cls-vrt-deep-dive.md`
+### 2026-07-26 - Project Structure Reorganization & Backend Modularization
+- Keywords: `project-reorganization`, `layered-architecture`, `backend-facade`, `docs-categorization`, `test-isolation`
+- Decision: Reorganized workspace directory hierarchy strictly matching docs/FILE_ORGANIZATION.md. Extracted backend/server.js into modular routes and services while maintaining facade backward compatibility. Isolated Vitest from Playwright E2E suites.
+- Action: Moved root clutter into docs/plans/, artifacts/screenshots/, and docs/archive/. Created backend/src/services/ (marketOracleService, deepAnalysisService, analysisContextService) and backend/src/routes/aiRoutes.js. Updated frontend/vitest.config.js and root package.json.
+- Source: `docs/plans/project_structure_reorganization_plan.md`, `backend/server.js`, `backend/src/routes/aiRoutes.js`, `backend/src/services/`, `frontend/vitest.config.js`
+
 

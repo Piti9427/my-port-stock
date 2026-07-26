@@ -38,10 +38,12 @@ This map is designed for AI agents to discover, evaluate, and navigate the markd
         *   `0004-unbiased-institutional-quality-gates.md`
 
 ### 4. Code & Visual Style Guides
-*   **`docs/DESIGN.md`** (Size: Medium)
+*   **`docs/architecture/DESIGN.md`** (Size: Medium)
     *   *Intent:* Defines the dark terminal UI styling guidelines, colors, font rules, spacing, and CSS constraints.
 *   **`docs/FILE_ORGANIZATION.md`** (Size: Medium)
     *   *Intent:* Standardizes directory structure, generated artifacts, scratch files, and template notes naming.
+*   **`docs/plans/`**, **`docs/specs/`**, **`docs/architecture/`**, **`docs/guidelines/`**
+    *   *Intent:* Subdivided categories for project plans, feature specs, system architecture, and developer guidelines.
 
 ---
 
@@ -53,7 +55,7 @@ Use this matrix to load only the files required for your active task:
 | :--- | :--- | :--- |
 | **Debug database or RLS rules** | `docs/adr/0002-clerk-user-isolation-rls.md` | `GEMINI.md` (database rules section) |
 | **Modify buy/sell decision math** | `AGENTS.md`, `ELITE_INVESTOR_SOP.md` | `docs/adr/0004-unbiased-institutional-quality-gates.md` |
-| **Edit CSS or build UI pages** | `docs/DESIGN.md` | `docs/FILE_ORGANIZATION.md` |
+| **Edit CSS or build UI pages** | `docs/architecture/DESIGN.md` | `docs/FILE_ORGANIZATION.md` |
 | **Understand previous session tasks** | `PROJECT_MEMORY_INDEX.md` | Check `notes/` directory for active roadmap notes |
 | **Write scripts or add tool files** | `docs/FILE_ORGANIZATION.md` | `tools/` directory list |
 
