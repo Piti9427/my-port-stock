@@ -9,6 +9,7 @@
   "scripts": {
     "start": "npm run start --workspace=backend",
     "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
+    "dev:ui": "concurrently \"npm run dev:ui --workspace=backend\" \"npm run dev:ui --workspace=frontend\"",
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
@@ -21,6 +22,8 @@
     "prepare": "npm run prepare --workspaces --if-present"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
+    "@types/node": "^26.1.1",
     "concurrently": "^10.0.3"
   }
 }

@@ -27,6 +27,7 @@
 | `skills-workflow`   | Project developer workflow using integrated Agent Skills                         | `docs/PROJECT_SKILLS_WORKFLOW.md`                                   |
 | `clerk-isolation`   | Clerk user data isolation and Supabase database RLS architecture                 | `docs/adr/0002-clerk-user-isolation-rls.md`                         |
 | `autonomous-search` | Sub-agent contextual search and hybrid oracle contract architecture              | `docs/adr/0003-subagent-autonomous-search.md`                       |
+| `cls-vrt-deep-dive` | Celestica and Vertiv 7-Dimension SOP deep dive                                    | `notes/2026-07-07-cls-vrt-deep-dive.md`                             |
 
 ## Durable Entries
 
@@ -463,3 +464,10 @@
 - Decision: Unified layout spacing and margins to horizontal 28px across all pages. Cleaned up duplicate headers and resolved Clerk avatar centering. Extended visual theme settings to support System Mode colors matching the OS's prefers-color-scheme setting. Solved the select dropdown chevron indicator removal glitch and constrained the config page max-width to prevent input stretching on desktop. Created global select stylesheet rules with token-aware background variables to unify select dropdown designs and removed hardcoded inline styles in form drawer inputs.
 - Action: Updated database schema constraints, backend validators, route tests, pages/layout stylesheets, and onboarding/config layouts. Wrap user avatar button in center-aligned container wrappers, add custom SVG chevron asset to select dropdowns globally, and clean up inline CSS blocks in TradeTicket.jsx and TradeLogDrawer.jsx.
 - Source: `supabase/migrations/20260704170000_add_system_theme.sql`, `frontend/src/preferences/PreferencesContext.jsx`, `frontend/src/styles/pages.css`, `frontend/src/styles/layout.css`, `frontend/tests/portfolioRiskPage.test.jsx`, `frontend/src/pages/TodayPage.jsx`, `frontend/src/styles/tokens.css`, `frontend/src/components/command-center/TradeTicket.jsx`, `frontend/src/components/journal/TradeLogDrawer.jsx`
+
+### 2026-07-07 - Celestica & Vertiv 7-Dimension SOP Deep Dive
+- Keywords: `cls-vrt-deep-dive`, `datacenter-hardware`, `liquid-cooling`, `customer-concentration`
+- Decision: Performed a full 7-Dimension SOP & SWOT audit on Celestica (CLS) and Vertiv (VRT) following user scoping. Both are set to WAIT due to short-term technical pullbacks.
+- Action: Documented deep dive notes in the workspace notes folder.
+- Source: `notes/2026-07-07-cls-vrt-deep-dive.md`
+

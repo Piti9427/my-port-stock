@@ -1,0 +1,905 @@
+[
+  {
+    "id": "TC001",
+    "title": "Look up a ticker and view its quote panel",
+    "description": "Verifies that a user can search for a ticker in the command center and see the quote panel for that symbol.",
+    "category": "Command Center Analysis",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /command-center"
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid ticker symbol in the search field"
+      },
+      {
+        "type": "action",
+        "description": "Search for the ticker"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the ticker quote panel is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "View portfolio summary and holdings on the dashboard",
+    "description": "Verifies that a user can open the dashboard and inspect portfolio summary metrics and holdings.",
+    "category": "Portfolio Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify portfolio summary metrics are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify holdings are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Log a trade from command center",
+    "description": "Verifies that a user can search for a ticker, open the trade ticket, and submit a journal entry from the analysis workspace.",
+    "category": "Command Center Analysis",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /command-center"
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid ticker symbol in the search field"
+      },
+      {
+        "type": "action",
+        "description": "Search for the ticker"
+      },
+      {
+        "type": "action",
+        "description": "Open the trade ticket drawer"
+      },
+      {
+        "type": "action",
+        "description": "Submit a journal entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the trade is recorded in the workflow"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Run deep analysis for a searched ticker",
+    "description": "Verifies that a user can search for a ticker and launch deep analysis to view the analysis results for that symbol.",
+    "category": "Command Center Analysis",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /command-center"
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid ticker symbol in the search field"
+      },
+      {
+        "type": "action",
+        "description": "Search for the ticker"
+      },
+      {
+        "type": "action",
+        "description": "Run deep analysis for the selected ticker"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the analysis results are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Review today overview and open a linked workflow",
+    "description": "Verifies that a user can review the today queue and continue into a related workflow from an actionable card.",
+    "category": "Today Overview",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify today action cards are displayed"
+      },
+      {
+        "type": "action",
+        "description": "Click a card link to continue to a related workflow"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the related workflow page is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Review ticker quote and decision packet",
+    "description": "This test verifies that a user can open a ticker detail page and review the quote data and decision packet for that symbol.",
+    "category": "Ticker Detail",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /market"
+      },
+      {
+        "type": "action",
+        "description": "Open an item in the explorer"
+      },
+      {
+        "type": "action",
+        "description": "Open the related ticker detail view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify quote information is shown for the selected ticker"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a decision packet is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Chat about a ticker in command center",
+    "description": "Verifies that a user can search for a ticker, switch to chat mode, and see a response in the chat thread.",
+    "category": "Command Center Analysis",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /command-center"
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid ticker symbol in the search field"
+      },
+      {
+        "type": "action",
+        "description": "Search for the ticker"
+      },
+      {
+        "type": "action",
+        "description": "Switch to chat workspace mode"
+      },
+      {
+        "type": "action",
+        "description": "Send a message about the ticker"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a chat response is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Log a new trade from the journal",
+    "description": "Verifies that a user can open the trade drawer, submit a new trade, and see it added to journal history.",
+    "category": "Trade Journal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /journal"
+      },
+      {
+        "type": "action",
+        "description": "Open the log trade drawer"
+      },
+      {
+        "type": "action",
+        "description": "Fill in valid trade details"
+      },
+      {
+        "type": "action",
+        "description": "Submit the trade"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new trade appears in the journal history"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Browse journal history and filter trades",
+    "description": "Verifies that a user can open the trade journal and filter or sort the history to find previous trades.",
+    "category": "Trade Journal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /journal"
+      },
+      {
+        "type": "action",
+        "description": "Apply a trade filter"
+      },
+      {
+        "type": "action",
+        "description": "Change the trade sort order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify journal entries are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the filtered journal view is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Add a ticker to the watchlist from the dashboard",
+    "description": "Verifies that a user can add a new ticker to the watchlist and see it appear in the dashboard list.",
+    "category": "Portfolio Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Add a new ticker to the watchlist"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the watchlist is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new watchlist ticker is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Filter and inspect journal entries",
+    "description": "Verifies that a trader can narrow the journal by common filters and see the trade list update accordingly.",
+    "category": "Trade Journal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /journal"
+      },
+      {
+        "type": "action",
+        "description": "Filter the journal by a ticker"
+      },
+      {
+        "type": "action",
+        "description": "Filter the journal by a trade mode"
+      },
+      {
+        "type": "action",
+        "description": "Filter the journal by a trade status"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the trade list is narrowed to matching entries"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Inspect ticker journal history and analysis context",
+    "description": "This test verifies that a user can open a ticker detail page and inspect its journal history and analysis context.",
+    "category": "Ticker Detail",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /market"
+      },
+      {
+        "type": "action",
+        "description": "Open an item in the explorer"
+      },
+      {
+        "type": "action",
+        "description": "Open the related ticker detail view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify journal history is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify analysis context is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Open ticker detail from a linked workflow",
+    "description": "Verifies that a user can navigate into a ticker detail view from an existing workflow and inspect the ticker context.",
+    "category": "Ticker Detail",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open a ticker detail view from a linked ticker"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the ticker detail view is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify ticker context content is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "View analytics metrics and equity curve",
+    "description": "Verifies that an investor can open analytics and review the core performance summary and equity curve.",
+    "category": "Analytics",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /analytics"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify analytics metric cards are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an equity curve chart is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Remove a ticker from the watchlist on the dashboard",
+    "description": "Verifies that a user can remove an existing ticker from the watchlist and see it disappear from the list.",
+    "category": "Portfolio Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Remove a ticker from the watchlist"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the watchlist is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the removed ticker is no longer displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "Continue from ticker detail into related workflow",
+    "description": "This test verifies that a user can move from ticker detail into a related analysis or journal workflow and keep the ticker context.",
+    "category": "Ticker Detail",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /market"
+      },
+      {
+        "type": "action",
+        "description": "Open an item in the explorer"
+      },
+      {
+        "type": "action",
+        "description": "Open the related ticker detail view"
+      },
+      {
+        "type": "action",
+        "description": "Continue into a related analysis or journal workflow"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the related workflow is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected ticker context remains visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "Expand a journal row to inspect trade details",
+    "description": "Verifies that a user can expand a trade row in the journal and inspect the associated details.",
+    "category": "Trade Journal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /journal"
+      },
+      {
+        "type": "action",
+        "description": "Expand a journal row"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the row details are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC018",
+    "title": "Use ticker detail from a linked workflow",
+    "description": "This test verifies that a user can reach ticker detail from an app workflow and review the full ticker context there.",
+    "category": "Ticker Detail",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /market"
+      },
+      {
+        "type": "action",
+        "description": "Open an item in the explorer"
+      },
+      {
+        "type": "action",
+        "description": "Open the related ticker detail view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the ticker detail page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify quote information, decision packet, and journal context are available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC019",
+    "title": "Refresh today queue and see updated actions",
+    "description": "Verifies that refreshing the today overview updates the action list and statuses in the page.",
+    "category": "Today Overview",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Refresh the today queue"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the today action cards are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the status indicators are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC020",
+    "title": "Sort journal trades and review the updated order",
+    "description": "Verifies that a user can sort the trade journal columns and observe the row order change.",
+    "category": "Trade Journal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /journal"
+      },
+      {
+        "type": "action",
+        "description": "Sort the journal by a trade column"
+      },
+      {
+        "type": "action",
+        "description": "Sort the journal by another trade column"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the trade rows are displayed in the updated order"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC021",
+    "title": "Browse market themes and compare quotes",
+    "description": "This test verifies that a user can explore market themes on the market explorer and review display-only quote data to compare ideas.",
+    "category": "Market Explorer",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /market"
+      },
+      {
+        "type": "action",
+        "description": "Browse a market sector or theme section"
+      },
+      {
+        "type": "action",
+        "description": "Open an item in the explorer"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify display-only quote data is shown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify market theme or sector information is shown"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC022",
+    "title": "Review analytics after journaling trades",
+    "description": "Verifies that a user can open analytics and see performance metrics and the equity curve derived from journal history.",
+    "category": "Analytics",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /analytics"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify performance metrics are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the equity curve is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC023",
+    "title": "Expand a journal row to review trade details",
+    "description": "Verifies that expanding a trade row reveals the full trade detail information for review.",
+    "category": "Trade Journal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /journal"
+      },
+      {
+        "type": "action",
+        "description": "Expand a trade row"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the trade detail information is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC024",
+    "title": "Open related ticker detail from market exploration",
+    "description": "This test verifies that a user can move from market exploration into a related ticker detail view and see the ticker context load.",
+    "category": "Market Explorer",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /market"
+      },
+      {
+        "type": "action",
+        "description": "Open an item in the explorer"
+      },
+      {
+        "type": "action",
+        "description": "Open the related ticker detail view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the ticker detail page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify quote information is shown for the selected ticker"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC025",
+    "title": "Open a related workflow from a dashboard quick action",
+    "description": "Verifies that a user can jump from the dashboard into a related analysis or journaling workflow using a quick action.",
+    "category": "Portfolio Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Use a quick action to open a related workflow"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the related workflow page is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC026",
+    "title": "Filter analytics by date and mode",
+    "description": "Verifies that a user can adjust analytics filters and see the performance view refresh accordingly.",
+    "category": "Analytics",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /analytics"
+      },
+      {
+        "type": "action",
+        "description": "Apply a date filter"
+      },
+      {
+        "type": "action",
+        "description": "Apply a trade mode filter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the analytics metrics and chart are updated"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC027",
+    "title": "Inspect market explorer sectors and themes",
+    "description": "Verifies that a user can open the market explorer and browse sector or theme content with displayed quote data.",
+    "category": "Market Explorer",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /market"
+      },
+      {
+        "type": "action",
+        "description": "Browse a sector or theme view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify market quote data is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify sector or theme content is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC028",
+    "title": "Review portfolio risk and scenario planning",
+    "description": "Verifies that a user can open the risk page and inspect concentration metrics and scenario planning context.",
+    "category": "Portfolio Risk",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /risk"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify portfolio concentration metrics are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify scenario planning content is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC029",
+    "title": "Open ticker detail from a journal entry",
+    "description": "Verifies that a user can move from a journal row into the linked ticker detail view.",
+    "category": "Trade Journal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /journal"
+      },
+      {
+        "type": "action",
+        "description": "Open a ticker link from a journal row"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the ticker detail page is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC030",
+    "title": "Open command center from a journal entry",
+    "description": "Verifies that a user can move from a journal row into the linked command center analysis workspace.",
+    "category": "Trade Journal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /journal"
+      },
+      {
+        "type": "action",
+        "description": "Open a command center link from a journal row"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the command center page is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC031",
+    "title": "Browse config sections and save preference changes",
+    "description": "Verifies that a user can navigate configuration sections, edit preferences, and save changes successfully.",
+    "category": "System Config",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /config"
+      },
+      {
+        "type": "action",
+        "description": "Open a settings section"
+      },
+      {
+        "type": "action",
+        "description": "Edit a preference field"
+      },
+      {
+        "type": "action",
+        "description": "Save the configuration changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated settings are visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC032",
+    "title": "Persist configuration changes after revisiting the page",
+    "description": "Verifies that saved preference changes remain in place when the configuration page is revisited.",
+    "category": "System Config",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /config"
+      },
+      {
+        "type": "action",
+        "description": "Change a runtime preference value"
+      },
+      {
+        "type": "action",
+        "description": "Save the configuration changes"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /config"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated preference remains visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC033",
+    "title": "Handle an empty ticker search in command center",
+    "description": "Verifies that the command center shows validation feedback when a user searches without entering a ticker.",
+    "category": "Command Center Analysis",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /command-center"
+      },
+      {
+        "type": "action",
+        "description": "Submit the ticker search without entering a symbol"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a search validation error is displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC034",
+    "title": "Reject an invalid watchlist ticker on the dashboard",
+    "description": "Verifies that the dashboard prevents adding an invalid ticker and shows validation feedback.",
+    "category": "Portfolio Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Add an invalid ticker to the watchlist"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a watchlist validation error is displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC035",
+    "title": "Handle an invalid journal trade entry",
+    "description": "Verifies that the journal prevents submitting an invalid trade and shows validation feedback.",
+    "category": "Trade Journal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /journal"
+      },
+      {
+        "type": "action",
+        "description": "Open the log trade drawer"
+      },
+      {
+        "type": "action",
+        "description": "Enter an invalid trade entry"
+      },
+      {
+        "type": "action",
+        "description": "Submit the trade entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a trade validation error is displayed"
+      }
+    ],
+    "priority": "Low"
+  }
+]
