@@ -27,6 +27,7 @@
 | `skills-workflow`   | Project developer workflow using integrated Agent Skills                         | `docs/PROJECT_SKILLS_WORKFLOW.md`                                   |
 | `clerk-isolation`   | Clerk user data isolation and Supabase database RLS architecture                 | `docs/adr/0002-clerk-user-isolation-rls.md`                         |
 | `autonomous-search` | Sub-agent contextual search and hybrid oracle contract architecture              | `docs/adr/0003-subagent-autonomous-search.md`                       |
+| `cls-vrt-deep-dive` | Celestica and Vertiv 7-Dimension SOP deep dive                                    | `notes/2026-07-07-cls-vrt-deep-dive.md`                             |
 
 ## Durable Entries
 
@@ -63,8 +64,8 @@
 
 - Keywords: `ux-ui-refactor`, `voiceover`, `live-clerk`, `acceptance-scope`, `manual-gates`
 - Decision: VoiceOver manual testing and live Clerk signed-in new/returning flows are intentionally skipped for this acceptance pass by user direction; automated AX-tree, dev-auth E2E, and live signed-out Clerk boundary smoke remain the evidence.
-- Action: Updated `docs/plans/ux_ui_refactor_plan.md` Phase 12.2/12.3 so these items no longer block completion.
-- Source: `docs/plans/ux_ui_refactor_plan.md`, `output/ux-ui-browser-verification.mjs`, `output/live-clerk-signed-out-smoke.mjs`
+- Action: Updated `docs/plans/2026-06-20-ux-ui-refactor-plan.md` Phase 12.2/12.3 so these items no longer block completion.
+- Source: `docs/plans/2026-06-20-ux-ui-refactor-plan.md`, `output/ux-ui-browser-verification.mjs`, `output/live-clerk-signed-out-smoke.mjs`
 
 ### 2026-06-17 - Markdown Runtime Redaction
 
@@ -273,9 +274,9 @@
 ### 2026-06-20 - UX/UI Runtime Contract Scope
 
 - Keywords: `ux-ui-refactor`, `runtime-contract`, `per-user-analysis`, `ticker-drilldown`, `production-hardening`
-- Decision: Expand `docs/plans/ux_ui_refactor_plan.md` from frontend-only UX/UI work into UX/UI plus runtime data contract hardening, limited to auth, per-user analysis context, and API response shape. No schema redesign or theme redesign.
+- Decision: Expand `docs/plans/2026-06-20-ux-ui-refactor-plan.md` from frontend-only UX/UI work into UX/UI plus runtime data contract hardening, limited to auth, per-user analysis context, and API response shape. No schema redesign or theme redesign.
 - Action: Added Phase 0 contract hardening, moved ticker drilldown to early execution priority, corrected tool/version assumptions, verified live Supabase schema/advisors, and updated verification/rollback gates.
-- Source: `docs/plans/ux_ui_refactor_plan.md`
+- Source: `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-20 - Phase 0 Runtime Contract + Ticker Drilldown Slice Implemented
 
@@ -289,7 +290,7 @@
 - Keywords: `dev-ui-auth-bypass`, `dev-ui-user`, `clerk`, `supabase-runtime`, `production-fail-closed`
 - Decision: Local visual testing may use `Authorization: Bearer dev-ui-auth-bypass` only when `DEV_UI_AUTH_BYPASS=true` and `NODE_ENV` is not production; production must reject the bypass token and require Clerk-backed identity.
 - Action: Added a shared backend request auth resolver, wired both `server.js` and runtime API routes to it, enabled the flag only in backend `npm run dev`, and added backend tests for enabled/disabled/production cases.
-- Source: `backend/src/auth/requestAuth.js`, `backend/tests/devAuthBypass.test.js`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `backend/src/auth/requestAuth.js`, `backend/tests/devAuthBypass.test.js`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-20 - CSS Architecture Foundation Split
 
@@ -310,112 +311,112 @@
 - Keywords: `command-center`, `authenticated-analysis`, `api-chat`, `supabase-context`, `quote-panel`, `runtime-contract`
 - Decision: Command Center should be a component-composed analysis workspace; any analysis/chat answer that uses portfolio or journal context must go through authenticated Supabase-scoped verified packets and fail closed when AI/current data is unavailable.
 - Action: Extracted Command Center panels and orchestration hook, added `/api/chat` on the verified packet path, kept schema unchanged, normalized quote delay metadata rendering, and verified desktop/mobile/browser/API behavior.
-- Source: `frontend/src/pages/CommandCenterPage.jsx`, `frontend/src/components/command-center/`, `frontend/src/hooks/useCommandCenter.js`, `backend/server.js`, `backend/src/services/aiAnalyst.js`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `frontend/src/pages/CommandCenterPage.jsx`, `frontend/src/components/command-center/`, `frontend/src/hooks/useCommandCenter.js`, `backend/server.js`, `backend/src/services/aiAnalyst.js`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-21 - Journal Decision Loop Slice
 
 - Keywords: `journal-page`, `decision-loop`, `url-filters`, `trade-drawer`, `post-mortem`, `supabase-journal`, `dev-auth-loop`
 - Decision: Trade Journal Phase 5.1 stays schema-stable on the existing Supabase `journal` table; closed-trade thesis/post-mortem UX uses `notes` and `source_note` rather than adding new columns.
 - Action: Extracted Journal filters/table/drawer components, added URL-persisted filters, sortable rows, expandable trade detail, risk-aware Log Trade drawer, stable dev auth bypass state, and a regression test for unstable `getToken` function identity.
-- Source: `frontend/src/pages/JournalPage.jsx`, `frontend/src/components/journal/`, `frontend/tests/journalPage.test.jsx`, `frontend/src/auth/clerkAdapter.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `frontend/src/pages/JournalPage.jsx`, `frontend/src/components/journal/`, `frontend/tests/journalPage.test.jsx`, `frontend/src/auth/clerkAdapter.jsx`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-21 - Analytics Closed-Trade Decision Loop
 
 - Keywords: `analytics-page`, `closed-trades`, `equity-curve`, `metric-card`, `url-filters`, `supabase-journal`, `ponytail`
 - Decision: Analytics Phase 5.2 should derive performance metrics from existing closed Supabase `journal` rows only; no chart dependency, API change, or schema migration is needed for the current plan.
 - Action: Rebuilt Analytics around `useJournal`, native URL-persisted filters, shared `MetricCard` KPI cards, a minimal SVG cumulative P/L curve, and no-data vs no-match empty states with regression tests.
-- Source: `frontend/src/pages/AnalyticsPage.jsx`, `frontend/src/components/analytics/`, `frontend/tests/analyticsPage.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `frontend/src/pages/AnalyticsPage.jsx`, `frontend/src/components/analytics/`, `frontend/tests/analyticsPage.test.jsx`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-21 - Portfolio Risk Holdings-Only Hardening
 
 - Keywords: `portfolio-risk`, `risk-budget`, `missing-stop-loss`, `supabase-holdings`, `ponytail`
 - Decision: Portfolio Risk Phase 6.1 stays on the existing Supabase `holdings` API shape; stop-loss data is optional/future-compatible and missing stops must render as unknown risk rather than inferred risk.
 - Action: Refactored Risk page to use `usePortfolio`, accessible sector buttons, position-level risk rows, known-risk budget gauge, missing stop-loss highlighting, and a regression test blocking unstable auth fetch loops.
-- Source: `frontend/src/pages/PortfolioRiskPage.jsx`, `frontend/src/components/risk/riskCalculations.js`, `frontend/tests/portfolioRiskPage.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `frontend/src/pages/PortfolioRiskPage.jsx`, `frontend/src/components/risk/riskCalculations.js`, `frontend/tests/portfolioRiskPage.test.jsx`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-21 - Market Explorer Display-Only Hardening
 
 - Keywords: `market-explorer`, `display-quote-only`, `quick-analyze`, `sector-overview`, `theme-watchlists`, `ponytail`
 - Decision: Market Explorer Phase 6.2 remains a discovery/display surface; it must not present static coverage as verified sector performance or execution-ready price data.
 - Action: Added display-only quote warnings, static market/sector/theme overview, Space Data Center tickers in the local universe, row/theme Quick analyze handoff to Command Center, and preserved `/ticker/:symbol` drilldown through an Open detail action.
-- Source: `frontend/src/pages/MarketExplorerPage.jsx`, `frontend/tests/marketExplorerPage.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `frontend/src/pages/MarketExplorerPage.jsx`, `frontend/tests/marketExplorerPage.test.jsx`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-21 - Config Local-Only Settings Restructure
 
 - Keywords: `config-page`, `settings-sidebar`, `api-key-masking`, `per-section-save`, `localstorage`, `ponytail`
 - Decision: Config Phase 7.1 is a frontend-local settings organization slice only; it must not change backend env/secret behavior or pretend local preferences configure Supabase runtime data.
 - Action: Split Config into extracted config model/sidebar/section components, added General/API Keys/Risk Parameters/Notifications/Data Management sections, per-section dirty save, masked API key handling that excludes secrets from localStorage, and a page-size regression test.
-- Source: `frontend/src/pages/ConfigPage.jsx`, `frontend/src/components/config/`, `frontend/tests/configPage.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `frontend/src/pages/ConfigPage.jsx`, `frontend/src/components/config/`, `frontend/tests/configPage.test.jsx`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-21 - First-Run Empty States Without Sample Data
 
 - Keywords: `first-run-empty-state`, `dashboard`, `journal`, `analytics`, `risk`, `supabase-empty`, `ponytail`
 - Decision: First-run UX must guide empty Supabase accounts without sample rows, markdown runtime fallback, or schema changes.
 - Action: Added first-run copy/actions for Dashboard, Journal, Analytics, and Risk; Dashboard routes to Journal, Journal opens Log Trade, Analytics requires a closed trade, and Risk explains the holdings requirement.
-- Source: `frontend/src/components/dashboard/HoldingsTable.jsx`, `frontend/src/pages/DashboardPage.jsx`, `frontend/src/pages/JournalPage.jsx`, `frontend/src/pages/AnalyticsPage.jsx`, `frontend/src/pages/PortfolioRiskPage.jsx`, `frontend/tests/firstRunEmptyStates.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `frontend/src/components/dashboard/HoldingsTable.jsx`, `frontend/src/pages/DashboardPage.jsx`, `frontend/src/pages/JournalPage.jsx`, `frontend/src/pages/AnalyticsPage.jsx`, `frontend/src/pages/PortfolioRiskPage.jsx`, `frontend/tests/firstRunEmptyStates.test.jsx`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-21 - UX/UI Hardening Automated Pass
 
 - Keywords: `ux-ui-refactor`, `anti-slop`, `mobile-bottom-nav`, `stale-data`, `focus-visible`, `motion`, `phase-12`, `ponytail`
 - Decision: Finish the production hardening slice with automated/static contracts only; do not add browser dependencies or unused live-update animation hooks.
 - Action: Added CSS anti-slop contracts, stale-data indicator timing/display, mobile bottom-nav CSS, global focus-visible fallback, reduced-motion-safe drawer/toast/skeleton/route motion, and recorded that browser/VoiceOver/E2E smoke remains manual pending.
-- Source: `frontend/tests/cssArchitectureContract.test.js`, `frontend/tests/appShellNavigation.test.jsx`, `frontend/tests/productionDataContract.test.js`, `frontend/src/styles/`, `frontend/src/hooks/useApi.js`, `frontend/src/components/ui/DataStamp.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `frontend/tests/cssArchitectureContract.test.js`, `frontend/tests/appShellNavigation.test.jsx`, `frontend/tests/productionDataContract.test.js`, `frontend/src/styles/`, `frontend/src/hooks/useApi.js`, `frontend/src/components/ui/DataStamp.jsx`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-21 - UX/UI Refactor Phase 12 Browser Evidence
 
 - Keywords: `ux-ui-refactor`, `phase-12`, `cdp-browser-qa`, `impeccable-critique`, `contrast`, `keyboard-flow`, `voiceover-pending`
 - Decision: Use clean headless Chrome CDP as the production browser-verification fallback when Playwright MCP is unavailable; do not add Playwright/Puppeteer just for this plan.
 - Action: Verified route matrix `32/32`, contrast `4/4`, malformed quote state checks `2/2`, Cmd+K/keyboard focus flow, and saved desktop/mobile Dashboard/Market screenshots. Wrote Impeccable snapshot `.impeccable/critique/2026-06-21T07-19-12Z__frontend-src.md` with trend `28 -> 38`. Manual VoiceOver and full signed-in Clerk flows remain explicit pending items.
-- Source: `docs/plans/ux_ui_refactor_plan.md`, `.impeccable/critique/2026-06-21T07-19-12Z__frontend-src.md`, `artifacts/screenshots/ux-ui-refactor-dashboard-desktop-cdp.png`, `artifacts/screenshots/ux-ui-refactor-market-mobile-cdp.png`
+- Source: `docs/plans/2026-06-20-ux-ui-refactor-plan.md`, `.impeccable/critique/2026-06-21T07-19-12Z__frontend-src.md`, `artifacts/screenshots/ux-ui-refactor-dashboard-desktop-cdp.png`, `artifacts/screenshots/ux-ui-refactor-market-mobile-cdp.png`
 
 ### 2026-06-21 - UX/UI Refactor Dev-Auth Flow Contracts
 
 - Keywords: `ux-ui-refactor`, `phase-12`, `end-to-end-flow`, `dev-auth`, `new-user-flow`, `returning-user-flow`, `clerk-pending`
 - Decision: Use RTL/App-shell dev-auth flow contracts as automated evidence for Phase 12.3 while keeping live Clerk sign-in verification as a separate manual gate; do not add browser E2E dependencies for this plan.
 - Action: Added `frontend/tests/endToEndUserFlows.test.jsx` covering empty-account analyze/log/journal/analytics/risk flow and returning-user dashboard/ticker-detail/analysis/scenario-planner/journal append flow. Focused command passed: `npm test --workspace=frontend -- --run tests/endToEndUserFlows.test.jsx`.
-- Source: `frontend/tests/endToEndUserFlows.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `frontend/tests/endToEndUserFlows.test.jsx`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-21 - UX/UI Refactor Accessibility Landmark Hardening
 
 - Keywords: `ux-ui-refactor`, `phase-12`, `accessibility-tree`, `single-main-landmark`, `screen-reader`, `voiceover-pending`
 - Decision: `App.jsx` owns the authenticated product `main` landmark; route pages must not add nested `<main>` landmarks. CDP Accessibility Tree smoke is useful automated evidence but does not replace manual VoiceOver verification.
 - Action: Added an app-shell regression for nested main landmarks, converted authenticated page wrappers/panels from `main` to `div`/`section`, and verified 8 routes through Chrome CDP Accessibility Tree with one DOM/AX main landmark, one h1, named main navigation, and no unlabeled interactive controls.
-- Source: `frontend/tests/appShellNavigation.test.jsx`, `frontend/src/pages/DashboardPage.jsx`, `frontend/src/pages/CommandCenterPage.jsx`, `frontend/src/pages/ConfigPage.jsx`, `frontend/src/pages/MarketExplorerPage.jsx`, `frontend/src/pages/TickerDetailPage.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `frontend/tests/appShellNavigation.test.jsx`, `frontend/src/pages/DashboardPage.jsx`, `frontend/src/pages/CommandCenterPage.jsx`, `frontend/src/pages/ConfigPage.jsx`, `frontend/src/pages/MarketExplorerPage.jsx`, `frontend/src/pages/TickerDetailPage.jsx`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-21 - UX/UI Refactor Zero-Warning Quality Gate
 
 - Keywords: `ux-ui-refactor`, `phase-12`, `zero-warning-lint`, `react-compiler`, `websocket-reconnect`, `scenario-planner-reset`, `prettier`
 - Decision: Close the production quality gate with the smallest behavior-preserving fixes: remove unused exports, stabilize effect callbacks, use narrow documented lint suppressions for intentional lifecycle/provider patterns, and avoid file-splitting or new dependencies solely for Fast Refresh.
 - Action: Reduced frontend lint warnings from 19 to 0, added a regression proving `ScenarioPlanner` clears draft levels after close/reopen, and formatted the refactor workspace. Verified with `npm run check:all --workspace=frontend`, `npm run lint --workspace=frontend -- --max-warnings=0`, and 45/45 backend tests.
-- Source: `frontend/src/components/ScenarioPlanner.jsx`, `frontend/src/components/PixelTradingFloor.jsx`, `frontend/src/hooks/useAgentEvents.jsx`, `frontend/src/pages/WatchlistPage.jsx`, `frontend/tests/dashboardComponents.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `frontend/src/components/ScenarioPlanner.jsx`, `frontend/src/components/PixelTradingFloor.jsx`, `frontend/src/hooks/useAgentEvents.jsx`, `frontend/src/pages/WatchlistPage.jsx`, `frontend/tests/dashboardComponents.test.jsx`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-21 - UX/UI Refactor CDP Matrix and Final Gate Refresh
 
 - Keywords: `ux-ui-refactor`, `phase-12`, `cdp-browser-matrix`, `contrast-audit`, `mobile-ticker-detail`, `manual-voiceover-pending`
 - Decision: Treat clean headless Chrome CDP plus automated dev-auth flows as the current production-style browser evidence, while keeping manual VoiceOver and live Clerk sign-in flows explicitly pending.
 - Action: Added a one-off dependency-free CDP verifier under `output/`, fixed mobile Ticker Detail intrinsic overflow at 390px, reran route matrix `32/32`, contrast `8/8`, state matrix, keyboard flow, new-user browser flow, and returning-user browser flow. Full gates passed: frontend 27 files / 124 tests, lint, placeholder typecheck, architecture, build, backend 46 tests, Impeccable detector `[]`.
-- Source: `output/ux-ui-browser-verification.mjs`, `frontend/src/styles/pages.css`, `frontend/tests/appShellNavigation.test.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `output/ux-ui-browser-verification.mjs`, `frontend/src/styles/pages.css`, `frontend/tests/appShellNavigation.test.jsx`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-21 - UX/UI Refactor Live Clerk Boundary Smoke
 
 - Keywords: `ux-ui-refactor`, `phase-12`, `clerk-signed-out`, `sign-in-surface`, `live-clerk-pending`
 - Decision: Live Clerk verification can safely prove the signed-out boundary and sign-in surface without credentials, but signed-in new/returning flows still require user login and remain manual gates.
 - Action: Added `output/live-clerk-signed-out-smoke.mjs` and verified `npm run dev --workspace=frontend` renders Landing instead of authenticated shell, has no missing publishable-key state, and opens the Clerk sign-in surface from Sign In.
-- Source: `output/live-clerk-signed-out-smoke.mjs`, `frontend/src/auth/clerkAdapter.jsx`, `frontend/src/main.jsx`, `docs/plans/ux_ui_refactor_plan.md`
+- Source: `output/live-clerk-signed-out-smoke.mjs`, `frontend/src/auth/clerkAdapter.jsx`, `frontend/src/main.jsx`, `docs/plans/2026-06-20-ux-ui-refactor-plan.md`
 
 ### 2026-06-27 - Unbiased Institutional CIO Upgrade & AI Documentation Map
 
 - Keywords: `institutional-cio`, `piotroski-f-score`, `altman-z-score`, `roce`, `anchored-vwap`, `zvr-ratio`, `documentation-map`, `typography-compliance`
 - Decision: Implemented the institutional-grade upgrade by adding F-Score, Z-Score, ROCE, and Anchored VWAP calculations to the Python market oracle, enforcing their thresholds in the backend decision engine, and displaying them as metric cards on the frontend ticker detail page. Created a dedicated AI Agent documentation map and formatted ADR 0004 with YAML frontmatter/runnable verifications to align with repo standards. Performed a UI/UX audit using Vercel Web Interface Guidelines, fixing loading states and placeholders to use the standard horizontal ellipsis (`…`) character instead of straight periods (`...`).
-- Action: Updated `tools/market_oracle.py`, `backend/src/decision/decisionEngine.js`, `frontend/src/pages/TickerDetailPage.jsx`, created `docs/DOCUMENTATION_MAP.md`, updated `docs/adr/0004-unbiased-institutional-quality-gates.md`, modified 6 frontend files to fix ellipsis typography, created `docs/plans/institutional_risk_refactor_plan.md` containing the approved design options, and validated using Vitest/Node test runner (182 total checks pass).
-- Source: `plan.md`, `tools/market_oracle.py`, `backend/src/decision/decisionEngine.js`, `frontend/src/pages/TickerDetailPage.jsx`, `docs/DOCUMENTATION_MAP.md`, `docs/adr/0004-unbiased-institutional-quality-gates.md`, `frontend/src/Dashboard.jsx`, `frontend/src/components/command-center/TickerInput.jsx`, `frontend/src/components/command-center/TradeTicket.jsx`, `frontend/src/components/journal/TradeLogDrawer.jsx`, `frontend/src/components/command-center/ChatPanel.jsx`, `frontend/src/components/command-center/AnalysisControls.jsx`, `docs/plans/institutional_risk_refactor_plan.md`
+- Action: Updated `tools/market_oracle.py`, `backend/src/decision/decisionEngine.js`, `frontend/src/pages/TickerDetailPage.jsx`, created `docs/DOCUMENTATION_MAP.md`, updated `docs/adr/0004-unbiased-institutional-quality-gates.md`, modified 6 frontend files to fix ellipsis typography, created `docs/plans/2026-06-27-institutional-risk-refactor-plan.md` containing the approved design options, and validated using Vitest/Node test runner (182 total checks pass).
+- Source: `plan.md`, `tools/market_oracle.py`, `backend/src/decision/decisionEngine.js`, `frontend/src/pages/TickerDetailPage.jsx`, `docs/DOCUMENTATION_MAP.md`, `docs/adr/0004-unbiased-institutional-quality-gates.md`, `frontend/src/Dashboard.jsx`, `frontend/src/components/command-center/TickerInput.jsx`, `frontend/src/components/command-center/TradeTicket.jsx`, `frontend/src/components/journal/TradeLogDrawer.jsx`, `frontend/src/components/command-center/ChatPanel.jsx`, `frontend/src/components/command-center/AnalysisControls.jsx`, `docs/plans/2026-06-27-institutional-risk-refactor-plan.md`
 
 ### 2026-06-27 - Institutional Portfolio Risk Upgrades
 
 - Keywords: `drawdown-breaker`, `sector-limit`, `time-stop`, `trailing-stop`, `exchange-rate`, `cognitive-bias`
 - Decision: Implemented institutional risk rules including: 15% drawdown breaker, 30% sector concentration cap, weekly S&P 500 EMA200 macro filter, next earnings proximity size cap, daily trailing stop lock levels, position time stops (5 days Quick, 15 days Swing), USD/THB exchange rates, and cognitive bias logging.
 - Action: Updated codebases. Ran CodeRabbit review and applied fixes: normalized local midnight timezone calculations on earnings date check in `TickerDetailPage.jsx`, resolved S&P 500 macro and FX rate hardcoded default value leaks in `market_oracle.py`, secured strict 3-state macro risk validation and corrected the trailing stop activation math in `decisionEngine.js`, and standardized cognitive bias naming. Verified that all 182 test cases pass and build compiles cleanly.
-- Source: `docs/plans/institutional_risk_refactor_plan.md`
+- Source: `docs/plans/2026-06-27-institutional-risk-refactor-plan.md`
 
 ### 2026-06-27 - UX/UI Polish & Alignment with Design Skills
 
@@ -436,7 +437,7 @@
 - Keywords: `pwa`, `verified-alerts`, `alert-scheduler`, `web-push`, `static-only-cache`, `adr-0005`
 - Decision: Keep Vite + Express; cache only the shell. V1 supports explicit multiple alert rules per US ticker/ETF, two-source edge-triggered evaluation, a degraded-data event after two consecutive failures, and redacted Web Push. Journal/Plan may prefill but never auto-syncs rules.
 - Action: Revised ADR-0005 and Slice 3 plan; TypeScript, LINE, Capacitor, Thai equities, and distributed scheduling remain deferred.
-- Source: `docs/adr/0005-pwa-first-ts-migration-vite-stack.md`, `docs/plans/webapp-pwa-implementation-plan.md`, `CONTEXT.md`
+- Source: `docs/adr/0005-pwa-first-ts-migration-vite-stack.md`, `docs/plans/2026-06-28-webapp-pwa-implementation-plan.md`, `CONTEXT.md`
 
 ### 2026-06-28 - Product Platform Vertical-Slice Roadmap
 
@@ -444,3 +445,29 @@
 - Decision: Deliver the approved multi-user Personal Investment OS through just-in-time vertical plans. Gate 0 backend hardening precedes per-user preferences, Today/Portfolio Risk, PWA/Inbox, Analyze/Plan, Discover, and Journal Learning.
 - Action: Added the master roadmap and detailed Gate 0 plan; later slice plans are written only after the preceding repository state is verified.
 - Source: `docs/superpowers/specs/2026-06-28-myportstock-product-platform-design.md`, `docs/superpowers/plans/2026-06-28-product-platform-roadmap.md`, `docs/superpowers/plans/2026-06-28-backend-production-hardening.md`
+
+### 2026-07-03 - Per-User Onboarding, Visual Themes & RLS Constraints
+
+- Keywords: `user-preferences`, `light-mode`, `onboarding-flow`, `rls-preferences`, `tradingview-theme`, `smooth-transitions`
+- Decision: Implemented database RLS-scoped user preferences with light-mode default, REST APIs, frontend Context, dynamic theme class toggling, and Onboarding page. Dynamic theme settings sync to the TradingView chart widget. Implemented smooth, global CSS color transitions using custom ease-out cubic-bezier curves for a luxurious theme-toggle experience.
+- Action: Created schema migration, preference repositories/validators/controllers, frontend provider, custom hook, onboarding view, theme toggle button, animations stylesheet transitions, and visual/contract/E2E test verification.
+- Source: `supabase/migrations/20260703160000_user_preferences.sql`, `backend/tests/preferencesRoutes.test.js`, `frontend/src/preferences/PreferencesContext.jsx`, `frontend/src/styles/animations.css`, `frontend/tests/onboardingPreferences.test.jsx`
+
+### 2026-07-04 - Slice 2: Today Decision Hub and Portfolio Risk
+- Keywords: `today-page`, `portfolio-pulse`, `deterministic-priority`, `card-dismissal`, `motion-entrance`, `purity-guardrails`
+- Decision: Replaced default authenticated route `/` with a rule-based Today action queue sorted Protect -> Prepare -> Opportunity -> Learn, accompanied by a dynamic Portfolio Pulse sidebar. Implemented card dismissal with local expiry rules, mobile responsive card prev/next navigation, and compliance with strict linter purity checks.
+- Action: Created backend `/api/today` route and tests, frontend `useToday` hook, `TodayPage` component, Vitest test suite, shared utility refactoring, and CSS animations.
+- Source: `backend/src/routes/today.js`, `frontend/src/pages/TodayPage.jsx`, `frontend/tests/todayPage.test.jsx`, `backend/tests/todayRoutes.test.js`, `frontend/src/styles/pages.css`
+
+### 2026-07-04 - Spacing Polish & System Theme Support
+- Keywords: `spacing-polish`, `system-theme`, `layout-unification`, `clerk-avatar`, `empty-states`, `resolved-theme`, `select-chevron`, `config-layout`, `global-select-rules`, `inline-style-cleanups`
+- Decision: Unified layout spacing and margins to horizontal 28px across all pages. Cleaned up duplicate headers and resolved Clerk avatar centering. Extended visual theme settings to support System Mode colors matching the OS's prefers-color-scheme setting. Solved the select dropdown chevron indicator removal glitch and constrained the config page max-width to prevent input stretching on desktop. Created global select stylesheet rules with token-aware background variables to unify select dropdown designs and removed hardcoded inline styles in form drawer inputs.
+- Action: Updated database schema constraints, backend validators, route tests, pages/layout stylesheets, and onboarding/config layouts. Wrap user avatar button in center-aligned container wrappers, add custom SVG chevron asset to select dropdowns globally, and clean up inline CSS blocks in TradeTicket.jsx and TradeLogDrawer.jsx.
+- Source: `supabase/migrations/20260704170000_add_system_theme.sql`, `frontend/src/preferences/PreferencesContext.jsx`, `frontend/src/styles/pages.css`, `frontend/src/styles/layout.css`, `frontend/tests/portfolioRiskPage.test.jsx`, `frontend/src/pages/TodayPage.jsx`, `frontend/src/styles/tokens.css`, `frontend/src/components/command-center/TradeTicket.jsx`, `frontend/src/components/journal/TradeLogDrawer.jsx`
+
+### 2026-07-07 - Celestica & Vertiv 7-Dimension SOP Deep Dive
+- Keywords: `cls-vrt-deep-dive`, `datacenter-hardware`, `liquid-cooling`, `customer-concentration`
+- Decision: Performed a full 7-Dimension SOP & SWOT audit on Celestica (CLS) and Vertiv (VRT) following user scoping. Both are set to WAIT due to short-term technical pullbacks.
+- Action: Documented deep dive notes in the workspace notes folder.
+- Source: `notes/2026-07-07-cls-vrt-deep-dive.md`
+

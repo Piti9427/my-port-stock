@@ -33,17 +33,27 @@
   color: var(--text-secondary);
 }
 
-.input-field {
+.input-field,
+.form-input,
+.ticker-input,
+.mode-select,
+.search-input {
   width: 100%;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   background: var(--bg-panel-solid);
   color: var(--text-primary);
   box-shadow: none;
+  transition: border-color 0.15s var(--ease-out-quart), box-shadow 0.15s var(--ease-out-quart);
 }
 
-.input-field:focus {
+.input-field:focus,
+.form-input:focus,
+.ticker-input:focus,
+.mode-select:focus,
+.search-input:focus {
   border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(var(--brand-rgb), 0.12);
   outline: none;
 }
 
@@ -262,6 +272,24 @@
   overflow-x: auto;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
+  padding-bottom: 6px;
+}
+
+.ui-data-table-wrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.ui-data-table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ui-data-table-wrap::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 999px;
+}
+
+.ui-data-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
 }
 
 .ui-data-table {
@@ -298,14 +326,26 @@
   font: inherit;
 }
 
-.ui-data-table-clickable-row {
+.ui-data-table-clickable-row,
+.watchlist-row,
+.analytics-history-table tr {
   cursor: pointer;
+  transition: background-color 150ms var(--ease-out-quart);
 }
 
 .ui-data-table-clickable-row:hover,
-.ui-data-table-clickable-row:focus-visible {
-  background: var(--bg-panel-hover);
+.ui-data-table-clickable-row:focus-visible,
+.watchlist-row:hover,
+.analytics-history-table tr:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
   outline: none;
+}
+
+[data-theme="light"] .ui-data-table-clickable-row:hover,
+[data-theme="light"] .ui-data-table-clickable-row:focus-visible,
+[data-theme="light"] .watchlist-row:hover,
+[data-theme="light"] .analytics-history-table tr:hover {
+  background: rgba(0, 0, 0, 0.015) !important;
 }
 
 .semantic-positive {
@@ -617,7 +657,7 @@
 .command-palette {
   width: min(640px, 100%);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface-elevated);
   box-shadow: none;
   overflow: hidden;
@@ -656,7 +696,7 @@
   width: 100%;
   min-height: 54px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--text-secondary);
   display: grid;
@@ -681,7 +721,7 @@
   width: 30px;
   height: 30px;
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   display: inline-flex;
   align-items: center;
   justify-content: center;

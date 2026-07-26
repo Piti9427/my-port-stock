@@ -2,7 +2,7 @@
 const express = require('express');
 const { z } = require('zod');
 const { getRequestUserId } = require('../auth/requestAuth');
-const { default: YahooFinance } = require('yahoo-finance2');
+const { enrichWithMarketData } = require('../services/quoteEnricher');
 
 const router = express.Router();
 
@@ -13,14 +13,6 @@ function getUserId(req) {
 const { getScopedDb } = require('../db');
 const { supabaseConfigured } = require('../db/supabaseClient');
 const { normalizeTicker } = require('../common/format');
-const { BoundedMap } = require('../common/BoundedMap');
-const { fetchSparkline } = require('../services/marketData');
-
-const yahooFinance = new YahooFinance();
-
-// Simple sparkline cache
-const sparklineCache = new BoundedMap(200);
-const SPARKLINE_TTL = 60 * 60 * 1000; // 1 hour
 
 function runtimeInsufficientData(reason, extras = {}) {
   return {
@@ -28,42 +20,6 @@ function runtimeInsufficientData(reason, extras = {}) {
     error_details: reason,
     ...extras,
   };
-}
-
-async function getSparkline(ticker) {
-  const now = Date.now();
-  if (sparklineCache.has(ticker)) {
-    const cached = sparklineCache.get(ticker);
-    if (now - cached.timestamp < SPARKLINE_TTL) return cached.data;
-  }
-  try {
-    const data = await fetchSparkline(ticker, now);
-    sparklineCache.set(ticker, { timestamp: now, data });
-    return data;
-  } catch (e) {
-    console.error(`Error fetching sparkline for ${ticker}:`, e.message);
-    return [0, 0];
-  }
-}
-
-async function enrichWithMarketData(items) {
-  return Promise.all(items.map(async (item) => {
-    try {
-      const quote = await yahooFinance.quote(item.ticker);
-      const spark = await getSparkline(item.ticker);
-      return {
-        ...item,
-        price: quote.regularMarketPrice,
-        change: quote.regularMarketChange,
-        changePct: quote.regularMarketChangePercent,
-        beta: quote.beta || 1.0,
-        spark
-      };
-    } catch (e) {
-      console.error(`Error enriching market data for ${item.ticker}:`, e.message);
-      return { ...item, price: null, change: null, changePct: null, beta: 1.0, spark: [] };
-    }
-  }));
 }
 
 // Zod Validation Schemas
@@ -164,6 +120,13 @@ router.get('/holdings', async (req, res, next) => {
         ...item,
         mode,
         beta,
+        fx_rate: rate,
+        value_usd: isUsd ? currentValueUsd : currentValueUsd / thbRate,
+        value_thb: isUsd ? currentValueUsd * thbRate : currentValueUsd,
+        cost_usd: isUsd ? costValueUsd : costValueUsd / thbRate,
+        cost_thb: isUsd ? costValueUsd * thbRate : costValueUsd,
+        day_pl_usd: isUsd ? shares * (item.change || 0) : (shares * (item.change || 0)) / thbRate,
+        day_pl_thb: isUsd ? (shares * (item.change || 0)) * thbRate : shares * (item.change || 0),
         current_value_usd: currentValueUsd,
         pl_usd: plUsd,
         pl_thb: plUsd * rate,
@@ -173,7 +136,10 @@ router.get('/holdings', async (req, res, next) => {
       };
     });
 
-    res.json(finalHoldings);
+    res.json({
+      holdings: finalHoldings,
+      usd_thb_rate: thbRate,
+    });
   } catch (err) {
     next(err);
   }
@@ -250,7 +216,7 @@ router.post('/watchlists', async (req, res, next) => {
     res.status(200).json(result);
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return res.status(400).json({ error: err.errors.map(e => e.message).join(', ') });
+      return res.status(400).json({ error: err.issues.map(e => e.message).join(', ') });
     }
     next(err);
   }
@@ -333,7 +299,7 @@ router.post('/journal', async (req, res, next) => {
     res.status(200).json(data);
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return res.status(400).json({ error: err.errors.map(e => e.message).join(', ') });
+      return res.status(400).json({ error: err.issues.map(e => e.message).join(', ') });
     }
     next(err);
   }
@@ -434,6 +400,9 @@ router.get('/price/:ticker', async (req, res) => {
     res.status(404).json({ error: `Could not fetch price for ${ticker}` });
   }
 });
+
+router.use('/preferences', require('./preferences'));
+router.use('/today', require('./today'));
 
 module.exports = router;
 module.exports.getUserId = getUserId;

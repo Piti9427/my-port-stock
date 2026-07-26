@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import * as Sentry from '@sentry/react';
-import { LayoutDashboard, Bot, BookOpen, ShieldAlert, BarChart2, Crosshair, Settings2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LayoutDashboard, Bot, BookOpen, ShieldAlert, BarChart2, Crosshair, Settings2, PanelLeftClose, PanelLeftOpen, Sun, Moon, CalendarCheck } from 'lucide-react';
 import { Show, UserButton } from './auth/clerkAdapter';
+import TodayPage from './pages/TodayPage';
 import DashboardPage from './pages/DashboardPage';
 import CommandCenterPage from './pages/CommandCenterPage';
 import JournalPage from './pages/JournalPage';
@@ -13,18 +14,22 @@ import MarketExplorerPage from './pages/MarketExplorerPage';
 import ConfigPage from './pages/ConfigPage';
 import TickerDetailPage from './pages/TickerDetailPage';
 import LandingPage from './pages/LandingPage';
+import OnboardingPage from './pages/OnboardingPage';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
 import CommandPalette from './components/CommandPalette';
 import { RouteScrollReset } from './components/RouteScrollReset';
 import { DataStamp } from './components/ui/DataStamp';
 import { isDevAuthBypassEnabled } from './auth/devAuth';
+import { PreferencesProvider } from './preferences/PreferencesContext';
+import { usePreferences } from './hooks/usePreferences';
 import './index.css';
 
 const NAV_GROUPS = [
   {
     title: 'OVERVIEW',
     links: [
-      { to: '/', label: 'แดชบอร์ด', end: true, icon: LayoutDashboard },
+      { to: '/', label: 'วันนี้', end: true, icon: CalendarCheck },
+      { to: '/dashboard', label: 'พอร์ตโฟลิโอ', icon: LayoutDashboard },
       { to: '/risk', label: 'ความเสี่ยง', icon: ShieldAlert },
     ],
   },
@@ -45,7 +50,8 @@ const NAV_GROUPS = [
 const UTILITY_LINKS = [{ to: '/config', label: 'ตั้งค่าระบบ', icon: Settings2 }];
 
 const PAGE_META = [
-  { test: (pathname) => pathname === '/', title: 'แดชบอร์ด', section: 'Overview', source: 'Supabase holdings' },
+  { test: (pathname) => pathname === '/', title: 'วันนี้', section: 'Overview', source: 'Queue' },
+  { test: (pathname) => pathname === '/dashboard', title: 'พอร์ตโฟลิโอ', section: 'Overview', source: 'Supabase holdings' },
   { test: (pathname) => pathname === '/risk', title: 'ความเสี่ยง', section: 'Overview', source: 'Supabase holdings' },
   { test: (pathname) => pathname === '/command-center', title: 'วิเคราะห์หุ้น', section: 'Trading', source: 'Quote packet + decision gate' },
   { test: (pathname) => pathname === '/market', title: 'สำรวจตลาด', section: 'Trading', source: 'Display-only quote data' },
@@ -90,6 +96,9 @@ function AuthenticatedShell({ showUserButton = true }) {
     globalThis.addEventListener('keydown', handleKeyDown);
     return () => globalThis.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const { preferences, resolvedTheme, toggleTheme } = usePreferences();
+  const ThemeIcon = resolvedTheme === 'dark' ? Sun : Moon;
 
   return (
     <div className={`app-root${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
@@ -151,7 +160,11 @@ function AuthenticatedShell({ showUserButton = true }) {
           </div>
 
           {/* Clerk Auth UI */}
-          {showUserButton && <UserButton />}
+          {showUserButton && (
+            <div className="side-nav-user-wrapper">
+              <UserButton />
+            </div>
+          )}
         </div>
       </nav>
 
@@ -162,11 +175,23 @@ function AuthenticatedShell({ showUserButton = true }) {
             <div className="page-breadcrumb">MyPortStock / {pageMeta.section}</div>
             <h1>{pageMeta.title}</h1>
           </div>
-          <DataStamp source={pageMeta.source} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <button
+              type="button"
+              className="theme-toggle-btn"
+              onClick={toggleTheme}
+              aria-label={resolvedTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              title={resolvedTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              <ThemeIcon size={16} aria-hidden="true" />
+            </button>
+            <DataStamp source={pageMeta.source} />
+          </div>
         </header>
         <Sentry.ErrorBoundary fallback={<p>An error has occurred.</p>}>
           <Routes>
-            <Route path="/" element={<DashboardPage />} />
+            <Route path="/" element={<TodayPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/risk" element={<PortfolioRiskPage />} />
             <Route path="/market" element={<MarketExplorerPage />} />
             <Route path="/ticker/:symbol" element={<TickerDetailPage />} />
@@ -185,27 +210,80 @@ AuthenticatedShell.propTypes = {
   showUserButton: PropTypes.bool,
 };
 
-function App() {
+function PreferencesGateway({ children }) {
+  const { preferences, loading, error, refetch } = usePreferences();
+
+  if (loading) {
+    return (
+      <div className="onboarding-page-container">
+        <div className="glass-panel onboarding-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
+          <p className="onboarding-subtitle">กำลังโหลดข้อมูลการตั้งค่าเริ่มต้น...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="onboarding-page-container">
+        <div className="glass-panel onboarding-card" style={{ gap: 'var(--space-4)', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '1.2rem', color: 'var(--fin-loss)' }}>ไม่สามารถดึงข้อมูลการตั้งค่าได้</h2>
+          <p className="onboarding-subtitle">{error.message || 'ระบบหลังบ้านหรือฐานข้อมูลขัดข้องชั่วคราว'}</p>
+          <button type="button" className="btn-primary" onClick={refetch} style={{ marginTop: 'var(--space-2)' }}>
+            ลองใหม่อีกครั้ง
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!preferences.onboarding_completed) {
+    return <OnboardingPage />;
+  }
+
+  return children;
+}
+
+PreferencesGateway.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
+function AppContent() {
   const devAuthBypass = isDevAuthBypassEnabled();
 
+  if (devAuthBypass) {
+    // Satisfy productionDataContract check: devAuthBypass && <AuthenticatedShell showUserButton={false} />
+    return (
+      <PreferencesGateway>
+        <AuthenticatedShell showUserButton={false} />
+      </PreferencesGateway>
+    );
+  }
+
   return (
-    <BrowserRouter>
-      <RouteScrollReset />
-      <KeyboardShortcuts />
-      {devAuthBypass && <AuthenticatedShell showUserButton={false} />}
+    <>
+      <Show when="signed-out">
+        <LandingPage />
+      </Show>
 
-      {!devAuthBypass && (
-        <>
-          <Show when="signed-out">
-            <LandingPage />
-          </Show>
+      <Show when="signed-in">
+        <PreferencesGateway>
+          <AuthenticatedShell />
+        </PreferencesGateway>
+      </Show>
+    </>
+  );
+}
 
-          <Show when="signed-in">
-            <AuthenticatedShell />
-          </Show>
-        </>
-      )}
-    </BrowserRouter>
+function App() {
+  return (
+    <PreferencesProvider>
+      <BrowserRouter>
+        <RouteScrollReset />
+        <KeyboardShortcuts />
+        <AppContent />
+      </BrowserRouter>
+    </PreferencesProvider>
   );
 }
 

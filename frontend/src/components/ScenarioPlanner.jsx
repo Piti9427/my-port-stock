@@ -126,9 +126,15 @@ function ScenarioPlannerContent({ open, ticker, holding, onClose, onLogTrade }) 
                 {rows.map((row) => (
                   <tr key={row.key}>
                     <td>{row.label}</td>
-                    <td>{currencySymbol(ticker)}{row.entry.toFixed(2)}</td>
+                    <td>
+                      {currencySymbol(ticker)}
+                      {row.entry.toFixed(2)}
+                    </td>
                     <td>{row.addedShares}</td>
-                    <td>{currencySymbol(ticker)}{row.newAverage.toFixed(2)}</td>
+                    <td>
+                      {currencySymbol(ticker)}
+                      {row.newAverage.toFixed(2)}
+                    </td>
                     <td>{row.rr == null ? '—' : `1:${row.rr.toFixed(1)}`}</td>
                   </tr>
                 ))}

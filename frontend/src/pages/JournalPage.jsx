@@ -113,6 +113,20 @@ export default function JournalPage() {
     loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName) || event.target.isContentEditable) {
+        return;
+      }
+      if (event.key.toLowerCase() === 'c' && !drawerOpen) {
+        event.preventDefault();
+        setDrawerOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [drawerOpen]);
+
   const tickerOptions = useMemo(() => uniqueSorted(trades.map((trade) => normalizeTicker(trade.ticker))), [trades]);
   const modeOptions = useMemo(() => uniqueSorted(trades.map((trade) => trade.mode)), [trades]);
 

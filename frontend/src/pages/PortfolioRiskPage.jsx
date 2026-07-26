@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ShieldAlert } from 'lucide-react';
 import { useAuth } from '../auth/clerkAdapter';
 import { usePortfolio } from '../hooks/usePortfolio';
@@ -36,6 +37,7 @@ function riskBudgetTone(risk) {
 
 export default function PortfolioRiskPage() {
   const { getToken } = useAuth();
+  const navigate = useNavigate();
   const [selectedSector, setSelectedSector] = useState(null);
   const { holdings, loading, status, refetch } = usePortfolio({ getToken });
 
@@ -50,11 +52,22 @@ export default function PortfolioRiskPage() {
 
   const unavailable = status === 'ERROR' || status === 'UNAUTHORIZED' || status === 'INSUFFICIENT_DATA';
 
+  if (!loading && !unavailable && holdings.length === 0) {
+    return (
+      <div className="risk-page">
+        <EmptyState
+          title="ยังไม่มีพอร์ตการลงทุน 📈"
+          description="ระบบไม่สามารถวิเคราะห์และประเมินเพดานความเสี่ยงได้ เนื่องจากยังไม่มีหุ้นในพอร์ตโฟลิโอของคุณ เริ่มต้นโดยการเพิ่มหุ้นตัวแรกในระบบบันทึกเทรด"
+          action="บันทึกเทรดตัวแรก"
+          onAction={() => navigate('/journal')}
+        />
+      </div>
+    );
+  }
+
   const sectorTreemapContent = (() => {
     if (loading) {
-      return (
-        <EmptyState title="Loading portfolio risk..." />
-      );
+      return <EmptyState title="Loading portfolio risk..." />;
     }
     if (unavailable) {
       return (
@@ -134,9 +147,7 @@ export default function PortfolioRiskPage() {
         </div>
         <div className="glass-panel risk-kpi-card risk-budget-card">
           <div className="kpi-label">Risk Budget Used</div>
-          <div className={`kpi-value ${riskBudgetTone(risk)}`}>
-            {formatCurrency(risk.knownRisk)}
-          </div>
+          <div className={`kpi-value ${riskBudgetTone(risk)}`}>{formatCurrency(risk.knownRisk)}</div>
           <Progress
             value={Math.min(risk.riskBudgetPct, 100)}
             className="my-3 h-1.5"
@@ -182,12 +193,26 @@ export default function PortfolioRiskPage() {
                 </thead>
                 <tbody>
                   {activeSector.holdings.map((holding) => (
-                    <tr key={holding.id || holding.ticker} className={`${holding.thbRisk === null ? 'risk-row-missing' : ''} ${holding.time_stop_hit ? 'time-stop-breached' : ''}`}>
+                    <tr
+                      key={holding.id || holding.ticker}
+                      className={`${holding.thbRisk === null ? 'risk-row-missing' : ''} ${holding.time_stop_hit ? 'time-stop-breached' : ''}`}
+                    >
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           {holding.ticker}
                           {holding.time_stop_hit && (
-                            <span style={{ fontSize: '0.65rem', background: '#3f1a1a', color: 'var(--fin-loss)', padding: '2px 4px', borderRadius: '4px', border: '1px solid #7f1d1d', fontFamily: 'monospace' }} title="Time Stop limit exceeded. Recycling of capital recommended.">
+                            <span
+                              style={{
+                                fontSize: '0.65rem',
+                                background: '#3f1a1a',
+                                color: 'var(--fin-loss)',
+                                padding: '2px 4px',
+                                borderRadius: '4px',
+                                border: '1px solid #7f1d1d',
+                                fontFamily: 'monospace',
+                              }}
+                              title="Time Stop limit exceeded. Recycling of capital recommended."
+                            >
                               ⏰ Time Stop
                             </span>
                           )}
@@ -198,7 +223,9 @@ export default function PortfolioRiskPage() {
                       <td>{holding.stopDistancePct === null ? 'Unknown' : formatPercent(holding.stopDistancePct)}</td>
                       <td>{holding.thbRisk === null ? 'Unknown' : formatCurrency(holding.thbRisk)}</td>
                       <td className={holding.pl_thb >= 0 ? 'semantic-positive' : 'semantic-negative'}>
-                        {holding.pl_thb !== undefined ? `${holding.pl_thb >= 0 ? '+' : ''}${Number(holding.pl_thb).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}
+                        {holding.pl_thb !== undefined
+                          ? `${holding.pl_thb >= 0 ? '+' : ''}${Number(holding.pl_thb).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                          : '—'}
                       </td>
                       <td style={{ color: holding.time_stop_hit ? 'var(--fin-loss)' : 'inherit' }}>
                         {holding.age_days !== undefined ? `${holding.age_days} วัน` : '—'}

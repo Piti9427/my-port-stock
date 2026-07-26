@@ -142,12 +142,7 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label htmlFor="journal-entry-input">Entry Price</label>
-            <input
-              id="journal-entry-input"
-              inputMode="decimal"
-              value={form.entry}
-              onChange={(event) => update('entry', event.target.value)}
-            />
+            <input id="journal-entry-input" inputMode="decimal" value={form.entry} onChange={(event) => update('entry', event.target.value)} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label htmlFor="journal-stoploss-input">Stop Loss</label>
@@ -160,21 +155,11 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label htmlFor="journal-target-input">Target</label>
-            <input
-              id="journal-target-input"
-              inputMode="decimal"
-              value={form.target}
-              onChange={(event) => update('target', event.target.value)}
-            />
+            <input id="journal-target-input" inputMode="decimal" value={form.target} onChange={(event) => update('target', event.target.value)} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label htmlFor="journal-capital-input">Capital Allocated</label>
-            <input
-              id="journal-capital-input"
-              inputMode="decimal"
-              value={form.capital}
-              onChange={(event) => update('capital', event.target.value)}
-            />
+            <input id="journal-capital-input" inputMode="decimal" value={form.capital} onChange={(event) => update('capital', event.target.value)} />
           </div>
         </div>
         <div className="journal-quick-fill" aria-label="Capital quick fill">
@@ -190,7 +175,7 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
             id="journal-bias-select"
             value={form.cognitiveBias}
             onChange={(event) => update('cognitiveBias', event.target.value)}
-            style={{ background: '#18181b', color: '#f4f4f5', border: '1px solid #27272a', padding: '8px', borderRadius: '4px', fontFamily: 'monospace' }}
+            className="mode-select"
           >
             {['None', 'FOMO', 'Loss Aversion', 'Anchoring', 'Herd Behavior'].map((bias) => (
               <option key={bias} value={bias}>
