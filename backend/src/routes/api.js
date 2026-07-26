@@ -377,23 +377,31 @@ router.get('/watchlist/scan', async (req, res, next) => {
 router.get('/price/:ticker', async (req, res) => {
   const { ticker } = req.params;
   try {
-    const { getUsdThbRate } = require('../services/marketData');
-    const quote = await yahooFinance.quote(ticker);
-    
-    const thbRate = await getUsdThbRate();
+    const { getLivePrice, getUsdThbRate } = require('../services/marketData');
+    const yahooFinance = require('yahoo-finance2').default;
+
+    const [quote, thbRate] = await Promise.all([
+      yahooFinance.quote(ticker),
+      getUsdThbRate(),
+    ]);
+
+    if (!quote || !quote.regularMarketPrice) {
+      return res.status(404).json({ error: `No price data found for ${ticker}` });
+    }
+
     const isUsd = quote.currency === 'USD';
     const rate = isUsd ? thbRate : 1;
 
     res.json({
       ticker,
       price: quote.regularMarketPrice * rate,
-      change: quote.regularMarketChange * rate,
-      changePct: quote.regularMarketChangePercent,
+      change: quote.regularMarketChange ? quote.regularMarketChange * rate : null,
+      changePct: quote.regularMarketChangePercent ?? null,
       high: quote.regularMarketDayHigh ? quote.regularMarketDayHigh * rate : null,
       low: quote.regularMarketDayLow ? quote.regularMarketDayLow * rate : null,
-      volume: quote.regularMarketVolume,
+      volume: quote.regularMarketVolume ?? null,
       marketCap: quote.marketCap ? quote.marketCap * rate : null,
-      currency: 'THB'
+      currency: 'THB',
     });
   } catch (error) {
     console.error(`Error fetching price for ${ticker}:`, error.message);

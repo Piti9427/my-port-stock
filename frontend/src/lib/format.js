@@ -29,6 +29,7 @@ export function currencySymbol(ticker) {
  * @returns {string}
  */
 export function formatCurrency(value, ticker, { signed = false, decimals = 2 } = {}) {
+  if (value === null || value === undefined) return '—';
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return '—';
 
@@ -54,6 +55,7 @@ export function formatCurrency(value, ticker, { signed = false, decimals = 2 } =
  * @returns {string}
  */
 export function formatCurrencyCompact(value, ticker) {
+  if (value === null || value === undefined) return '—';
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return '—';
   const symbol = currencySymbol(ticker);
@@ -75,6 +77,7 @@ export function formatCurrencyCompact(value, ticker) {
  * @returns {string}
  */
 export function formatPercent(value, { signed = false, decimals = 2 } = {}) {
+  if (value === null || value === undefined) return '—';
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return '—';
   const prefix = signed && numeric > 0 ? '+' : '';
