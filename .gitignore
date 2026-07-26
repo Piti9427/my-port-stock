@@ -4,6 +4,8 @@ node_modules/
 # Runtime / generated scratch space
 tmp/
 .playwright-mcp/
+__pycache__/
+*.pyc
 
 # Local environment files
 .env

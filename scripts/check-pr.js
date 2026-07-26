@@ -25,11 +25,12 @@ const steps = [
   { id: "typecheck", name: "Static Type Check", cmd: "npm run check:type" },
   { id: "build", name: "Production Build Check", cmd: "npm run check:build" },
   { id: "unit", name: "Unit & Integration Tests", cmd: "npm run check:unit" },
-  { id: "e2e", name: "Playwright E2E Tests", cmd: "npm run check:e2e" },
+  { id: "python", name: "Python Quant Model Tests", cmd: "npm run check:python" },
+  { id: "e2e", name: "Playwright E2E & A11y Tests", cmd: "npm run check:e2e" },
 ];
 
 console.log(`\n${colors.bright}${colors.cyan}=====================================================${colors.reset}`);
-console.log(`${colors.bright}${colors.cyan}   MyPortStock Pre-PR Verification Suite (6 Gates)   ${colors.reset}`);
+console.log(`${colors.bright}${colors.cyan}   MyPortStock Pre-PR Verification Suite (7 Gates)   ${colors.reset}`);
 console.log(`${colors.bright}${colors.cyan}=====================================================${colors.reset}\n`);
 
 const results = [];
@@ -102,7 +103,7 @@ console.log(`${colors.bright}Verification Report generated:${colors.reset} ${rep
 console.log(`${colors.bright}${colors.cyan}-----------------------------------------------------${colors.reset}`);
 
 if (overallPassed) {
-  console.log(`\n${colors.green}${colors.bright}🎉 ALL 6 VERIFICATION GATES PASSED in ${totalDurationSec}s! Ready for PR to develop/main.${colors.reset}\n`);
+  console.log(`\n${colors.green}${colors.bright}🎉 ALL 7 VERIFICATION GATES PASSED in ${totalDurationSec}s! Ready for PR to develop/main.${colors.reset}\n`);
   process.exit(0);
 } else {
   console.log(`\n${colors.red}${colors.bright}🚨 VERIFICATION FAILED. Correct issues above before proceeding with PR.${colors.reset}\n`);

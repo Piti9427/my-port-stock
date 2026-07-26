@@ -24,6 +24,8 @@
     "check:type": "npm run typecheck --workspaces --if-present",
     "check:build": "npm run build --workspaces --if-present",
     "check:unit": "npm run test:unit --workspaces --if-present",
+    "check:coverage": "npm run test --workspace=frontend -- --run --coverage",
+    "check:python": "python3 tools/market_oracle_test.py",
     "check:e2e": "npx playwright test --config=frontend/playwright.config.ts",
     "check:pr": "node scripts/check-pr.js",
     "check:frontend-standard": "npm run check:frontend-standard --workspaces --if-present",
