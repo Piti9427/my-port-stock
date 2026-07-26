@@ -468,10 +468,11 @@
 ### 2026-07-07 - Celestica & Vertiv 7-Dimension SOP Deep Dive
 - Keywords: `cls-vrt-deep-dive`, `datacenter-hardware`, `liquid-cooling`, `customer-concentration`
 - Decision: Performed a full 7-Dimension SOP & SWOT audit on Celestica (CLS) and Vertiv (VRT) following user scoping. Both are set to WAIT due to short-term technical pullbacks.
-### 2026-07-26 - Project Structure Reorganization & Backend Modularization
-- Keywords: `project-reorganization`, `layered-architecture`, `backend-facade`, `docs-categorization`, `test-isolation`
-- Decision: Reorganized workspace directory hierarchy strictly matching docs/FILE_ORGANIZATION.md. Extracted backend/server.js into modular routes and services while maintaining facade backward compatibility. Isolated Vitest from Playwright E2E suites.
-- Action: Moved root clutter into docs/plans/, artifacts/screenshots/, and docs/archive/. Created backend/src/services/ (marketOracleService, deepAnalysisService, analysisContextService) and backend/src/routes/aiRoutes.js. Updated frontend/vitest.config.js and root package.json.
-- Source: `docs/plans/project_structure_reorganization_plan.md`, `backend/server.js`, `backend/src/routes/aiRoutes.js`, `backend/src/services/`, `frontend/vitest.config.js`
+### 2026-07-26 - Comprehensive Test Suite Coverage & Pre-PR 7-Gate Verification
+- Keywords: `test-suite-expansion`, `ws-ticket-ttl`, `quote-fallback-resiliency`, `sop-boundary-gates`, `event-bus-isolation`, `playwright-dev-bypass`, `pr-verification-7-gates`
+- Decision: Expanded test coverage across 5 key dimensions: WebSocket ticket TTL & auto-purge, Quote Provider fail-closed resiliency, Analysis Context caching, Event Bus multi-user channel isolation, and Investment SOP mathematical boundary gates. Configured Playwright E2E with Option A (Dev Auth Bypass) running against Vite dev server (127.0.0.1:5173).
+- Action: Created backend test suites (`wsTicketTTLEdgeCase.test.js`, `quoteSourcesFallback.test.js`, `analysisContextService.test.js`, `agentEventBus.test.js`, `sopBoundaryGates.test.js`), added Playwright specs (`tradeThesisSubmission.spec.ts`, `journalExitPostMortem.spec.ts`), updated `PreferencesContext.jsx` with fail-open fallback, and verified clean pass across all 7 Pre-PR verification gates (`npm run check:pr`).
+- Source: `test_suite_coverage_plan.md`, `walkthrough.md`, `backend/tests/`, `frontend/e2e/`, `frontend/src/preferences/PreferencesContext.jsx`
+
 
 
