@@ -110,7 +110,7 @@ function AuthenticatedShell({ showUserButton = true }) {
     return () => globalThis.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const { preferences, resolvedTheme, toggleTheme } = usePreferences();
+  const { resolvedTheme, toggleTheme } = usePreferences();
   const ThemeIcon = resolvedTheme === 'dark' ? Sun : Moon;
 
   return (

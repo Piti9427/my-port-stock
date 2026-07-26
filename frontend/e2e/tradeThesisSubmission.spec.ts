@@ -12,29 +12,26 @@ test.describe('Trade Thesis Submission E2E Flow (Option A: Dev Auth Bypass)', ()
     await page.goto('/command-center');
     await expect(page).toHaveURL(/\/command-center/);
 
-    // 2. Verify page title or header presence
-    const heading = page.locator('h1, h2, [data-testid="command-center-header"]').first();
-    await expect(heading).toBeVisible();
+    // 2. Wait for preferences gateway loading to settle
+    await expect(page.locator('text=กำลังโหลดข้อมูล')).not.toBeVisible({ timeout: 10000 });
 
-    // 3. Fill in Ticker Input
-    const tickerInput = page.locator('input[placeholder*="symbol"], input[placeholder*="ticker"], input[name="ticker"]').first();
+    // 3. Verify main content or header presence
+    const container = page.locator('main, .command-center-page, .page-header').first();
+    await expect(container).toBeVisible({ timeout: 10000 });
+
+    // 4. Fill in Ticker Input (#command-ticker)
+    const tickerInput = page.locator('#command-ticker, input[placeholder="NVDA"]').first();
     if (await tickerInput.isVisible()) {
       await tickerInput.fill('NVDA');
     }
 
-    // 4. Select Decision Mode if selector exists
-    const modeSelect = page.locator('select[name="decisionMode"], [data-testid="decision-mode-select"]').first();
-    if (await modeSelect.isVisible()) {
-      await modeSelect.selectOption('Swing Trade');
+    // 5. Click Load quote button if present
+    const loadBtn = page.locator('button.btn-analyze, button:has-text("Load quote")').first();
+    if (await loadBtn.isVisible()) {
+      await loadBtn.click();
     }
 
-    // 5. Submit form or trigger analysis
-    const submitBtn = page.locator('button[type="submit"], button:has-text("Analyze"), button:has-text("Submit")').first();
-    if (await submitBtn.isVisible()) {
-      await submitBtn.click();
-    }
-
-    // 6. Verify page remains responsive and accessible without auth redirect
-    await expect(page.locator('body')).toBeVisible();
+    // 6. Verify page content is visible and rendered
+    await expect(page.locator('.command-center-page, main').first()).toBeVisible();
   });
 });

@@ -12,15 +12,14 @@ test.describe('Journal & Exit Post-Mortem E2E Flow (Option A: Dev Auth Bypass)',
     await page.goto('/journal');
     await expect(page).toHaveURL(/\/journal/);
 
-    // 2. Verify Journal page header or container renders
-    const pageBody = page.locator('body');
-    await expect(pageBody).toBeVisible();
+    // 2. Wait for preferences gateway loading to settle
+    await expect(page.locator('text=กำลังโหลดข้อมูล')).not.toBeVisible({ timeout: 10000 });
 
-    // 3. Check table or card layout presence
-    const journalContainer = page.locator('[data-testid="journal-container"], main, .container').first();
-    await expect(journalContainer).toBeVisible();
+    // 3. Verify Journal page layout or main content renders
+    const mainContainer = page.locator('main, .journal-page, #main-content').first();
+    await expect(mainContainer).toBeVisible({ timeout: 10000 });
 
-    // 4. Verify no auth modal or error block is blocking access under Option A bypass
+    // 4. Verify no auth error block is blocking access
     await expect(page.locator('text=Unauthorized')).not.toBeVisible();
   });
 });

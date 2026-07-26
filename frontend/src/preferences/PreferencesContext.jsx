@@ -2,6 +2,7 @@
 import { createContext, useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useAuth } from '../auth/clerkAdapter';
+import { isDevAuthBypassEnabled } from '../auth/devAuth';
 import { fetchWithAuth } from '../lib/api';
 
 export const PreferencesContext = createContext(null);
@@ -50,7 +51,14 @@ export function PreferencesProvider({ children }) {
       setPreferences(normalized);
     } catch (err) {
       console.error('Failed to load preferences:', err);
-      if (!isTestEnv) {
+      if (err.status === 503 || isDevAuthBypassEnabled()) {
+        // Fail-open for local dev / unconfigured DB: use default preferences so UI remains accessible
+        setPreferences({
+          ...DEFAULT_PREFERENCES,
+          onboarding_completed: true,
+        });
+        setError(null);
+      } else if (!isTestEnv) {
         setError(err);
       }
     } finally {

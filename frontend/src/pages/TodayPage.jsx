@@ -1,19 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  CalendarCheck,
-  TrendingUp,
-  Clock,
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
-  ShieldAlert,
-  HelpCircle,
-  Activity,
-  CheckCircle,
-  X,
-} from 'lucide-react';
+import { TrendingUp, Clock, ArrowRight, ChevronDown, ChevronUp, ShieldAlert, HelpCircle, Activity, CheckCircle, X } from 'lucide-react';
 import { useAuth } from '../auth/clerkAdapter';
 import { useToday } from '../hooks/useToday';
 import { EmptyState } from '../components/ui/EmptyState';
