@@ -99,7 +99,7 @@ describe("dev UI auth bypass", () => {
       .set("Authorization", "Bearer dev-ui-auth-bypass");
 
     assert.equal(res.statusCode, 200);
-    assert.deepEqual(res.body, []);
+    assert.deepEqual(res.body, { holdings: [], usd_thb_rate: 33.69 });
     assert.deepEqual(loaded.calls, ["dev-ui-user"]);
   });
 

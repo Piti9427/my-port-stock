@@ -193,7 +193,7 @@ describe("runtime portfolio isolation", () => {
     const res = await request(loaded.app).get("/api/holdings");
 
     assert.equal(res.statusCode, 200);
-    assert.deepEqual(res.body, []);
+    assert.deepEqual(res.body, { holdings: [], usd_thb_rate: 33.69 });
   });
 
   it("does not return user A rows to user B", async () => {

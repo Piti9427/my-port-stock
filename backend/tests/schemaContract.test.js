@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const schema = fs.readFileSync(path.join(__dirname, "../supabase_schema.sql"), "utf8");
+const schema = fs.readFileSync(path.join(__dirname, "../../supabase/schema.sql"), "utf8");
 
 test("schema has owner import audit table and explicit Data API grants", () => {
   assert.match(schema, /CREATE TABLE IF NOT EXISTS public\.import_batches/);
