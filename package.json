@@ -19,8 +19,15 @@
     "format": "npm run format --workspaces --if-present",
     "format:check": "npm run format:check --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "check:format": "npm run format:check --workspaces --if-present",
+    "check:lint": "npm run lint --workspaces --if-present",
+    "check:type": "npm run typecheck --workspaces --if-present",
+    "check:build": "npm run build --workspaces --if-present",
+    "check:unit": "npm run test:unit --workspaces --if-present",
+    "check:e2e": "npx playwright test --config=frontend/playwright.config.ts",
+    "check:pr": "node scripts/check-pr.js",
     "check:frontend-standard": "npm run check:frontend-standard --workspaces --if-present",
-    "check:all": "npm run check:all --workspaces --if-present",
+    "check:all": "node scripts/check-pr.js",
     "prepare": "npm run prepare --workspaces --if-present"
   },
   "devDependencies": {

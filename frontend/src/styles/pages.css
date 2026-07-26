@@ -265,7 +265,9 @@
 
 .mode-select {
   width: 100%;
-  background: var(--bg-panel-solid) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23a1a1aa' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") no-repeat right 12px center / 1.25rem;
+  background: var(--bg-panel-solid)
+    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23a1a1aa' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")
+    no-repeat right 12px center / 1.25rem;
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
   padding: 11px 40px 11px 16px;
@@ -1592,7 +1594,9 @@
   padding: 10px 12px;
   font: inherit;
   font-size: 0.82rem;
-  transition: border-color 0.15s var(--ease-out-quart), box-shadow 0.15s var(--ease-out-quart);
+  transition:
+    border-color 0.15s var(--ease-out-quart),
+    box-shadow 0.15s var(--ease-out-quart);
 }
 
 .journal-filters select:focus,
@@ -4078,7 +4082,9 @@
   font: inherit;
   font-size: 0.78rem;
   font-weight: 700;
-  transition: background-color 0.15s var(--ease-out-quart), color 0.15s var(--ease-out-quart);
+  transition:
+    background-color 0.15s var(--ease-out-quart),
+    color 0.15s var(--ease-out-quart);
 }
 
 .command-mode-toggle button:last-child,
@@ -5140,7 +5146,10 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.25s ease, background-color 0.25s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .today-card:hover {
@@ -5226,7 +5235,8 @@
 }
 
 @keyframes pulse-breathe {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
   }
   50% {
@@ -5591,5 +5601,3 @@
     transition: none;
   }
 }
-
-

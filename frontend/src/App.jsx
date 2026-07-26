@@ -2,7 +2,20 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import * as Sentry from '@sentry/react';
-import { LayoutDashboard, Bot, BookOpen, ShieldAlert, BarChart2, Crosshair, Settings2, PanelLeftClose, PanelLeftOpen, Sun, Moon, CalendarCheck } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Bot,
+  BookOpen,
+  ShieldAlert,
+  BarChart2,
+  Crosshair,
+  Settings2,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Sun,
+  Moon,
+  CalendarCheck,
+} from 'lucide-react';
 import { Show, UserButton } from './auth/clerkAdapter';
 import TodayPage from './pages/TodayPage';
 import DashboardPage from './pages/DashboardPage';

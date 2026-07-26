@@ -20,7 +20,7 @@ function buildPositionRows(holdings, totalValue) {
     const shares = numberValue(holding.shares);
     const price = numberValue(holding.price);
     const rate = numberValue(holding.fx_rate || 1.0);
-    const value = numberValue(holding.value_thb || (shares * price * rate));
+    const value = numberValue(holding.value_thb || shares * price * rate);
     const stopLoss = getStopLoss(holding);
     const hasValidStop = stopLoss !== null && price > 0 && shares > 0 && stopLoss < price;
     const stopDistancePct = hasValidStop ? ((price - stopLoss) / price) * 100 : null;
@@ -67,7 +67,7 @@ export function buildPortfolioRisk(holdings, options = {}) {
   const riskBudget = options.riskBudget ?? DEFAULT_RISK_BUDGET;
   const totalValue = holdings.reduce((sum, holding) => {
     const rate = numberValue(holding.fx_rate || 1.0);
-    return sum + numberValue(holding.value_thb || (numberValue(holding.shares) * numberValue(holding.price) * rate));
+    return sum + numberValue(holding.value_thb || numberValue(holding.shares) * numberValue(holding.price) * rate);
   }, 0);
   const positions = buildPositionRows(holdings, totalValue);
   const sectors = buildSectors(positions, totalValue, sectorLimit);

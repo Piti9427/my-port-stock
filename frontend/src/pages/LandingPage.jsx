@@ -15,7 +15,9 @@ export default function LandingPage() {
           <span className="font-semibold tracking-tight text-[var(--text-primary)] text-lg">MyPortStock</span>
         </div>
         <SignInButton mode="modal">
-          <button className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200">Sign In</button>
+          <button className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200">
+            Sign In
+          </button>
         </SignInButton>
       </header>
 

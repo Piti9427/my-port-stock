@@ -20,7 +20,9 @@ function buildSummary(holdings) {
 
   holdings.forEach((holding) => {
     if (holding.sector) sectors.add(holding.sector);
-    const valThb = numberValue(holding.value_thb || (numberValue(holding.shares) * numberValue(holding.price || holding.avg_cost) * (holding.fx_rate || 1.0)));
+    const valThb = numberValue(
+      holding.value_thb || numberValue(holding.shares) * numberValue(holding.price || holding.avg_cost) * (holding.fx_rate || 1.0)
+    );
     totalValueThb += valThb;
 
     const beta = numberValue(holding.beta ?? 1.0);

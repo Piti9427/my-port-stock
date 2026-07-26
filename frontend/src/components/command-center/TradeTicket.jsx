@@ -126,12 +126,7 @@ export function TradeTicket({ open, ticker, decisionMode, quotePrice, currentHol
         </div>
         <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label htmlFor="ticket-bias-select">Cognitive Bias Tag</label>
-          <select
-            id="ticket-bias-select"
-            value={cognitiveBias}
-            onChange={(event) => setCognitiveBias(event.target.value)}
-            className="mode-select"
-          >
+          <select id="ticket-bias-select" value={cognitiveBias} onChange={(event) => setCognitiveBias(event.target.value)} className="mode-select">
             {['None', 'FOMO', 'Loss Aversion', 'Anchoring', 'Herd Behavior'].map((bias) => (
               <option key={bias} value={bias}>
                 {bias}

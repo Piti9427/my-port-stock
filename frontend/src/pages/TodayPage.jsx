@@ -12,7 +12,7 @@ import {
   HelpCircle,
   Activity,
   CheckCircle,
-  X
+  X,
 } from 'lucide-react';
 import { useAuth } from '../auth/clerkAdapter';
 import { useToday } from '../hooks/useToday';
@@ -67,9 +67,10 @@ export default function TodayPage() {
       if (!dismissedAtStr) return true;
 
       const dismissedAt = new Date(dismissedAtStr).getTime();
-      const expiryDuration = item.category === 'protect' 
-        ? 24 * 60 * 60 * 1000 // 24 hours
-        : 7 * 24 * 60 * 60 * 1000; // 7 days
+      const expiryDuration =
+        item.category === 'protect'
+          ? 24 * 60 * 60 * 1000 // 24 hours
+          : 7 * 24 * 60 * 60 * 1000; // 7 days
 
       if (mountTime - dismissedAt > expiryDuration) {
         // Expiry passed, cleanup key in background
@@ -175,7 +176,9 @@ export default function TodayPage() {
       <div className="today-pulse-section">
         <div className="today-pulse-section-header">
           <span>PORTFOLIO DRAWDOWN</span>
-          <span className="num-font">{pulse.drawdownPct.toFixed(1)}% / {pulse.maxDrawdownPct}%</span>
+          <span className="num-font">
+            {pulse.drawdownPct.toFixed(1)}% / {pulse.maxDrawdownPct}%
+          </span>
         </div>
         <div className="today-pulse-bar-track">
           <div
@@ -220,7 +223,9 @@ export default function TodayPage() {
       {pulse.missingStopCount > 0 && (
         <div className="today-pulse-alert-box alert-loss">
           <ShieldAlert className="alert-box-icon" />
-          <span>{pulse.missingStopCount} position{pulse.missingStopCount > 1 ? 's' : ''} missing stop-loss definitions</span>
+          <span>
+            {pulse.missingStopCount} position{pulse.missingStopCount > 1 ? 's' : ''} missing stop-loss definitions
+          </span>
         </div>
       )}
     </div>
@@ -230,9 +235,7 @@ export default function TodayPage() {
 
   return (
     <div className="today-page">
-      <div className="today-description">
-        ตรวจสอบสัญญาณพอร์ตโฟลิโอและการกระทำตามระบบประเมินความเสี่ยงรายวัน
-      </div>
+      <div className="today-description">ตรวจสอบสัญญาณพอร์ตโฟลิโอและการกระทำตามระบบประเมินความเสี่ยงรายวัน</div>
 
       {isBrandNew ? (
         <EmptyState
@@ -305,17 +308,9 @@ export default function TodayPage() {
                           {item.category === 'protect' && <span className="tag-pulse-dot" />}
                           {styles.label}
                         </span>
-                        {item.ticker && (
-                          <span className="today-card-ticker-tag num-font">
-                            {item.ticker}
-                          </span>
-                        )}
+                        {item.ticker && <span className="today-card-ticker-tag num-font">{item.ticker}</span>}
                       </div>
-                      <button
-                        className="today-card-dismiss-btn"
-                        onClick={(e) => handleDismiss(item, e)}
-                        aria-label="Dismiss alarm"
-                      >
+                      <button className="today-card-dismiss-btn" onClick={(e) => handleDismiss(item, e)} aria-label="Dismiss alarm">
                         <X className="dismiss-btn-icon" />
                       </button>
                     </div>
@@ -328,19 +323,12 @@ export default function TodayPage() {
                     </div>
 
                     <div className="today-card-actions">
-                      <button
-                        className="today-card-cta-btn button-primary"
-                        onClick={(e) => handleCtaClick(item.ctaRoute, e)}
-                      >
+                      <button className="today-card-cta-btn button-primary" onClick={(e) => handleCtaClick(item.ctaRoute, e)}>
                         <span>{item.cta}</span>
                         <ArrowRight className="cta-icon" />
                       </button>
                       <button className="today-card-expand-btn">
-                        {isExpanded ? (
-                          <ChevronUp className="expand-icon" />
-                        ) : (
-                          <ChevronDown className="expand-icon" />
-                        )}
+                        {isExpanded ? <ChevronUp className="expand-icon" /> : <ChevronDown className="expand-icon" />}
                       </button>
                     </div>
 
@@ -359,9 +347,7 @@ export default function TodayPage() {
                             <div key={key} className="today-card-evidence-item">
                               <div className="evidence-label">{key.replace(/([A-Z])/g, ' $1').toUpperCase()}</div>
                               <div className="evidence-value num-font">
-                                {typeof val === 'number'
-                                  ? val.toLocaleString(undefined, { maximumFractionDigits: 2 })
-                                  : String(val)}
+                                {typeof val === 'number' ? val.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(val)}
                               </div>
                             </div>
                           ))}
@@ -385,7 +371,9 @@ export default function TodayPage() {
               return (
                 <div className="today-mobile-card-container">
                   <div className="today-mobile-card-indicator">
-                    <span>สัญญาณเตือน {activeMobileIndex + 1} จาก {activeQueue.length}</span>
+                    <span>
+                      สัญญาณเตือน {activeMobileIndex + 1} จาก {activeQueue.length}
+                    </span>
                   </div>
 
                   <motion.div
@@ -401,17 +389,9 @@ export default function TodayPage() {
                           {currentItem.category === 'protect' && <span className="tag-pulse-dot" />}
                           {styles.label}
                         </span>
-                        {currentItem.ticker && (
-                          <span className="today-card-ticker-tag num-font">
-                            {currentItem.ticker}
-                          </span>
-                        )}
+                        {currentItem.ticker && <span className="today-card-ticker-tag num-font">{currentItem.ticker}</span>}
                       </div>
-                      <button
-                        className="today-card-dismiss-btn"
-                        onClick={(e) => handleDismiss(currentItem, e)}
-                        aria-label="Dismiss Alarm"
-                      >
+                      <button className="today-card-dismiss-btn" onClick={(e) => handleDismiss(currentItem, e)} aria-label="Dismiss Alarm">
                         <X className="dismiss-btn-icon" />
                       </button>
                     </div>
@@ -424,10 +404,7 @@ export default function TodayPage() {
                     </div>
 
                     <div className="today-card-actions">
-                      <button
-                        className="today-card-cta-btn button-primary"
-                        onClick={(e) => handleCtaClick(currentItem.ctaRoute, e)}
-                      >
+                      <button className="today-card-cta-btn button-primary" onClick={(e) => handleCtaClick(currentItem.ctaRoute, e)}>
                         <span>{currentItem.cta}</span>
                         <ArrowRight className="cta-icon" />
                       </button>
@@ -439,9 +416,7 @@ export default function TodayPage() {
                         {Object.entries(currentItem.evidence || {}).map(([key, val]) => (
                           <div key={key} className="today-card-evidence-item">
                             <div className="evidence-label">{key.toUpperCase()}</div>
-                            <div className="evidence-value num-font">
-                              {typeof val === 'number' ? val.toFixed(2) : String(val)}
-                            </div>
+                            <div className="evidence-value num-font">{typeof val === 'number' ? val.toFixed(2) : String(val)}</div>
                           </div>
                         ))}
                       </div>

@@ -115,7 +115,7 @@ test('TodayPage card CTAs trigger correct page routing', async () => {
   renderTodayPage();
 
   const ctaButtons = screen.getAllByRole('button', { name: /(Analyze|Write Post-Mortem)/i });
-  
+
   // Click first button (AAPL Analyze CTA)
   fireEvent.click(ctaButtons[0]);
   expect(screen.getByTestId('location')).toHaveTextContent('/command-center?ticker=AAPL');
@@ -134,7 +134,7 @@ test('Dismissing a card saves it to localStorage and filters it from view', asyn
   await waitFor(() => {
     expect(screen.queryAllByText('AAPL is within 2.5% of stop-loss').length).toBe(0);
   });
-  
+
   // Check localStorage contains key
   const dismissedKey = 'myportstock_dismissed_protect_stop_proximity_AAPL';
   expect(localStorage.getItem(dismissedKey)).not.toBeNull();

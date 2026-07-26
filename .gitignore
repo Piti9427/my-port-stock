@@ -11,6 +11,7 @@ tmp/
 
 # Keep generated artifacts local unless intentionally committed.
 artifacts/playwright-mcp/
+artifacts/reports/
 
 # IDE and tool specific files
 .codegraph/
