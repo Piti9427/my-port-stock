@@ -29,8 +29,17 @@
 | `autonomous-search`      | Sub-agent contextual search and hybrid oracle contract architecture              | `docs/adr/0003-subagent-autonomous-search.md`                       |
 | `cls-vrt-deep-dive`      | Celestica and Vertiv 7-Dimension SOP deep dive                                   | `notes/2026-07-07-cls-vrt-deep-dive.md`                             |
 | `enterprise-qa-pipeline` | Merge Gates, Advisory Checks, Scheduled Assurance, QA/security pipeline          | `docs/plans/2026-07-26-enterprise-qa-security-pipeline-plan.md`     |
+| `test-coverage-gap-plan` | 3-Phase Test Coverage Gap Implementation Plan (+31 tests)                         | `docs/plans/2026-07-27-test-coverage-gap-plan.md`                  |
 
 ## Durable Entries
+
+### 2026-07-27 - Test Coverage Gap Implementation Plan
+
+- Keywords: `test-coverage-gap-plan`, `pgtap`, `rls-isolation`, `landing-page-test`, `ui-primitives-contract`
+- Decision: Saved 3-Phase actionable test coverage plan (+31 tests across DB, Frontend, Backend). Phase 1 (DB RLS & CHECK constraints), Phase 2 (LandingPage & 7 shadcn UI primitives), Phase 3 (Backend helpers & routes).
+- Action: Created [2026-07-27-test-coverage-gap-plan.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/plans/2026-07-27-test-coverage-gap-plan.md).
+- Source: `docs/plans/2026-07-27-test-coverage-gap-plan.md`
+
 
 ### 2026-06-28 - Gate 0 Backend Hardening Local Implementation
 
