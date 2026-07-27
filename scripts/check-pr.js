@@ -70,7 +70,11 @@ for (const [id, name, command] of steps) {
   }
 }
 
+// Write JSON Report
 fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+const totalDurationMs = Date.now() - suiteStartedAt;
+const overallResult = failed ? "FAIL" : "PASS";
+
 fs.writeFileSync(
   reportPath,
   `${JSON.stringify(
@@ -78,8 +82,8 @@ fs.writeFileSync(
       generatedAt: new Date().toISOString(),
       commitSha,
       assuranceClass: "Merge Gate",
-      overallResult: failed ? "FAIL" : "PASS",
-      durationMs: Date.now() - suiteStartedAt,
+      overallResult,
+      durationMs: totalDurationMs,
       checks: results,
     },
     null,
@@ -87,5 +91,54 @@ fs.writeFileSync(
   )}\n`,
 );
 
-console.log(`PR assurance report: ${reportPath}`);
+// Format Terminal Console Summary Output
+const totalSec = (totalDurationMs / 1000).toFixed(1);
+console.log("\n");
+console.log(
+  "================================================================================",
+);
+console.log(
+  "                  PR QUALITY ASSURANCE SUITE SUMMARY                             ",
+);
+console.log(
+  "================================================================================",
+);
+console.log(` Commit SHA : ${commitSha}`);
+console.log(
+  ` Result     : ${overallResult === "PASS" ? "✅ PASS" : "❌ FAIL"}`,
+);
+console.log(` Total Time : ${totalSec}s`);
+console.log(
+  "--------------------------------------------------------------------------------",
+);
+console.log(
+  " #   Gate Name                              Duration     Result                ",
+);
+console.log(
+  "--------------------------------------------------------------------------------",
+);
+
+steps.forEach(([id, name], idx) => {
+  const check = results.find((r) => r.id === id);
+  const numStr = String(idx + 1).padStart(2, " ");
+  const namePad = name.padEnd(38, " ");
+
+  if (check) {
+    const durSec = (check.durationMs / 1000).toFixed(1) + "s";
+    const durPad = durSec.padStart(8, " ");
+    const resStr = check.result === "PASS" ? "✅ PASS" : "❌ FAIL";
+    console.log(` ${numStr}  ${namePad} ${durPad}     ${resStr}`);
+  } else {
+    console.log(` ${numStr}  ${namePad}     -        ⏸️ SKIPPED`);
+  }
+});
+
+console.log(
+  "--------------------------------------------------------------------------------",
+);
+console.log(` JSON Report Saved : ${path.relative(repoRoot, reportPath)}`);
+console.log(
+  "================================================================================\n",
+);
+
 process.exit(failed ? 1 : 0);
