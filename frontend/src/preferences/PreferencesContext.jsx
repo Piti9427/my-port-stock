@@ -2,6 +2,7 @@
 import { createContext, useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useAuth } from '../auth/clerkAdapter';
+import { isDevAuthBypassEnabled } from '../auth/devAuth';
 import { fetchWithAuth } from '../lib/api';
 
 export const PreferencesContext = createContext(null);
@@ -19,7 +20,8 @@ export function PreferencesProvider({ children }) {
   const { getToken, userId } = useAuth();
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
   const [loading, setLoading] = useState(() => {
-    const isSpyOrMock = typeof fetchWithAuth.mock !== 'undefined' || fetchWithAuth.hasOwnProperty('_isMockFunction');
+    const isSpyOrMock =
+      Object.prototype.hasOwnProperty.call(fetchWithAuth, 'mock') || Object.prototype.hasOwnProperty.call(fetchWithAuth, '_isMockFunction');
     const shouldFetch = !isTestEnv || isSpyOrMock;
     return shouldFetch ? Boolean(userId) : false;
   });
@@ -50,7 +52,14 @@ export function PreferencesProvider({ children }) {
       setPreferences(normalized);
     } catch (err) {
       console.error('Failed to load preferences:', err);
-      if (!isTestEnv) {
+      if (err.status === 503 || isDevAuthBypassEnabled()) {
+        // Fail-open for local dev / unconfigured DB: use default preferences so UI remains accessible
+        setPreferences({
+          ...DEFAULT_PREFERENCES,
+          onboarding_completed: true,
+        });
+        setError(null);
+      } else if (!isTestEnv) {
         setError(err);
       }
     } finally {
@@ -68,7 +77,8 @@ export function PreferencesProvider({ children }) {
 
   // Load preferences on sign-in
   useEffect(() => {
-    const isSpyOrMock = typeof fetchWithAuth.mock !== 'undefined' || fetchWithAuth.hasOwnProperty('_isMockFunction');
+    const isSpyOrMock =
+      Object.prototype.hasOwnProperty.call(fetchWithAuth, 'mock') || Object.prototype.hasOwnProperty.call(fetchWithAuth, '_isMockFunction');
     const shouldFetch = !isTestEnv || isSpyOrMock;
 
     if (!shouldFetch) {
@@ -104,33 +114,36 @@ export function PreferencesProvider({ children }) {
     }
   }, [preferences?.theme]);
 
-  const savePreferences = useCallback(async (nextPrefs) => {
-    setError(null);
-    try {
-      const payload = {
-        reporting_currency: nextPrefs.reporting_currency ?? preferences.reporting_currency,
-        disclosure_level: nextPrefs.disclosure_level ?? preferences.disclosure_level,
-        theme: nextPrefs.theme ?? preferences.theme,
-      };
-      const data = await fetchWithAuth('/api/preferences', getTokenRef.current, {
-        method: 'PUT',
-        body: payload,
-      });
-      const normalized = data
-        ? {
-            ...DEFAULT_PREFERENCES,
-            ...data,
-            onboarding_completed: Boolean(data.onboarding_completed_at || data.onboarding_completed),
-          }
-        : DEFAULT_PREFERENCES;
-      setPreferences(normalized);
-      return normalized;
-    } catch (err) {
-      console.error('Failed to save preferences:', err);
-      setError(err);
-      throw err;
-    }
-  }, [preferences]);
+  const savePreferences = useCallback(
+    async (nextPrefs) => {
+      setError(null);
+      try {
+        const payload = {
+          reporting_currency: nextPrefs.reporting_currency ?? preferences.reporting_currency,
+          disclosure_level: nextPrefs.disclosure_level ?? preferences.disclosure_level,
+          theme: nextPrefs.theme ?? preferences.theme,
+        };
+        const data = await fetchWithAuth('/api/preferences', getTokenRef.current, {
+          method: 'PUT',
+          body: payload,
+        });
+        const normalized = data
+          ? {
+              ...DEFAULT_PREFERENCES,
+              ...data,
+              onboarding_completed: Boolean(data.onboarding_completed_at || data.onboarding_completed),
+            }
+          : DEFAULT_PREFERENCES;
+        setPreferences(normalized);
+        return normalized;
+      } catch (err) {
+        console.error('Failed to save preferences:', err);
+        setError(err);
+        throw err;
+      }
+    },
+    [preferences]
+  );
 
   const toggleTheme = useCallback(async () => {
     const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark';

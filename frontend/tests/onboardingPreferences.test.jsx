@@ -1,6 +1,6 @@
 // frontend/tests/onboardingPreferences.test.jsx
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PreferencesProvider } from '../src/preferences/PreferencesContext';
 import OnboardingPage from '../src/pages/OnboardingPage';
 import { usePreferences } from '../src/hooks/usePreferences';

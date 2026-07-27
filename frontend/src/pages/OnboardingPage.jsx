@@ -162,11 +162,7 @@ export default function OnboardingPage() {
             </div>
           </fieldset>
 
-          <button
-            type="submit"
-            className="btn-primary onboarding-submit-button"
-            disabled={saving}
-          >
+          <button type="submit" className="btn-primary onboarding-submit-button" disabled={saving}>
             {saving ? 'กำลังตั้งค่า...' : 'บันทึกและเริ่มต้นใช้งาน'}
           </button>
         </form>

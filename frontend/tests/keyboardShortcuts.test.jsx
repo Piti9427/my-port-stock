@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { expect, test, vi } from 'vitest';
 import KeyboardShortcuts from '../src/components/KeyboardShortcuts.jsx';
 
@@ -42,8 +42,8 @@ test('route sequences navigate without updating the router during render', async
     </MemoryRouter>
   );
 
-  fireEvent.keyDown(globalThis, { key: 'g' });
-  fireEvent.keyDown(globalThis, { key: 'd' });
+  fireEvent.keyDown(window, { key: 'g' });
+  fireEvent.keyDown(window, { key: 'd' });
 
   await waitFor(() => expect(screen.getByLabelText('location')).toHaveTextContent('/'));
   expect(consoleError).not.toHaveBeenCalled();

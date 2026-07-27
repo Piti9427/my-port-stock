@@ -8,7 +8,7 @@ const STATUS_LABELS = {
   insufficient_data: 'Insufficient data',
 };
 
-export function StatusBadge({ status = 'wait', label }) {
+export function StatusBadge({ status = 'wait', label = null }) {
   const normalizedStatus = String(status).trim().toLowerCase().replace(/\s+/g, '_');
   const displayLabel = label || STATUS_LABELS[normalizedStatus] || normalizedStatus.replace(/_/g, ' ');
 

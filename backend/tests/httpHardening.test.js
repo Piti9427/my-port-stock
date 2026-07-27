@@ -44,7 +44,10 @@ describe("HTTP hardening", () => {
       error: "Internal server error",
       requestId: response.headers["x-request-id"],
     });
-    assert.doesNotMatch(JSON.stringify(response.body), /database|stack|secret/i);
+    assert.doesNotMatch(
+      JSON.stringify(response.body),
+      /database|stack|secret/i,
+    );
   });
 
   it("sets security headers without exposing Express", async () => {
@@ -91,7 +94,9 @@ describe("HTTP hardening", () => {
     proxyApp.set("trust proxy", 1);
     proxyApp.use(requestContextForTest());
     proxyApp.use(ordinary);
-    proxyApp.get("/resource", (_req, res) => res.status(200).json({ ok: true }));
+    proxyApp.get("/resource", (_req, res) =>
+      res.status(200).json({ ok: true }),
+    );
 
     const first = await request(proxyApp)
       .get("/resource")

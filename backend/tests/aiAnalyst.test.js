@@ -3,11 +3,17 @@ const assert = require("node:assert/strict");
 
 test("AI analyst fails closed when Gemini API key is missing", async () => {
   const previousKey = process.env.GEMINI_API_KEY;
+  const previousTestMode = process.env.MPS_TEST_MODE;
   delete process.env.GEMINI_API_KEY;
+  delete process.env.MPS_TEST_MODE;
   delete require.cache[require.resolve("../src/services/aiAnalyst")];
 
   const { analyzeTicker } = require("../src/services/aiAnalyst");
-  const analysis = await analyzeTicker("AAPL", { shares: 100 }, { last_price: 150.5 });
+  const analysis = await analyzeTicker(
+    "AAPL",
+    { shares: 100 },
+    { last_price: 150.5 },
+  );
 
   assert.equal(analysis.status, "INSUFFICIENT_DATA");
   assert.equal(analysis.reason_code, "AI_ANALYST_UNAVAILABLE");
@@ -15,6 +21,9 @@ test("AI analyst fails closed when Gemini API key is missing", async () => {
 
   if (previousKey) {
     process.env.GEMINI_API_KEY = previousKey;
+  }
+  if (previousTestMode) {
+    process.env.MPS_TEST_MODE = previousTestMode;
   }
 });
 

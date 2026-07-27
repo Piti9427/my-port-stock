@@ -1,6 +1,6 @@
-export function EmptyState({ icon, title, description, action, onAction }) {
+export function EmptyState({ icon = null, title, description = null, action = null, onAction = null }) {
   const actionLabel = typeof action === 'string' ? action : action?.label;
-  const actionHandler = typeof action === 'object' ? action.onClick : onAction;
+  const actionHandler = action && typeof action === 'object' ? action.onClick : onAction;
 
   return (
     <div className="empty-state ui-empty-state" role="status">

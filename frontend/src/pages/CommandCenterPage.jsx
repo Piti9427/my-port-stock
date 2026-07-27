@@ -13,19 +13,21 @@ export default function CommandCenterPage() {
   const state = useCommandCenter();
   const snapshot = state.analysis?.decision_snapshot || {};
 
+  const { tradeOpen, setTradeOpen } = state;
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName) || event.target.isContentEditable) {
         return;
       }
-      if (event.key.toLowerCase() === 't' && !state.tradeOpen) {
+      if (event.key.toLowerCase() === 't' && !tradeOpen) {
         event.preventDefault();
-        state.setTradeOpen(true);
+        setTradeOpen(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [state.tradeOpen, state.setTradeOpen]);
+  }, [tradeOpen, setTradeOpen]);
 
   return (
     <div className="command-center-page command-workspace">

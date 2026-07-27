@@ -1,0 +1,12 @@
+title = "MyPortStock reviewed Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+# Keep allowlists narrow and reasoned. No repository-wide or file-wide
+# allowlist exists by design; additions require security review.
+
+[[allowlists]]
+description = "Documented Clerk SDK test publishable key used only to initialize unit-test middleware"
+regexTarget = "secret"
+regexes = ['''^pk_test_Y2xlcmsuZXhhbXBsZS5jb20k$''']

@@ -44,7 +44,9 @@
   background: var(--bg-panel-solid);
   color: var(--text-primary);
   box-shadow: none;
-  transition: border-color 0.15s var(--ease-out-quart), box-shadow 0.15s var(--ease-out-quart);
+  transition:
+    border-color 0.15s var(--ease-out-quart),
+    box-shadow 0.15s var(--ease-out-quart);
 }
 
 .input-field:focus,
@@ -341,10 +343,10 @@
   outline: none;
 }
 
-[data-theme="light"] .ui-data-table-clickable-row:hover,
-[data-theme="light"] .ui-data-table-clickable-row:focus-visible,
-[data-theme="light"] .watchlist-row:hover,
-[data-theme="light"] .analytics-history-table tr:hover {
+[data-theme='light'] .ui-data-table-clickable-row:hover,
+[data-theme='light'] .ui-data-table-clickable-row:focus-visible,
+[data-theme='light'] .watchlist-row:hover,
+[data-theme='light'] .analytics-history-table tr:hover {
   background: rgba(0, 0, 0, 0.015) !important;
 }
 

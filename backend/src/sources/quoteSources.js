@@ -87,7 +87,13 @@ function normalizeNasdaqTimestamp(rawTimestamp) {
   const second = Number(match[6] || 0);
   const meridiem = match[7].toUpperCase();
 
-  if (!month || !day || !year || !Number.isFinite(hour) || !Number.isFinite(minute)) {
+  if (
+    !month ||
+    !day ||
+    !year ||
+    !Number.isFinite(hour) ||
+    !Number.isFinite(minute)
+  ) {
     return null;
   }
 
@@ -99,7 +105,15 @@ function normalizeNasdaqTimestamp(rawTimestamp) {
     hour = 0;
   }
 
-  return zonedTimeToUtc("America/New_York", year, month, day, hour, minute, second);
+  return zonedTimeToUtc(
+    "America/New_York",
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second,
+  );
 }
 
 function normalizeStooqTimestamp(rawDate, rawTime) {
@@ -143,7 +157,9 @@ function parseSimpleCsv(csvText) {
   const headers = lines[0].split(",").map((header) => header.trim());
   const values = lines[1].split(",").map((value) => value.trim());
 
-  return Object.fromEntries(headers.map((header, index) => [header, values[index]]));
+  return Object.fromEntries(
+    headers.map((header, index) => [header, values[index]]),
+  );
 }
 
 function buildCandidate(quote, priceField, timeField) {
@@ -158,9 +174,12 @@ function buildCandidate(quote, priceField, timeField) {
 }
 
 function selectQuoteCandidate(quote, marketSession) {
-  const regular = () => buildCandidate(quote, "regularMarketPrice", "regularMarketTime");
-  const preMarket = () => buildCandidate(quote, "preMarketPrice", "preMarketTime");
-  const afterHours = () => buildCandidate(quote, "postMarketPrice", "postMarketTime");
+  const regular = () =>
+    buildCandidate(quote, "regularMarketPrice", "regularMarketTime");
+  const preMarket = () =>
+    buildCandidate(quote, "preMarketPrice", "preMarketTime");
+  const afterHours = () =>
+    buildCandidate(quote, "postMarketPrice", "postMarketTime");
 
   if (marketSession === "Pre-market") {
     return preMarket() || regular();
@@ -201,7 +220,9 @@ function buildYahooQuoteSource(quote, asOf = new Date()) {
 
 function buildNasdaqQuoteSource(ticker, payload) {
   if (!US_EQUITY_PATTERN.test(ticker)) {
-    return insufficientData("Nasdaq cross-check supports US equity symbols only");
+    return insufficientData(
+      "Nasdaq cross-check supports US equity symbols only",
+    );
   }
 
   const quoteData = payload?.data;
@@ -225,7 +246,9 @@ function buildNasdaqQuoteSource(ticker, payload) {
     quote_timestamp: timestamp,
     quote_timestamp_raw: primaryData.lastTradeTimestamp,
     market_session: quoteData.marketStatus || "Unknown",
-    quote_delay_status: primaryData.isRealTime ? "Real-time" : "Delayed or unspecified",
+    quote_delay_status: primaryData.isRealTime
+      ? "Real-time"
+      : "Delayed or unspecified",
   };
 }
 
@@ -340,7 +363,7 @@ async function fetchYahooQuoteSource(ticker, asOf) {
 async function fetchFinnhubQuoteSource(ticker) {
   try {
     if (!process.env.FINNHUB_API_KEY) {
-       return insufficientData("Finnhub API key not configured");
+      return insufficientData("Finnhub API key not configured");
     }
     const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(ticker)}&token=${process.env.FINNHUB_API_KEY}`;
     const response = await fetch(url, {

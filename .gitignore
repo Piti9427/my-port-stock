@@ -4,6 +4,8 @@ node_modules/
 # Runtime / generated scratch space
 tmp/
 .playwright-mcp/
+__pycache__/
+*.pyc
 
 # Local environment files
 .env
@@ -11,6 +13,8 @@ tmp/
 
 # Keep generated artifacts local unless intentionally committed.
 artifacts/playwright-mcp/
+artifacts/reports/
+artifacts/gate-reports/
 
 # IDE and tool specific files
 .codegraph/
@@ -36,3 +40,5 @@ testsprite_tests/tmp/config.json
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+# Supabase CLI local branch state
+supabase/.branches/

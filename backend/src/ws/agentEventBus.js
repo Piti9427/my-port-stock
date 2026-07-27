@@ -2,15 +2,23 @@
 
 const WebSocket = require("ws");
 
+/** @type {(event: Record<string, unknown>, options?: {userId?: string|null}) => boolean} */
 let broadcastFn = () => false;
 
 function rejectUpgrade(socket) {
-  socket.write("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\nContent-Length: 0\r\n\r\n");
+  socket.write(
+    "HTTP/1.1 401 Unauthorized\r\nConnection: close\r\nContent-Length: 0\r\n\r\n",
+  );
   socket.destroy();
 }
 
+/**
+ * @param {import("node:http").Server} httpServer
+ * @param {{ticketStore?: import("./wsTicketStore").WsTicketStore}} [options]
+ */
 function createAgentEventBus(httpServer, { ticketStore } = {}) {
-  if (!ticketStore) throw new TypeError("Agent event bus requires a ticket store");
+  if (!ticketStore)
+    throw new TypeError("Agent event bus requires a ticket store");
 
   const wss = new WebSocket.Server({ noServer: true });
 
@@ -37,11 +45,14 @@ function createAgentEventBus(httpServer, { ticketStore } = {}) {
     });
   });
 
-  broadcastFn = function scopedBroadcast(event, { userId } = {}) {
+  broadcastFn = function scopedBroadcast(event, { userId = null } = {}) {
     const isSystemHealth = event?.type === "SYSTEM_HEALTH";
     if (!userId && !isSystemHealth) return false;
 
-    const payload = JSON.stringify({ ...event, timestamp: new Date().toISOString() });
+    const payload = JSON.stringify({
+      ...event,
+      timestamp: new Date().toISOString(),
+    });
     for (const client of wss.clients) {
       const canReceive = isSystemHealth || client.userId === userId;
       if (canReceive && client.readyState === WebSocket.OPEN) {
@@ -54,7 +65,12 @@ function createAgentEventBus(httpServer, { ticketStore } = {}) {
   function close() {
     httpServer.off("upgrade", handleUpgrade);
     for (const client of wss.clients) client.terminate();
-    return new Promise((resolve) => wss.close(resolve));
+    return new Promise((resolve, reject) =>
+      wss.close((error) => {
+        if (error) reject(error);
+        else resolve();
+      }),
+    );
   }
 
   return { wss, broadcast: broadcastFn, close };

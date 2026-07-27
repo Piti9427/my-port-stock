@@ -16,7 +16,7 @@
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "node scripts/typecheck.js",
+    "typecheck": "tsc -p tsconfig.checkjs.json",
     "generate:module": "node scripts/generate-module.js",
     "verify:architecture": "node scripts/verify-architecture.js",
     "check:frontend-standard": "npm run lint && npm run verify:architecture && npm run build",
@@ -27,16 +27,6 @@
     "check:all": "npm run format:check && npm run lint && npm run verify:architecture && npm run typecheck && npm run test -- --run && npm run build",
     "prepare": "husky",
     "lint-staged": "lint-staged"
-  },
-  "lint-staged": {
-    "*.{js,jsx}": [
-      "prettier --write",
-      "eslint --fix",
-      "vitest related --run"
-    ],
-    "*.{json,css,md}": [
-      "prettier --write"
-    ]
   },
   "dependencies": {
     "@clerk/react": "^6.9.1",
@@ -51,11 +41,12 @@
     "motion": "^12.42.2",
     "pixi.js": "^8.19.0",
     "prop-types": "^15.8.1",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "react-router-dom": "^7.17.0"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router": "^8.3.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
     "@eslint/js": "^10.0.1",
@@ -67,6 +58,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.10",
     "autoprefixer": "^10.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -78,6 +70,7 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.7",
+    "msw": "2.15.0",
     "postcss": "^8.5.15",
     "prettier": "^3.8.4",
     "tailwind-merge": "^3.6.0",

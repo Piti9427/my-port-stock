@@ -1,3 +1,9 @@
+---
+status: Completed
+updated_at: "2026-07-27"
+owner: AI Agent / Developer
+---
+
 # Design Brief & Implementation Plan: Visual Trading Floor (Pixel Agent View)
 
 ## 1. Feature Summary

@@ -55,7 +55,9 @@ describe("Preferences API Routes", () => {
       lastUpsertData = {
         ...data,
         user_id: userId,
-        onboarding_completed_at: mockUserPreferences?.onboarding_completed_at || new Date().toISOString(),
+        onboarding_completed_at:
+          mockUserPreferences?.onboarding_completed_at ||
+          new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
       return lastUpsertData;
@@ -85,7 +87,6 @@ describe("Preferences API Routes", () => {
     });
     return app;
   }
-
 
   it("GET /api/preferences rejects anonymous request with 401", async () => {
     const app = createApp(null);
@@ -135,9 +136,11 @@ describe("Preferences API Routes", () => {
 
   it("PUT /api/preferences rejects anonymous request with 401", async () => {
     const app = createApp(null);
-    const res = await request(app)
-      .put("/api/preferences")
-      .send({ reporting_currency: "THB", disclosure_level: "beginner", theme: "light" });
+    const res = await request(app).put("/api/preferences").send({
+      reporting_currency: "THB",
+      disclosure_level: "beginner",
+      theme: "light",
+    });
     assert.equal(res.statusCode, 401);
   });
 
@@ -149,9 +152,7 @@ describe("Preferences API Routes", () => {
       theme: "dark",
     };
 
-    const res = await request(app)
-      .put("/api/preferences")
-      .send(payload);
+    const res = await request(app).put("/api/preferences").send(payload);
 
     assert.equal(res.statusCode, 200);
     assert.equal(lastUpsertData.reporting_currency, "USD");
@@ -168,9 +169,7 @@ describe("Preferences API Routes", () => {
       theme: "system",
     };
 
-    const res = await request(app)
-      .put("/api/preferences")
-      .send(payload);
+    const res = await request(app).put("/api/preferences").send(payload);
 
     assert.equal(res.statusCode, 200);
     assert.equal(lastUpsertData.theme, "system");
@@ -179,34 +178,38 @@ describe("Preferences API Routes", () => {
   it("PUT /api/preferences rejects invalid currency, disclosure level, or theme with 400", async () => {
     const app = createApp("user_123");
 
-    const badCurrency = await request(app)
-      .put("/api/preferences")
-      .send({ reporting_currency: "EUR", disclosure_level: "beginner", theme: "light" });
+    const badCurrency = await request(app).put("/api/preferences").send({
+      reporting_currency: "EUR",
+      disclosure_level: "beginner",
+      theme: "light",
+    });
     assert.equal(badCurrency.statusCode, 400);
 
-    const badDisclosure = await request(app)
-      .put("/api/preferences")
-      .send({ reporting_currency: "THB", disclosure_level: "expert", theme: "light" });
+    const badDisclosure = await request(app).put("/api/preferences").send({
+      reporting_currency: "THB",
+      disclosure_level: "expert",
+      theme: "light",
+    });
     assert.equal(badDisclosure.statusCode, 400);
 
-    const badTheme = await request(app)
-      .put("/api/preferences")
-      .send({ reporting_currency: "THB", disclosure_level: "beginner", theme: "blue" });
+    const badTheme = await request(app).put("/api/preferences").send({
+      reporting_currency: "THB",
+      disclosure_level: "beginner",
+      theme: "blue",
+    });
     assert.equal(badTheme.statusCode, 400);
   });
 
   it("PUT /api/preferences rejects unknown keys or risk-policy overrides", async () => {
     const app = createApp("user_123");
 
-    const res = await request(app)
-      .put("/api/preferences")
-      .send({
-        reporting_currency: "USD",
-        disclosure_level: "advanced",
-        theme: "dark",
-        minRR: 5,
-        maxSpeculativePct: 50,
-      });
+    const res = await request(app).put("/api/preferences").send({
+      reporting_currency: "USD",
+      disclosure_level: "advanced",
+      theme: "dark",
+      minRR: 5,
+      maxSpeculativePct: 50,
+    });
 
     assert.equal(res.statusCode, 400);
   });

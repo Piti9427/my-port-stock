@@ -1,17 +1,26 @@
 // src/services/aiAnalyst.js
-require('dotenv').config();
-const { GoogleGenAI } = require('@google/genai');
+require("dotenv").config();
+const { getTestProviders } = require("../providers/providerRegistry");
 
-const apiKey = process.env.GEMINI_API_KEY || 'mock';
-const ai = new GoogleGenAI({ apiKey });
+const apiKey = process.env.GEMINI_API_KEY || "mock";
+let aiClientPromise;
+
+async function getAiClient() {
+  if (!aiClientPromise) {
+    aiClientPromise = import("@google/genai").then(
+      ({ GoogleGenAI }) => new GoogleGenAI({ apiKey }),
+    );
+  }
+  return aiClientPromise;
+}
 
 function unavailableAnalysis(reason) {
   return {
-    status: 'INSUFFICIENT_DATA',
-    reason_code: 'AI_ANALYST_UNAVAILABLE',
+    status: "INSUFFICIENT_DATA",
+    reason_code: "AI_ANALYST_UNAVAILABLE",
     error_details: reason,
     decision_snapshot: {
-      verdict: 'Wait',
+      verdict: "Wait",
       score: null,
       one_line_reason: reason,
     },
@@ -21,28 +30,28 @@ function unavailableAnalysis(reason) {
 }
 
 function validateAnalysisShape(value) {
-  if (!value || typeof value !== 'object') {
-    throw new Error('Gemini response is not a JSON object');
+  if (!value || typeof value !== "object") {
+    throw new Error("Gemini response is not a JSON object");
   }
 
   const verdict = value.decision_snapshot?.verdict;
-  if (!verdict || typeof verdict !== 'string') {
-    throw new Error('Gemini response missing decision_snapshot.verdict');
+  if (!verdict || typeof verdict !== "string") {
+    throw new Error("Gemini response missing decision_snapshot.verdict");
   }
 
   const swot = value.swot;
-  if (!swot || typeof swot !== 'object') {
-    throw new Error('Gemini response missing swot structured section');
+  if (!swot || typeof swot !== "object") {
+    throw new Error("Gemini response missing swot structured section");
   }
 
-  for (const key of ['strengths', 'weaknesses', 'opportunities', 'threats']) {
+  for (const key of ["strengths", "weaknesses", "opportunities", "threats"]) {
     if (!Array.isArray(swot[key])) {
       throw new Error(`Gemini response missing swot.${key}`);
     }
   }
 
-  if (!value.trade_plan || typeof value.trade_plan !== 'object') {
-    throw new Error('Gemini response missing trade_plan structured section');
+  if (!value.trade_plan || typeof value.trade_plan !== "object") {
+    throw new Error("Gemini response missing trade_plan structured section");
   }
 
   return value;
@@ -50,8 +59,8 @@ function validateAnalysisShape(value) {
 
 function unavailableChat(reason) {
   return {
-    status: 'INSUFFICIENT_DATA',
-    reason_code: 'AI_CHAT_UNAVAILABLE',
+    status: "INSUFFICIENT_DATA",
+    reason_code: "AI_CHAT_UNAVAILABLE",
     error_details: reason,
     message: reason,
   };
@@ -60,13 +69,18 @@ function unavailableChat(reason) {
 async function generateContentWithTimeout(prompt) {
   let timeoutId;
   try {
+    const ai = await getAiClient();
     const apiCall = ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: "gemini-2.5-flash",
       contents: prompt,
     });
 
-    const timeoutPromise = new Promise((_, reject) =>
-      timeoutId = setTimeout(() => reject(new Error('Gemini API request timed out')), 8000)
+    const timeoutPromise = new Promise(
+      (_, reject) =>
+        (timeoutId = setTimeout(
+          () => reject(new Error("Gemini API request timed out")),
+          8000,
+        )),
     );
 
     return await Promise.race([apiCall, timeoutPromise]);
@@ -75,13 +89,23 @@ async function generateContentWithTimeout(prompt) {
   }
 }
 
-async function chatWithVerifiedContext({ ticker, message, decisionMode, packet }) {
-  if (apiKey === 'mock') {
-    return unavailableChat('Gemini API key is missing');
+async function chatWithVerifiedContext({
+  ticker,
+  message,
+  decisionMode,
+  packet,
+}) {
+  const testProvider = getTestProviders()?.gemini;
+  if (testProvider)
+    return testProvider.analyze({ ticker, message, decisionMode, packet });
+  if (apiKey === "mock") {
+    return unavailableChat("Gemini API key is missing");
   }
 
-  if (!packet || packet.status === 'INSUFFICIENT_DATA') {
-    return unavailableChat(packet?.error_details || 'Verified packet is unavailable');
+  if (!packet || packet.status === "INSUFFICIENT_DATA") {
+    return unavailableChat(
+      packet?.error_details || "Verified packet is unavailable",
+    );
   }
 
   const prompt = `Act as Elite Investor CIO for MyPortStock.
@@ -102,20 +126,23 @@ Return plain Thai text only.`;
 
   try {
     const response = await generateContentWithTimeout(prompt);
-    const text = String(response.text || '').trim();
+    const text = String(response.text || "").trim();
     return {
-      status: text ? 'READY' : 'INSUFFICIENT_DATA',
-      message: text || 'Gemini response was empty',
+      status: text ? "READY" : "INSUFFICIENT_DATA",
+      message: text || "Gemini response was empty",
     };
   } catch (error) {
-    console.error('Gemini Chat Error:', error.message);
+    console.error("Gemini Chat Error:", error.message);
     return unavailableChat(`Gemini API unavailable: ${error.message}`);
   }
 }
 
 async function analyzeTicker(ticker, portfolioData, oracleData) {
-  if (apiKey === 'mock') {
-    return unavailableAnalysis('Gemini API key is missing');
+  const testProvider = getTestProviders()?.gemini;
+  if (testProvider)
+    return testProvider.analyze({ ticker, portfolioData, oracleData });
+  if (apiKey === "mock") {
+    return unavailableAnalysis("Gemini API key is missing");
   }
 
   const prompt = `Act as Elite Investor CIO. 
@@ -213,12 +240,15 @@ Ensure you return a JSON object ONLY, with the following properties:
 
   try {
     const response = await generateContentWithTimeout(prompt);
-    
+
     // Attempt to parse if the model returned JSON
-    const text = response.text.replace(/```json/i, '').replace(/```/g, '').trim();
+    const text = response.text
+      .replace(/```json/i, "")
+      .replace(/```/g, "")
+      .trim();
     return validateAnalysisShape(JSON.parse(text));
   } catch (error) {
-    console.error('Gemini API Error:', error.message);
+    console.error("Gemini API Error:", error.message);
     return unavailableAnalysis(`Gemini API unavailable: ${error.message}`);
   }
 }

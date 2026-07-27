@@ -20,37 +20,38 @@ Navigation hub for engineering, agent, and product documentation. Prefer **progr
 
 ## Engineering docs (this folder)
 
-| Doc | Purpose |
-|---|---|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System layout, data flow, major components |
-| [RUNBOOK.md](RUNBOOK.md) | Dev commands, local run, troubleshooting |
-| [ENVIRONMENT.md](ENVIRONMENT.md) | Environment variable reference (no secrets) |
-| [API_CONTRACT.md](API_CONTRACT.md) | REST API surface and response contracts |
-| [TESTING_STRATEGY.md](TESTING_STRATEGY.md) | Unit, integration, and verification gates |
-| [CODING_RULES.md](CODING_RULES.md) | Shared frontend/backend conventions |
-| [DEFINITION_OF_DONE.md](DEFINITION_OF_DONE.md) | Ship checklist |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Build and deploy notes |
-| [DESIGN.md](DESIGN.md) | Dark terminal UI system |
-| [FILE_ORGANIZATION.md](FILE_ORGANIZATION.md) | Repo layout and artifact rules |
-| [PROJECT_SKILLS_WORKFLOW.md](PROJECT_SKILLS_WORKFLOW.md) | 6-phase dev workflow with skills |
-| [AGENT_SKILLS.md](AGENT_SKILLS.md) | Task → skill routing table |
-| [AGENT_CONTEXT_GUIDELINES.md](AGENT_CONTEXT_GUIDELINES.md) | How to add agent context safely |
+| Doc                                                        | Purpose                                     |
+| ---------------------------------------------------------- | ------------------------------------------- |
+| [ARCHITECTURE.md](ARCHITECTURE.md)                         | System layout, data flow, major components  |
+| [RUNBOOK.md](RUNBOOK.md)                                   | Dev commands, local run, troubleshooting    |
+| [ENVIRONMENT.md](ENVIRONMENT.md)                           | Environment variable reference (no secrets) |
+| [API_CONTRACT.md](API_CONTRACT.md)                         | REST API surface and response contracts     |
+| [TESTING_STRATEGY.md](TESTING_STRATEGY.md)                 | Unit, integration, and verification gates   |
+| [CODING_RULES.md](CODING_RULES.md)                         | Shared frontend/backend conventions         |
+| [DEFINITION_OF_DONE.md](DEFINITION_OF_DONE.md)             | Ship checklist                              |
+| [DEPLOYMENT.md](DEPLOYMENT.md)                             | Build and deploy notes                      |
+| [DESIGN.md](DESIGN.md)                                     | Dark terminal UI system                     |
+| [FILE_ORGANIZATION.md](FILE_ORGANIZATION.md)               | Repo layout and artifact rules              |
+| [PROJECT_SKILLS_WORKFLOW.md](PROJECT_SKILLS_WORKFLOW.md)   | 6-phase dev workflow with skills            |
+| [AGENT_SKILLS.md](AGENT_SKILLS.md)                         | Task → skill routing table                  |
+| [AGENT_CONTEXT_GUIDELINES.md](AGENT_CONTEXT_GUIDELINES.md) | How to add agent context safely             |
 
 ## Decisions & plans
 
-| Zone | Location | Naming |
-|---|---|---|
-| ADRs | [`docs/adr/`](adr/) | `NNNN-kebab-title.md` |
-| Active execution plans | [`docs/plans/`](plans/) | `YYYY-MM-DD-kebab-description.md` |
+| Zone                       | Location                                        | Naming                                   |
+| -------------------------- | ----------------------------------------------- | ---------------------------------------- |
+| ADRs                       | [`docs/adr/`](adr/)                             | `NNNN-kebab-title.md`                    |
+| Active execution plans     | [`docs/plans/`](plans/)                         | `YYYY-MM-DD-kebab-description.md`        |
 | Superpowers workflow plans | [`docs/superpowers/plans/`](superpowers/plans/) | legacy + dated; new work → `docs/plans/` |
-| Handoffs | [`docs/plans/handoffs/`](plans/handoffs/) | `YYYY-MM-DD-kebab-description.md` |
-| Archive | [`docs/archive/`](archive/) | completed plans |
+| Handoffs                   | [`docs/plans/handoffs/`](plans/handoffs/)       | `YYYY-MM-DD-kebab-description.md`        |
+| Archive                    | [`docs/archive/`](archive/)                     | completed plans                          |
 
 ### Active plans
 
 - [2026-06-20-ux-ui-refactor-plan.md](plans/2026-06-20-ux-ui-refactor-plan.md)
 - [2026-06-27-institutional-risk-refactor-plan.md](plans/2026-06-27-institutional-risk-refactor-plan.md)
 - [2026-06-28-webapp-pwa-implementation-plan.md](plans/2026-06-28-webapp-pwa-implementation-plan.md)
+- [2026-07-26-enterprise-qa-security-pipeline-plan.md](plans/2026-07-26-enterprise-qa-security-pipeline-plan.md)
 
 ### ADRs
 
@@ -59,14 +60,15 @@ Navigation hub for engineering, agent, and product documentation. Prefer **progr
 - [0003 Subagent autonomous search](adr/0003-subagent-autonomous-search.md)
 - [0004 Institutional quality gates](adr/0004-unbiased-institutional-quality-gates.md)
 - [0005 PWA-first Vite stack](adr/0005-pwa-first-ts-migration-vite-stack.md)
+- [0006 Supabase migrations source of truth](adr/0006-supabase-migrations-source-of-truth.md)
 
 ## Root standards
 
-| File | Purpose |
-|---|---|
+| File                                    | Purpose                 |
+| --------------------------------------- | ----------------------- |
 | [`CONTRIBUTING.md`](../CONTRIBUTING.md) | Branch, commit, PR flow |
-| [`SECURITY.md`](../SECURITY.md) | Vulnerability reporting |
-| [`CHANGELOG.md`](../CHANGELOG.md) | Release history |
+| [`SECURITY.md`](../SECURITY.md)         | Vulnerability reporting |
+| [`CHANGELOG.md`](../CHANGELOG.md)       | Release history         |
 
 ## Docs tooling
 

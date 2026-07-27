@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router';
 import { ArrowLeft, BookOpen, Brain, Clock, Target } from 'lucide-react';
 import { useAuth } from '../auth/clerkAdapter';
 import { DataStamp } from '../components/ui/DataStamp';

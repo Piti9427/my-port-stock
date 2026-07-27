@@ -44,12 +44,16 @@ function normalizeTimestamp(value) {
   if (typeof value === "number" && Number.isFinite(value)) {
     const milliseconds = value > 1_000_000_000_000 ? value : value * 1000;
     const timestamp = new Date(milliseconds);
-    return Number.isFinite(timestamp.getTime()) ? timestamp.toISOString() : null;
+    return Number.isFinite(timestamp.getTime())
+      ? timestamp.toISOString()
+      : null;
   }
 
   if (typeof value === "string" && value.trim()) {
     const timestamp = new Date(value);
-    return Number.isFinite(timestamp.getTime()) ? timestamp.toISOString() : null;
+    return Number.isFinite(timestamp.getTime())
+      ? timestamp.toISOString()
+      : null;
   }
 
   return null;

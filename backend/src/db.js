@@ -1,20 +1,27 @@
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+const { createClient } = require("@supabase/supabase-js");
+require("dotenv").config();
 const {
   isUsableSupabaseConfig,
   supabase: configuredSupabase,
   createScopedClient,
-} = require('./db/supabaseClient');
+} = require("./db/supabaseClient");
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-const supabase = configuredSupabase || (isUsableSupabaseConfig(supabaseUrl, supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null);
+const supabase =
+  configuredSupabase ||
+  (isUsableSupabaseConfig(supabaseUrl, supabaseKey)
+    ? createClient(supabaseUrl, supabaseKey)
+    : null);
 
 function requireSupabase(client = supabase) {
   if (!client) {
-    const error = new Error('Supabase is not configured');
-    error.code = 'SUPABASE_NOT_CONFIGURED';
+    const error = /** @type {Error & {code?: string}} */ (
+      new Error("Supabase is not configured")
+    );
+    error.code = "SUPABASE_NOT_CONFIGURED";
     throw error;
   }
   return client;
@@ -22,12 +29,12 @@ function requireSupabase(client = supabase) {
 
 function createPortfolioDb(client) {
   const queryByUser = async (table, userId) => {
-    if (!userId) throw new Error('User ID is required');
+    if (!userId) throw new Error("User ID is required");
     const { data, error } = await requireSupabase(client)
       .from(table)
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_deleted', false);
+      .select("*")
+      .eq("user_id", userId)
+      .eq("is_deleted", false);
 
     if (error) throw error;
     return data || [];
@@ -35,35 +42,35 @@ function createPortfolioDb(client) {
 
   return {
     getUserHoldings(userId) {
-      return queryByUser('holdings', userId);
+      return queryByUser("holdings", userId);
     },
     getUserPortfolio(userId) {
       // Map to holdings table since portfolio table is dropped
-      return queryByUser('holdings', userId);
+      return queryByUser("holdings", userId);
     },
     getUserWatchlists(userId) {
-      return queryByUser('watchlists', userId);
+      return queryByUser("watchlists", userId);
     },
     getUserJournal(userId) {
-      return queryByUser('journal', userId);
+      return queryByUser("journal", userId);
     },
     getUserJournalByTicker(userId, ticker) {
-      if (!userId) throw new Error('User ID is required');
+      if (!userId) throw new Error("User ID is required");
       return requireSupabase(client)
-        .from('journal')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('ticker', ticker)
-        .eq('is_deleted', false)
+        .from("journal")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("ticker", ticker)
+        .eq("is_deleted", false)
         .then(({ data, error }) => {
           if (error) throw error;
           return data || [];
         });
     },
     insertJournalEntry(userId, entry) {
-      if (!userId) throw new Error('User ID is required');
+      if (!userId) throw new Error("User ID is required");
       return requireSupabase(client)
-        .from('journal')
+        .from("journal")
         .insert([{ ...entry, user_id: userId }])
         .select()
         .then(({ data, error }) => {
@@ -101,6 +108,9 @@ async function insertJournalEntry(userId, entry) {
 }
 
 function getScopedDb(userId) {
+  const testRuntimeData =
+    require("./providers/providerRegistry").getTestProviders()?.runtimeData;
+  if (testRuntimeData) return testRuntimeData;
   const client = createScopedClient(userId);
   return createPortfolioDb(client);
 }

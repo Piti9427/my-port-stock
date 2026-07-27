@@ -21,7 +21,9 @@ function readTextFile(filePath) {
 }
 
 function stripTickerPrefix(ticker) {
-  return String(ticker || "").replace(/^\$/, "").toUpperCase();
+  return String(ticker || "")
+    .replace(/^\$/, "")
+    .toUpperCase();
 }
 
 function containsTicker(text, ticker) {
@@ -30,7 +32,10 @@ function containsTicker(text, ticker) {
   }
 
   const normalizedTicker = stripTickerPrefix(ticker);
-  const pattern = new RegExp(String.raw`\$?${escapeRegex(normalizedTicker)}\b`, "i");
+  const pattern = new RegExp(
+    String.raw`\$?${escapeRegex(normalizedTicker)}\b`,
+    "i",
+  );
   return pattern.test(text);
 }
 
@@ -64,7 +69,10 @@ function getSection(markdown, heading) {
 
   const escapedHeading = escapeRegex(heading);
   const match = markdown.match(
-    new RegExp(String.raw`(^|\n)## ${escapedHeading}[^\n]*\n([\s\S]*?)(?=\n## |$)`, "i"),
+    new RegExp(
+      String.raw`(^|\n)## ${escapedHeading}[^\n]*\n([\s\S]*?)(?=\n## |$)`,
+      "i",
+    ),
   );
 
   return match ? match[2] : "";
@@ -95,7 +103,10 @@ function readJournalContext(ticker, options = {}) {
     };
   }
 
-  const activeTrades = getTickerTableMatches(getSection(markdown, "Active Trades"), normalizedTicker);
+  const activeTrades = getTickerTableMatches(
+    getSection(markdown, "Active Trades"),
+    normalizedTicker,
+  );
   const activeBacklog = getSection(markdown, "Active Thesis Backlog");
   const postMortemArchive = getSection(markdown, "Post-Mortem Archive");
   const fullMention = containsTicker(markdown, normalizedTicker);
@@ -148,7 +159,10 @@ function readPortfolioSnapshot(options = {}) {
     .split(/\r?\n/)
     .filter((line) => line.trim().startsWith("-"))
     .slice(0, 12);
-  const holdingsRows = getTickerTableMatches(getSection(markdown, "Holdings Snapshot"), "");
+  const holdingsRows = getTickerTableMatches(
+    getSection(markdown, "Holdings Snapshot"),
+    "",
+  );
 
   return {
     as_of: new Date().toISOString(),
@@ -169,8 +183,12 @@ function readTickerPortfolioContext(ticker, options = {}) {
     return portfolio;
   }
 
-  const markdown = readTextFile(options.portfolioPath || DEFAULT_PORTFOLIO_PATH) || "";
-  const isHeld = containsTicker(getSection(markdown, "Holdings Snapshot"), normalizedTicker);
+  const markdown =
+    readTextFile(options.portfolioPath || DEFAULT_PORTFOLIO_PATH) || "";
+  const isHeld = containsTicker(
+    getSection(markdown, "Holdings Snapshot"),
+    normalizedTicker,
+  );
   const isWatchlist = containsTicker(markdown, normalizedTicker);
 
   return {

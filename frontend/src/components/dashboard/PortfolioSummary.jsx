@@ -16,7 +16,7 @@ function formatMoney(value, { signed = false } = {}) {
   return `${sign}฿${absolute}`;
 }
 
-export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', timestamp, stale = false }) {
+export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', timestamp = null, stale = false }) {
   const metrics = holdings.reduce(
     (result, holding) => {
       const shares = numberValue(holding.shares);
@@ -25,9 +25,9 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
       const change = numberValue(holding.change);
 
       const rate = numberValue(holding.fx_rate || 1.0);
-      const valThb = numberValue(holding.value_thb || (shares * price * rate));
-      const costThb = numberValue(holding.cost_thb || (shares * averageCost * rate));
-      const dayPlThb = numberValue(holding.day_pl_thb || (shares * change * rate));
+      const valThb = numberValue(holding.value_thb || shares * price * rate);
+      const costThb = numberValue(holding.cost_thb || shares * averageCost * rate);
+      const dayPlThb = numberValue(holding.day_pl_thb || shares * change * rate);
 
       result.totalValue += valThb;
       result.totalCost += costThb;

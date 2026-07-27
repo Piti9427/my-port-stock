@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter, NavLink, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, NavLink, Route, Routes } from 'react-router';
 import { RouteScrollReset } from '../src/components/RouteScrollReset.jsx';
 
 test('resets document scroll when route location changes', () => {

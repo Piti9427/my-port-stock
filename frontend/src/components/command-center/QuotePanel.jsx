@@ -21,7 +21,7 @@ function formatDelayStatus(value) {
   return String(value);
 }
 
-export function QuotePanel({ quote, loading = false, error = '', onRetry }) {
+export function QuotePanel({ quote, loading = false, error = '', onRetry = null }) {
   if (loading) {
     return (
       <section className="command-panel command-quote-panel" aria-label="Quote loading">

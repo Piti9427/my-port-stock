@@ -17,7 +17,15 @@ function semanticValue(value, ticker, { signed = false } = {}) {
   );
 }
 
-export function HoldingsTable({ holdings = [], loading = false, status = 'OK', onOpenTicker, onPlan, onRetry, onFirstRunAction }) {
+export function HoldingsTable({
+  holdings = [],
+  loading = false,
+  status = 'OK',
+  onOpenTicker = null,
+  onPlan = null,
+  onRetry = null,
+  onFirstRunAction = null,
+}) {
   const rows = useMemo(() => {
     const totalValue = holdings.reduce((sum, holding) => sum + numberValue(holding.shares) * numberValue(holding.price), 0);
 

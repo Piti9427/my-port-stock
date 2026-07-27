@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, expect, test, vi } from 'vitest';
 import CommandPalette from '../src/components/CommandPalette.jsx';
 
@@ -61,7 +61,7 @@ test('Cmd+K opens command palette and ticker results navigate to ticker drilldow
     </MemoryRouter>
   );
 
-  fireEvent.keyDown(globalThis, { key: 'k', metaKey: true });
+  fireEvent.keyDown(window, { key: 'k', metaKey: true });
 
   expect(await screen.findByRole('dialog', { name: /Command Palette/i })).toBeInTheDocument();
 

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Fragment } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { EmptyState } from '../ui/EmptyState.jsx';
 import { Skeleton } from '../ui/Skeleton.jsx';
 import { formatCurrency, formatDate, statusLabel } from './journalFormatters.js';

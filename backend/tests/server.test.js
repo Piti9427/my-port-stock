@@ -24,7 +24,10 @@ describe("Express Server - Static Serving", () => {
 
 describe("production runtime lifecycle", () => {
   it("imports without opening listeners or registering signal handlers", () => {
-    assert.equal(process.listenerCount("SIGTERM"), sigtermListenersBeforeImport);
+    assert.equal(
+      process.listenerCount("SIGTERM"),
+      sigtermListenersBeforeImport,
+    );
     assert.equal(process.listenerCount("SIGINT"), sigintListenersBeforeImport);
   });
 
@@ -33,7 +36,10 @@ describe("production runtime lifecycle", () => {
     const payload = JSON.stringify(res.body);
 
     assert.equal(res.statusCode, 200);
-    assert.doesNotMatch(payload, /dsn|secret|token|authorization|user[_-]?id|raw_error/i);
+    assert.doesNotMatch(
+      payload,
+      /dsn|secret|token|authorization|user[_-]?id|raw_error/i,
+    );
   });
 
   it("closes WebSockets before the HTTP server", async () => {
@@ -60,7 +66,10 @@ describe("production runtime lifecycle", () => {
   });
 
   it("disables default Sentry PII and bounds sample rates through environment", () => {
-    const source = fs.readFileSync(path.join(__dirname, "../instrument.js"), "utf8");
+    const source = fs.readFileSync(
+      path.join(__dirname, "../instrument.js"),
+      "utf8",
+    );
 
     assert.match(source, /sendDefaultPii:\s*false/);
     assert.match(source, /SENTRY_TRACES_SAMPLE_RATE/);

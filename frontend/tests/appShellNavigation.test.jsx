@@ -48,7 +48,7 @@ test('authenticated shell groups navigation, keeps config as utility, and expose
   expect(nav).toHaveClass('collapsed');
   expect(screen.getByRole('button', { name: /Expand sidebar/i })).toBeInTheDocument();
 
-  fireEvent.keyDown(globalThis, { key: 'b', metaKey: true });
+  fireEvent.keyDown(window, { key: 'b', metaKey: true });
   expect(nav).not.toHaveClass('collapsed');
 });
 

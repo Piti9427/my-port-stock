@@ -14,21 +14,20 @@ test("market data service exports live price helpers", () => {
 
 test("fetchSparkline uses chart with a bounded date range", async () => {
   const now = Date.UTC(2026, 5, 21, 12);
-  let chartCall;
+  const captured =
+    /** @type {{chartCall?: {ticker: string, options: {period1: Date, period2: Date, interval: string}}}} */ ({});
   const yahooClient = {
     chart: async (ticker, options) => {
-      chartCall = { ticker, options };
+      captured.chartCall = { ticker, options };
       return {
-        quotes: [
-          { close: 100 },
-          { close: null },
-          { close: 102.5 },
-        ],
+        quotes: [{ close: 100 }, { close: null }, { close: 102.5 }],
       };
     },
   };
 
   const sparkline = await fetchSparkline("NVDA", now, yahooClient);
+  const chartCall = captured.chartCall;
+  assert.ok(chartCall);
 
   assert.deepEqual(sparkline, [100, 102.5]);
   assert.equal(chartCall.ticker, "NVDA");

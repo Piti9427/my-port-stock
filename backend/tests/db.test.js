@@ -23,7 +23,7 @@ test("portfolio DB queries holdings by Clerk user id", async () => {
         },
         then(onFulfilled) {
           return Promise.resolve({ data: [], error: null }).then(onFulfilled);
-        }
+        },
       };
       return queryBuilder;
     },

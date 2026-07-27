@@ -9,6 +9,7 @@ const {
 function packet(overrides = {}) {
   return {
     ticker: "NVDA",
+    last_price: 100,
     decision_mode: "Swing Trade",
     current_price_acceptance_gate: "pass",
     price_sources: ["Yahoo Finance API", "Nasdaq Quote API"],
@@ -55,7 +56,10 @@ test("Buy is blocked without executable risk plan", () => {
   });
 
   assert.equal(result.decision_snapshot.verdict, "Wait");
-  assert.match(result.adaptive_drilldown.blockers.join(" "), /No executable stop-loss/);
+  assert.match(
+    result.adaptive_drilldown.blockers.join(" "),
+    /No executable stop-loss/,
+  );
 });
 
 test("held or repeat ticker journal issue forces non-buy outcome", () => {
@@ -83,14 +87,21 @@ test("sub-agent insufficient data caps practical output at Wait", () => {
       rr_ratio: 2.5,
     },
     agentResults: {
-      fundamental: { status: "INSUFFICIENT_DATA", score: null, mode_fit: "Mixed" },
+      fundamental: {
+        status: "INSUFFICIENT_DATA",
+        score: null,
+        mode_fit: "Mixed",
+      },
       technical: { status: "PASS", score: 8, mode_fit: "Strong" },
       macro_flow: { status: "PASS", score: 8, mode_fit: "Strong" },
     },
   });
 
   assert.equal(result.decision_snapshot.verdict, "Wait");
-  assert.match(result.adaptive_drilldown.blockers.join(" "), /INSUFFICIENT_DATA/);
+  assert.match(
+    result.adaptive_drilldown.blockers.join(" "),
+    /INSUFFICIENT_DATA/,
+  );
 });
 
 test("Mode Fit Poor caps sub-agent score at 5", () => {
@@ -101,7 +112,10 @@ test("Mode Fit Poor caps sub-agent score at 5", () => {
   });
 
   assert.equal(result.agent_results.fundamental.score, 5);
-  assert.equal(result.agent_results.fundamental.score_cap_reason, "Mode Fit: Poor caps sub-agent score at 5");
+  assert.equal(
+    result.agent_results.fundamental.score_cap_reason,
+    "Mode Fit: Poor caps sub-agent score at 5",
+  );
 });
 
 test("Core Buy is blocked when Piotroski F-Score is below 7/9", () => {
@@ -124,11 +138,14 @@ test("Core Buy is blocked when Piotroski F-Score is below 7/9", () => {
         technical: { status: "PASS", score: 8, mode_fit: "Strong" },
         macro_flow: { status: "PASS", score: 8, mode_fit: "Strong" },
       },
-    }
+    },
   );
 
   assert.equal(result.decision_snapshot.verdict, "Wait");
-  assert.match(result.decision_snapshot.immediate_next_action, /Piotroski F-Score 6\/9 is below required 7\/9/);
+  assert.match(
+    result.decision_snapshot.immediate_next_action,
+    /Piotroski F-Score 6\/9 is below required 7\/9/,
+  );
 });
 
 test("Core Buy is blocked when Altman Z-Score is below 2.99", () => {
@@ -151,11 +168,14 @@ test("Core Buy is blocked when Altman Z-Score is below 2.99", () => {
         technical: { status: "PASS", score: 8, mode_fit: "Strong" },
         macro_flow: { status: "PASS", score: 8, mode_fit: "Strong" },
       },
-    }
+    },
   );
 
   assert.equal(result.decision_snapshot.verdict, "Wait");
-  assert.match(result.decision_snapshot.immediate_next_action, /Altman Z-Score 2.5 is below required 2.99/);
+  assert.match(
+    result.decision_snapshot.immediate_next_action,
+    /Altman Z-Score 2.5 is below required 2.99/,
+  );
 });
 
 test("Core Buy is blocked when ROCE is negative", () => {
@@ -178,11 +198,14 @@ test("Core Buy is blocked when ROCE is negative", () => {
         technical: { status: "PASS", score: 8, mode_fit: "Strong" },
         macro_flow: { status: "PASS", score: 8, mode_fit: "Strong" },
       },
-    }
+    },
   );
 
   assert.equal(result.decision_snapshot.verdict, "Wait");
-  assert.match(result.decision_snapshot.immediate_next_action, /ROCE -0.05 is non-positive/);
+  assert.match(
+    result.decision_snapshot.immediate_next_action,
+    /ROCE -0.05 is non-positive/,
+  );
 });
 
 test("Core verdict is overridden to Avoid/Trim when Altman Z-Score is < 1.81", () => {
@@ -206,7 +229,7 @@ test("Core verdict is overridden to Avoid/Trim when Altman Z-Score is < 1.81", (
         technical: { status: "PASS", score: 8, mode_fit: "Strong" },
         macro_flow: { status: "PASS", score: 8, mode_fit: "Strong" },
       },
-    }
+    },
   );
 
   assert.equal(resultNew.decision_snapshot.verdict, "Avoid");
@@ -233,7 +256,7 @@ test("Core verdict is overridden to Avoid/Trim when Altman Z-Score is < 1.81", (
         technical: { status: "PASS", score: 8, mode_fit: "Strong" },
         macro_flow: { status: "PASS", score: 8, mode_fit: "Strong" },
       },
-    }
+    },
   );
 
   assert.equal(resultHeld.decision_snapshot.verdict, "Trim");
@@ -259,11 +282,14 @@ test("Swing Buy is blocked when Piotroski F-Score is below 5/9", () => {
         technical: { status: "PASS", score: 8, mode_fit: "Strong" },
         macro_flow: { status: "PASS", score: 8, mode_fit: "Strong" },
       },
-    }
+    },
   );
 
   assert.equal(result.decision_snapshot.verdict, "Wait");
-  assert.match(result.decision_snapshot.immediate_next_action, /Piotroski F-Score 4\/9 is below required 5\/9/);
+  assert.match(
+    result.decision_snapshot.immediate_next_action,
+    /Piotroski F-Score 4\/9 is below required 5\/9/,
+  );
 });
 
 test("Swing Buy is blocked when ZVR ratio is below 1.5", () => {
@@ -285,11 +311,14 @@ test("Swing Buy is blocked when ZVR ratio is below 1.5", () => {
         technical: { status: "PASS", score: 8, mode_fit: "Strong" },
         macro_flow: { status: "PASS", score: 8, mode_fit: "Strong" },
       },
-    }
+    },
   );
 
   assert.equal(result.decision_snapshot.verdict, "Wait");
-  assert.match(result.decision_snapshot.immediate_next_action, /ZVR ratio 1.2 is below required 1.5/);
+  assert.match(
+    result.decision_snapshot.immediate_next_action,
+    /ZVR ratio 1.2 is below required 1.5/,
+  );
 });
 
 test("Speculative allocation cap check for speculative ticker with holdings", () => {
@@ -299,20 +328,25 @@ test("Speculative allocation cap check for speculative ticker with holdings", ()
       portfolio_context: {
         is_held: true,
         holdings_rows: [
-          { ticker: "ASTS", shares: 100, avg_cost: 10, sector: "Technology" }
-        ]
-      }
+          { ticker: "ASTS", shares: 100, avg_cost: 10, sector: "Technology" },
+        ],
+      },
     }),
     {
-      riskPlan: { stop_loss: 9, hard_risk_thb: 100, rr_ratio: 2.5, shares: 10, entry: 12 },
+      riskPlan: {
+        stop_loss: 9,
+        hard_risk_thb: 100,
+        rr_ratio: 2.5,
+        shares: 10,
+        entry: 12,
+      },
       agentResults: {
         fundamental: { status: "PASS", score: 8, mode_fit: "Strong" },
         technical: { status: "PASS", score: 8, mode_fit: "Strong" },
         macro_flow: { status: "PASS", score: 8, mode_fit: "Strong" },
       },
-    }
+    },
   );
 
   assert.ok(result);
 });
-

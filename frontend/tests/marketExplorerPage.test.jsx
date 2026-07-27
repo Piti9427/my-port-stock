@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { beforeEach, expect, test, vi } from 'vitest';
 import MarketExplorerPage from '../src/pages/MarketExplorerPage.jsx';
 
@@ -93,7 +93,7 @@ test('Market Explorer quick analyze buttons route each ticker to Command Center 
 });
 
 test('Market Explorer flashes refreshed quotes with semantic direction', async () => {
-  fetch
+  vi.mocked(fetch)
     .mockResolvedValueOnce(
       new Response(JSON.stringify({ price: 200, change: 1.5, changePct: 0.75 }), {
         status: 200,
@@ -119,7 +119,7 @@ test('Market Explorer flashes refreshed quotes with semantic direction', async (
 });
 
 test('Market Explorer treats a successful but incomplete quote payload as unavailable', async () => {
-  fetch.mockResolvedValueOnce(
+  vi.mocked(fetch).mockResolvedValueOnce(
     new Response(JSON.stringify({}), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

@@ -84,7 +84,7 @@ function FundamentalsTab({ deepAnalysis }) {
               ))
             ) : (
               <tr>
-                <td colSpan="5">INSUFFICIENT_DATA</td>
+                <td colSpan={5}>INSUFFICIENT_DATA</td>
               </tr>
             )}
           </tbody>

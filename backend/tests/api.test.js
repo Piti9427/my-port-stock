@@ -3,7 +3,11 @@ const assert = require("node:assert/strict");
 const express = require("express");
 const request = require("supertest");
 
-function loadIsolatedApi({ userId, scopedDb, scopedClientFactory }) {
+function loadIsolatedApi({
+  userId = null,
+  scopedDb = () => ({}),
+  scopedClientFactory = undefined,
+}) {
   const prevUrl = process.env.SUPABASE_URL;
   const prevKey = process.env.SUPABASE_ANON_KEY;
 
@@ -21,7 +25,9 @@ function loadIsolatedApi({ userId, scopedDb, scopedClientFactory }) {
   const supabaseClient = require("../src/db/supabaseClient");
   const originalGetScopedDb = db.getScopedDb;
   const originalCreateScopedClient = supabaseClient.createScopedClient;
-  db.getScopedDb = scopedDb;
+  db.getScopedDb = /** @type {typeof db.getScopedDb} */ (
+    /** @type {unknown} */ (scopedDb)
+  );
   if (scopedClientFactory) {
     supabaseClient.createScopedClient = scopedClientFactory;
   }
@@ -193,11 +199,13 @@ describe("runtime portfolio isolation", () => {
     const res = await request(loaded.app).get("/api/holdings");
 
     assert.equal(res.statusCode, 200);
-    assert.deepEqual(res.body, []);
+    assert.deepEqual(res.body, { holdings: [], usd_thb_rate: 33.69 });
   });
 
   it("does not return user A rows to user B", async () => {
-    const userATrades = [{ ticker: "NVDA", type: "BUY", shares: 1, price: 100 }];
+    const userATrades = [
+      { ticker: "NVDA", type: "BUY", shares: 1, price: 100 },
+    ];
     const loaded = loadIsolatedApi({
       userId: "user_b",
       scopedDb: (userId) => ({

@@ -24,10 +24,13 @@ function clearRuntimeModules() {
   });
 }
 
+/**
+ * @param {{nodeEnv?: string, devUiAuthBypass?: string, scopedDb?: (userId: string) => object}} [options]
+ */
 function loadServerWithScopedDb({
   nodeEnv = "test",
-  devUiAuthBypass,
-  scopedDb,
+  devUiAuthBypass = undefined,
+  scopedDb = () => ({}),
 } = {}) {
   const envKeys = [
     "NODE_ENV",
@@ -38,6 +41,8 @@ function loadServerWithScopedDb({
     "CLERK_PUBLISHABLE_KEY",
     "CLERK_SECRET_KEY",
     "DEV_UI_AUTH_BYPASS",
+    "MPS_TEST_MODE",
+    "MPS_TEST_SCENARIO",
   ];
   const previousEnv = snapshotEnv(envKeys);
 
@@ -48,6 +53,10 @@ function loadServerWithScopedDb({
   process.env.SUPABASE_JWT_SECRET = "test_supabase_jwt_secret";
   process.env.CLERK_PUBLISHABLE_KEY = "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k";
   process.env.CLERK_SECRET_KEY = "sk_test_123";
+  if (nodeEnv === "production") {
+    delete process.env.MPS_TEST_MODE;
+    delete process.env.MPS_TEST_SCENARIO;
+  }
   if (devUiAuthBypass === undefined) delete process.env.DEV_UI_AUTH_BYPASS;
   else process.env.DEV_UI_AUTH_BYPASS = devUiAuthBypass;
 
@@ -55,10 +64,12 @@ function loadServerWithScopedDb({
 
   const db = require("../src/db");
   const calls = [];
-  db.getScopedDb = (userId) => {
-    calls.push(userId);
-    return scopedDb(userId);
-  };
+  db.getScopedDb = /** @type {typeof db.getScopedDb} */ (
+    (userId) => {
+      calls.push(userId);
+      return scopedDb(userId);
+    }
+  );
 
   const { app } = require("../server");
 
@@ -99,7 +110,7 @@ describe("dev UI auth bypass", () => {
       .set("Authorization", "Bearer dev-ui-auth-bypass");
 
     assert.equal(res.statusCode, 200);
-    assert.deepEqual(res.body, []);
+    assert.deepEqual(res.body, { holdings: [], usd_thb_rate: 33.69 });
     assert.deepEqual(loaded.calls, ["dev-ui-user"]);
   });
 
