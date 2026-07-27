@@ -61,7 +61,7 @@ test('Cmd+K opens command palette and ticker results navigate to ticker drilldow
     </MemoryRouter>
   );
 
-  fireEvent.keyDown(globalThis, { key: 'k', metaKey: true });
+  fireEvent.keyDown(window, { key: 'k', metaKey: true });
 
   expect(await screen.findByRole('dialog', { name: /Command Palette/i })).toBeInTheDocument();
 

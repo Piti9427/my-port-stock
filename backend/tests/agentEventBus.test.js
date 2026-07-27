@@ -32,14 +32,24 @@ describe("Agent Event Bus Real-Time Resilience & Multi-User Isolation", () => {
     const ticketA = store.issue("user_1");
     const ticketB = store.issue("user_2");
 
-    const wsA = await connectWs(`${baseUrl}/ws/agent-events?ticket=${ticketA.ticket}`);
-    const wsB = await connectWs(`${baseUrl}/ws/agent-events?ticket=${ticketB.ticket}`);
-    cleanups.push(() => closeSocket(wsA), () => closeSocket(wsB));
+    const wsA = await connectWs(
+      `${baseUrl}/ws/agent-events?ticket=${ticketA.ticket}`,
+    );
+    const wsB = await connectWs(
+      `${baseUrl}/ws/agent-events?ticket=${ticketB.ticket}`,
+    );
+    cleanups.push(
+      () => closeSocket(wsA),
+      () => closeSocket(wsB),
+    );
 
     const msgAPromise = nextWsMessage(wsA);
     const msgBPromise = nextWsMessage(wsB);
 
-    const broadcastResult = bus.broadcast({ type: "SYSTEM_HEALTH", status: "OK" });
+    const broadcastResult = bus.broadcast({
+      type: "SYSTEM_HEALTH",
+      status: "OK",
+    });
     assert.equal(broadcastResult, true);
 
     const msgA = await msgAPromise;
@@ -56,15 +66,25 @@ describe("Agent Event Bus Real-Time Resilience & Multi-User Isolation", () => {
     const ticketA = store.issue("user_alice");
     const ticketB = store.issue("user_bob");
 
-    const wsA = await connectWs(`${baseUrl}/ws/agent-events?ticket=${ticketA.ticket}`);
-    const wsB = await connectWs(`${baseUrl}/ws/agent-events?ticket=${ticketB.ticket}`);
-    cleanups.push(() => closeSocket(wsA), () => closeSocket(wsB));
+    const wsA = await connectWs(
+      `${baseUrl}/ws/agent-events?ticket=${ticketA.ticket}`,
+    );
+    const wsB = await connectWs(
+      `${baseUrl}/ws/agent-events?ticket=${ticketB.ticket}`,
+    );
+    cleanups.push(
+      () => closeSocket(wsA),
+      () => closeSocket(wsB),
+    );
 
     const userBMessages = [];
     wsB.on("message", (raw) => userBMessages.push(JSON.parse(raw.toString())));
 
     const msgAPromise = nextWsMessage(wsA);
-    bus.broadcast({ type: "PORTFOLIO_ALERT", ticker: "NVDA" }, { userId: "user_alice" });
+    bus.broadcast(
+      { type: "PORTFOLIO_ALERT", ticker: "NVDA" },
+      { userId: "user_alice" },
+    );
 
     const msgA = await msgAPromise;
     assert.equal(msgA.type, "PORTFOLIO_ALERT");
@@ -79,8 +99,12 @@ describe("Agent Event Bus Real-Time Resilience & Multi-User Isolation", () => {
 async function startEventBus(ticketStore) {
   const server = http.createServer((_req, res) => res.end("ok"));
   const bus = createAgentEventBus(server, { ticketStore });
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  await new Promise((resolve) =>
+    server.listen(0, "127.0.0.1", () => resolve()),
+  );
   const address = server.address();
+  if (!address || typeof address === "string")
+    throw new Error("Expected TCP server address");
   cleanups.push(() => bus.close());
   cleanups.push(() => new Promise((resolve) => server.close(resolve)));
   return { baseUrl: `ws://127.0.0.1:${address.port}`, bus };
@@ -96,7 +120,9 @@ function connectWs(url) {
 
 function nextWsMessage(socket) {
   return new Promise((resolve) => {
-    socket.once("message", (payload) => resolve(JSON.parse(payload.toString())));
+    socket.once("message", (payload) =>
+      resolve(JSON.parse(payload.toString())),
+    );
   });
 }
 

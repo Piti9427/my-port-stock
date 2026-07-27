@@ -50,17 +50,24 @@ describe("authenticated WebSocket event bus", () => {
     const { baseUrl } = await startEventBus(store);
 
     assert.equal(await rejectedStatus(`${baseUrl}/ws/agent-events`), 401);
-    assert.equal(await rejectedStatus(`${baseUrl}/ws/agent-events?ticket=invalid`), 401);
+    assert.equal(
+      await rejectedStatus(`${baseUrl}/ws/agent-events?ticket=invalid`),
+      401,
+    );
 
     const expired = store.issue("user_a");
     now += 30_001;
     assert.equal(
-      await rejectedStatus(`${baseUrl}/ws/agent-events?ticket=${expired.ticket}`),
+      await rejectedStatus(
+        `${baseUrl}/ws/agent-events?ticket=${expired.ticket}`,
+      ),
       401,
     );
 
     const valid = store.issue("user_a");
-    const socket = await connect(`${baseUrl}/ws/agent-events?ticket=${valid.ticket}`);
+    const socket = await connect(
+      `${baseUrl}/ws/agent-events?ticket=${valid.ticket}`,
+    );
     cleanups.push(() => closeSocket(socket));
     assert.equal(socket.readyState, WebSocket.OPEN);
     assert.equal(
@@ -74,15 +81,24 @@ describe("authenticated WebSocket event bus", () => {
     const { baseUrl, bus } = await startEventBus(store);
     const userATicket = store.issue("user_a");
     const userBTicket = store.issue("user_b");
-    const userA = await connect(`${baseUrl}/ws/agent-events?ticket=${userATicket.ticket}`);
-    const userB = await connect(`${baseUrl}/ws/agent-events?ticket=${userBTicket.ticket}`);
+    const userA = await connect(
+      `${baseUrl}/ws/agent-events?ticket=${userATicket.ticket}`,
+    );
+    const userB = await connect(
+      `${baseUrl}/ws/agent-events?ticket=${userBTicket.ticket}`,
+    );
     cleanups.push(() => closeSocket(userA));
     cleanups.push(() => closeSocket(userB));
     const userBMessages = [];
-    userB.on("message", (payload) => userBMessages.push(JSON.parse(payload.toString())));
+    userB.on("message", (payload) =>
+      userBMessages.push(JSON.parse(payload.toString())),
+    );
 
     const userAMessage = nextMessage(userA);
-    assert.equal(bus.broadcast({ type: "ANALYSIS_PROGRESS" }, { userId: "user_a" }), true);
+    assert.equal(
+      bus.broadcast({ type: "ANALYSIS_PROGRESS" }, { userId: "user_a" }),
+      true,
+    );
 
     assert.equal((await userAMessage).type, "ANALYSIS_PROGRESS");
     await new Promise((resolve) => setImmediate(resolve));
@@ -94,8 +110,12 @@ describe("authenticated WebSocket event bus", () => {
 async function startEventBus(ticketStore) {
   const server = http.createServer((_req, res) => res.end("ok"));
   const bus = createAgentEventBus(server, { ticketStore });
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  await new Promise((resolve) =>
+    server.listen(0, "127.0.0.1", () => resolve()),
+  );
   const address = server.address();
+  if (!address || typeof address === "string")
+    throw new Error("Expected TCP server address");
   cleanups.push(() => bus.close());
   cleanups.push(() => new Promise((resolve) => server.close(resolve)));
   return { baseUrl: `ws://127.0.0.1:${address.port}`, bus };
@@ -117,14 +137,17 @@ function rejectedStatus(url) {
       resolve(response.statusCode);
     });
     socket.once("error", (error) => {
-      if (!String(error.message).includes("Unexpected server response")) reject(error);
+      if (!String(error.message).includes("Unexpected server response"))
+        reject(error);
     });
   });
 }
 
 function nextMessage(socket) {
   return new Promise((resolve) => {
-    socket.once("message", (payload) => resolve(JSON.parse(payload.toString())));
+    socket.once("message", (payload) =>
+      resolve(JSON.parse(payload.toString())),
+    );
   });
 }
 

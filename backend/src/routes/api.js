@@ -1,8 +1,9 @@
-'use strict';
-const express = require('express');
-const { z } = require('zod');
-const { getRequestUserId } = require('../auth/requestAuth');
-const { enrichWithMarketData } = require('../services/quoteEnricher');
+"use strict";
+const express = require("express");
+const { z } = require("zod");
+const { getRequestUserId } = require("../auth/requestAuth");
+const { isTestMode } = require("../providers/testMode");
+const { enrichWithMarketData } = require("../services/quoteEnricher");
 
 const router = express.Router();
 
@@ -10,9 +11,9 @@ function getUserId(req) {
   return getRequestUserId(req);
 }
 
-const { getScopedDb } = require('../db');
-const { supabaseConfigured } = require('../db/supabaseClient');
-const { normalizeTicker } = require('../common/format');
+const { getScopedDb } = require("../db");
+const { supabaseConfigured } = require("../db/supabaseClient");
+const { normalizeTicker } = require("../common/format");
 
 function runtimeInsufficientData(reason, extras = {}) {
   return {
@@ -24,26 +25,39 @@ function runtimeInsufficientData(reason, extras = {}) {
 
 // Zod Validation Schemas
 const WatchlistSchema = z.object({
-  ticker: z.string().trim().toUpperCase().regex(/^[A-Z0-9.-]{1,10}$/, {
-    message: "Ticker must be 1-10 alphanumeric characters, dots, or dashes."
-  }),
+  ticker: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z0-9.-]{1,10}$/, {
+      message: "Ticker must be 1-10 alphanumeric characters, dots, or dashes.",
+    }),
   name: z.string().trim().optional(),
   sector: z.string().trim().optional(),
   setup: z.string().trim().optional(),
   alert_price: z.number().nullable().optional(),
-  alert_type: z.enum(['above', 'below']).optional(),
+  alert_type: z.enum(["above", "below"]).optional(),
   ai_signal: z.string().trim().optional(),
   source_note: z.string().trim().optional(),
 });
 
 const JournalSchema = z.object({
-  date: z.string().optional().transform(val => val ? new Date(val).toISOString() : new Date().toISOString()),
-  ticker: z.string().trim().toUpperCase().regex(/^[A-Z0-9.-]{1,10}$/, {
-    message: "Ticker must be 1-10 alphanumeric characters, dots, or dashes."
-  }),
-  type: z.enum(['BUY', 'SELL', 'ADJUST']),
+  date: z
+    .string()
+    .optional()
+    .transform((val) =>
+      val ? new Date(val).toISOString() : new Date().toISOString(),
+    ),
+  ticker: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z0-9.-]{1,10}$/, {
+      message: "Ticker must be 1-10 alphanumeric characters, dots, or dashes.",
+    }),
+  type: z.enum(["BUY", "SELL", "ADJUST"]),
   mode: z.string().trim().optional(),
-  status: z.enum(['OPEN', 'CLOSED']).optional(),
+  status: z.enum(["OPEN", "CLOSED"]).optional(),
   shares: z.number().positive("Shares must be positive").optional(),
   price: z.number().nonnegative("Price must be non-negative").optional(),
   entry: z.number().optional(),
@@ -58,19 +72,19 @@ const JournalSchema = z.object({
 const JournalIdSchema = z.string().uuid();
 
 // Holdings Routes
-router.get('/holdings', async (req, res, next) => {
-  if (!supabaseConfigured) {
+router.get("/holdings", async (req, res, next) => {
+  if (!supabaseConfigured && !isTestMode()) {
     return res.status(200).json([]);
   }
   const userId = getUserId(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
-    const { getUsdThbRate } = require('../services/marketData');
+    const { getUsdThbRate } = require("../services/marketData");
     const userDb = getScopedDb(userId);
     const [holdings, trades] = await Promise.all([
       userDb.getUserHoldings(userId),
-      userDb.getUserJournal(userId)
+      userDb.getUserJournal(userId),
     ]);
     const enriched = await enrichWithMarketData(holdings);
 
@@ -78,14 +92,16 @@ router.get('/holdings', async (req, res, next) => {
 
     const openTradesByTicker = {};
     for (const trade of trades || []) {
-      const status = String(trade.status || '').trim().toUpperCase();
-      if (status === 'OPEN' || status === 'ACTIVE') {
-        const ticker = String(trade.ticker || '').toUpperCase();
+      const status = String(trade.status || "")
+        .trim()
+        .toUpperCase();
+      if (status === "OPEN" || status === "ACTIVE") {
+        const ticker = String(trade.ticker || "").toUpperCase();
         openTradesByTicker[ticker] = trade;
       }
     }
 
-    const finalHoldings = enriched.map(item => {
+    const finalHoldings = enriched.map((item) => {
       const price = item.price || item.avg_cost || 0;
       const shares = item.shares || 0;
       const costValueUsd = shares * (item.avg_cost || 0);
@@ -96,7 +112,7 @@ router.get('/holdings', async (req, res, next) => {
 
       // P/L calculations
       const plUsd = currentValueUsd - costValueUsd;
-      const isUsd = !item.ticker.endsWith('.BK');
+      const isUsd = !item.ticker.endsWith(".BK");
       const rate = isUsd ? thbRate : 1.0;
 
       // Position Age & Time Stop check
@@ -108,12 +124,12 @@ router.get('/holdings', async (req, res, next) => {
         ageDays = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
       }
 
-      const tickerKey = String(item.ticker || '').toUpperCase();
+      const tickerKey = String(item.ticker || "").toUpperCase();
       const activeTrade = openTradesByTicker[tickerKey];
-      const mode = activeTrade?.mode || item.mode || 'Long-Term/Core';
-      const isSwing = mode === 'Swing Trade';
-      const isQuick = mode === 'Quick Trade';
-      const timeStopLimit = isSwing ? 15 : (isQuick ? 5 : 9999);
+      const mode = activeTrade?.mode || item.mode || "Long-Term/Core";
+      const isSwing = mode === "Swing Trade";
+      const isQuick = mode === "Quick Trade";
+      const timeStopLimit = isSwing ? 15 : isQuick ? 5 : 9999;
       const timeStopHit = ageDays > timeStopLimit;
 
       return {
@@ -125,8 +141,12 @@ router.get('/holdings', async (req, res, next) => {
         value_thb: isUsd ? currentValueUsd * thbRate : currentValueUsd,
         cost_usd: isUsd ? costValueUsd : costValueUsd / thbRate,
         cost_thb: isUsd ? costValueUsd * thbRate : costValueUsd,
-        day_pl_usd: isUsd ? shares * (item.change || 0) : (shares * (item.change || 0)) / thbRate,
-        day_pl_thb: isUsd ? (shares * (item.change || 0)) * thbRate : shares * (item.change || 0),
+        day_pl_usd: isUsd
+          ? shares * (item.change || 0)
+          : (shares * (item.change || 0)) / thbRate,
+        day_pl_thb: isUsd
+          ? shares * (item.change || 0) * thbRate
+          : shares * (item.change || 0),
         current_value_usd: currentValueUsd,
         pl_usd: plUsd,
         pl_thb: plUsd * rate,
@@ -146,12 +166,16 @@ router.get('/holdings', async (req, res, next) => {
 });
 
 // Watchlist Routes
-router.get('/watchlists', async (req, res, next) => {
+router.get("/watchlists", async (req, res, next) => {
   if (!supabaseConfigured) {
-    return res.status(200).json(runtimeInsufficientData("Supabase is not configured", { watchlists: [] }));
+    return res.status(200).json(
+      runtimeInsufficientData("Supabase is not configured", {
+        watchlists: [],
+      }),
+    );
   }
   const userId = getUserId(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
     const userDb = getScopedDb(userId);
@@ -163,50 +187,56 @@ router.get('/watchlists', async (req, res, next) => {
   }
 });
 
-router.post('/watchlists', async (req, res, next) => {
+router.post("/watchlists", async (req, res, next) => {
   if (!supabaseConfigured) {
-    return res.status(503).json(runtimeInsufficientData("Supabase is not configured"));
+    return res
+      .status(503)
+      .json(runtimeInsufficientData("Supabase is not configured"));
   }
   const userId = getUserId(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
     const validated = WatchlistSchema.parse(req.body);
     const { ticker } = validated;
 
-    const scopedSupabase = require('../db/supabaseClient').createScopedClient(userId);
-    
+    const scopedSupabase = require("../db/supabaseClient").createScopedClient(
+      userId,
+    );
+
     // Check if the ticker already exists for this user (including soft-deleted)
     const { data: existing, error: fetchErr } = await scopedSupabase
-      .from('watchlists')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('ticker', ticker);
+      .from("watchlists")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("ticker", ticker);
 
     if (fetchErr) throw fetchErr;
 
     let result;
     if (existing && existing.length > 0) {
       const { data, error: updateErr } = await scopedSupabase
-        .from('watchlists')
+        .from("watchlists")
         .update({
           ...validated,
           is_deleted: false,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', existing[0].id)
+        .eq("id", existing[0].id)
         .select();
 
       if (updateErr) throw updateErr;
       result = data;
     } else {
       const { data, error: insertErr } = await scopedSupabase
-        .from('watchlists')
-        .insert([{
-          ...validated,
-          user_id: userId,
-          is_deleted: false
-        }])
+        .from("watchlists")
+        .insert([
+          {
+            ...validated,
+            user_id: userId,
+            is_deleted: false,
+          },
+        ])
         .select();
 
       if (insertErr) throw insertErr;
@@ -216,30 +246,36 @@ router.post('/watchlists', async (req, res, next) => {
     res.status(200).json(result);
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return res.status(400).json({ error: err.issues.map(e => e.message).join(', ') });
+      return res
+        .status(400)
+        .json({ error: err.issues.map((e) => e.message).join(", ") });
     }
     next(err);
   }
 });
 
-router.delete('/watchlists/:ticker', async (req, res, next) => {
+router.delete("/watchlists/:ticker", async (req, res, next) => {
   const ticker = normalizeTicker(req.params.ticker);
-  if (!ticker) return res.status(400).json({ error: 'Invalid ticker format' });
+  if (!ticker) return res.status(400).json({ error: "Invalid ticker format" });
 
   if (!supabaseConfigured) {
-    return res.status(503).json(runtimeInsufficientData("Supabase is not configured"));
+    return res
+      .status(503)
+      .json(runtimeInsufficientData("Supabase is not configured"));
   }
   const userId = getUserId(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
-    const scopedSupabase = require('../db/supabaseClient').createScopedClient(userId);
+    const scopedSupabase = require("../db/supabaseClient").createScopedClient(
+      userId,
+    );
 
     const { data, error } = await scopedSupabase
-      .from('watchlists')
+      .from("watchlists")
       .update({ is_deleted: true, updated_at: new Date().toISOString() })
-      .eq('user_id', userId)
-      .eq('ticker', ticker)
+      .eq("user_id", userId)
+      .eq("ticker", ticker)
       .select();
 
     if (error) throw error;
@@ -250,12 +286,16 @@ router.delete('/watchlists/:ticker', async (req, res, next) => {
 });
 
 // Journal Routes
-router.get('/journal', async (req, res, next) => {
+router.get("/journal", async (req, res, next) => {
   if (!supabaseConfigured) {
-    return res.status(200).json(runtimeInsufficientData("Supabase is not configured", { trades: [] }));
+    return res
+      .status(200)
+      .json(
+        runtimeInsufficientData("Supabase is not configured", { trades: [] }),
+      );
   }
   const userId = getUserId(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
     const userDb = getScopedDb(userId);
@@ -266,15 +306,19 @@ router.get('/journal', async (req, res, next) => {
   }
 });
 
-router.get('/journal/:ticker', async (req, res, next) => {
+router.get("/journal/:ticker", async (req, res, next) => {
   const ticker = normalizeTicker(req.params.ticker);
-  if (!ticker) return res.status(400).json({ error: 'Invalid ticker format' });
+  if (!ticker) return res.status(400).json({ error: "Invalid ticker format" });
 
   if (!supabaseConfigured) {
-    return res.status(200).json(runtimeInsufficientData("Supabase is not configured", { trades: [] }));
+    return res
+      .status(200)
+      .json(
+        runtimeInsufficientData("Supabase is not configured", { trades: [] }),
+      );
   }
   const userId = getUserId(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
     const userDb = getScopedDb(userId);
@@ -285,12 +329,14 @@ router.get('/journal/:ticker', async (req, res, next) => {
   }
 });
 
-router.post('/journal', async (req, res, next) => {
+router.post("/journal", async (req, res, next) => {
   if (!supabaseConfigured) {
-    return res.status(503).json(runtimeInsufficientData("Supabase is not configured"));
+    return res
+      .status(503)
+      .json(runtimeInsufficientData("Supabase is not configured"));
   }
   const userId = getUserId(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
     const validated = JournalSchema.parse(req.body);
@@ -299,54 +345,67 @@ router.post('/journal', async (req, res, next) => {
     res.status(200).json(data);
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return res.status(400).json({ error: err.issues.map(e => e.message).join(', ') });
+      return res
+        .status(400)
+        .json({ error: err.issues.map((e) => e.message).join(", ") });
     }
     next(err);
   }
 });
 
-router.delete('/journal/:id', async (req, res, next) => {
+router.delete("/journal/:id", async (req, res, next) => {
   const parsedId = JournalIdSchema.safeParse(req.params.id);
-  if (!parsedId.success) return res.status(400).json({ error: 'Invalid journal ID' });
+  if (!parsedId.success)
+    return res.status(400).json({ error: "Invalid journal ID" });
 
   if (!supabaseConfigured) {
-    return res.status(503).json(runtimeInsufficientData("Supabase is not configured"));
+    return res
+      .status(503)
+      .json(runtimeInsufficientData("Supabase is not configured"));
   }
   const userId = getUserId(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
     const id = parsedId.data;
-    const scopedSupabase = require('../db/supabaseClient').createScopedClient(userId);
+    const scopedSupabase = require("../db/supabaseClient").createScopedClient(
+      userId,
+    );
 
     const { data, error } = await scopedSupabase
-      .from('journal')
+      .from("journal")
       .update({ is_deleted: true, updated_at: new Date().toISOString() })
-      .eq('user_id', userId)
-      .eq('id', id)
+      .eq("user_id", userId)
+      .eq("id", id)
       .select();
 
     if (error) throw error;
-    res.status(200).json({ message: 'Journal entry soft-deleted successfully', data });
+    res
+      .status(200)
+      .json({ message: "Journal entry soft-deleted successfully", data });
   } catch (err) {
     next(err);
   }
 });
 
 // Watchlist Scanner Route
-router.get('/watchlist/scan', async (req, res, next) => {
+router.get("/watchlist/scan", async (req, res, next) => {
   if (!supabaseConfigured) {
-    return res.status(200).json(runtimeInsufficientData("Supabase is not configured", { alerts: [] }));
+    return res
+      .status(200)
+      .json(
+        runtimeInsufficientData("Supabase is not configured", { alerts: [] }),
+      );
   }
   const userId = getUserId(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
     const userDb = getScopedDb(userId);
     const watchlists = await userDb.getUserWatchlists(userId);
     const enriched = await enrichWithMarketData(watchlists);
 
-    const alerts = enriched.map(item => {
+    const alerts = enriched.map((item) => {
       const lastPrice = item.price;
       const alertPrice = item.alert_price;
       let triggered = false;
@@ -374,34 +433,46 @@ router.get('/watchlist/scan', async (req, res, next) => {
 });
 
 // Market Price Route
-router.get('/price/:ticker', async (req, res) => {
+router.get("/price/:ticker", async (req, res) => {
   const { ticker } = req.params;
   try {
-    const { getLivePrice, getUsdThbRate } = require('../services/marketData');
-    const yahooFinance = require('yahoo-finance2').default;
+    const { getUsdThbRate } = require("../services/marketData");
+    const { default: YahooFinance } = require("yahoo-finance2");
+    const yahooFinance = new YahooFinance();
 
-    const [quote, thbRate] = await Promise.all([
+    const [rawQuote, thbRate] = await Promise.all([
       yahooFinance.quote(ticker),
       getUsdThbRate(),
     ]);
+    const quote = /** @type {{
+     * regularMarketPrice?: number, currency?: string, regularMarketChange?: number,
+     * regularMarketChangePercent?: number, regularMarketDayHigh?: number,
+     * regularMarketDayLow?: number, regularMarketVolume?: number, marketCap?: number
+     * }} */ (rawQuote);
 
     if (!quote || !quote.regularMarketPrice) {
-      return res.status(404).json({ error: `No price data found for ${ticker}` });
+      return res
+        .status(404)
+        .json({ error: `No price data found for ${ticker}` });
     }
 
-    const isUsd = quote.currency === 'USD';
+    const isUsd = quote.currency === "USD";
     const rate = isUsd ? thbRate : 1;
 
     res.json({
       ticker,
       price: quote.regularMarketPrice * rate,
-      change: quote.regularMarketChange ? quote.regularMarketChange * rate : null,
+      change: quote.regularMarketChange
+        ? quote.regularMarketChange * rate
+        : null,
       changePct: quote.regularMarketChangePercent ?? null,
-      high: quote.regularMarketDayHigh ? quote.regularMarketDayHigh * rate : null,
+      high: quote.regularMarketDayHigh
+        ? quote.regularMarketDayHigh * rate
+        : null,
       low: quote.regularMarketDayLow ? quote.regularMarketDayLow * rate : null,
       volume: quote.regularMarketVolume ?? null,
       marketCap: quote.marketCap ? quote.marketCap * rate : null,
-      currency: 'THB',
+      currency: "THB",
     });
   } catch (error) {
     console.error(`Error fetching price for ${ticker}:`, error.message);
@@ -409,8 +480,8 @@ router.get('/price/:ticker', async (req, res) => {
   }
 });
 
-router.use('/preferences', require('./preferences'));
-router.use('/today', require('./today'));
+router.use("/preferences", require("./preferences"));
+router.use("/today", require("./today"));
 
 module.exports = router;
 module.exports.getUserId = getUserId;

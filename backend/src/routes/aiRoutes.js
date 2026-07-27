@@ -1,10 +1,17 @@
-'use strict';
-const express = require('express');
-const { z } = require('zod');
-const { getRequestUserId } = require('../auth/requestAuth');
-const { normalizeTicker, normalizeDecisionMode, insufficientData } = require('../common/format');
-const { chatWithVerifiedContext, analyzeTicker } = require('../services/aiAnalyst');
-const { runMarketOracle } = require('../services/marketOracleService');
+"use strict";
+const express = require("express");
+const { z } = require("zod");
+const { getRequestUserId } = require("../auth/requestAuth");
+const {
+  normalizeTicker,
+  normalizeDecisionMode,
+  insufficientData,
+} = require("../common/format");
+const {
+  chatWithVerifiedContext,
+  analyzeTicker,
+} = require("../services/aiAnalyst");
+const { runMarketOracle } = require("../services/marketOracleService");
 const {
   getAgentsForMode,
   buildDeepAnalysisPayload,
@@ -13,23 +20,30 @@ const {
   buildAgentResultsFromGemini,
   mergeGeminiAnalysis,
   buildInsufficientAnalyzeResponse,
-} = require('../services/deepAnalysisService');
+} = require("../services/deepAnalysisService");
 const {
   getVerifiedPacket,
   buildManualVerifiedPacket,
-} = require('../services/analysisContextService');
-const { evaluateDecision } = require('../decision/decisionEngine');
-const { broadcast } = require('../ws/agentEventBus');
+} = require("../services/analysisContextService");
+const { evaluateDecision } = require("../decision/decisionEngine");
+const { broadcast } = require("../ws/agentEventBus");
 
 const router = express.Router();
 
-const ChatMessageSchema = z.string()
+function containsDisallowedControlCharacter(message) {
+  // Intentionally reject non-whitespace C0 control characters in user prompts.
+  // eslint-disable-next-line no-control-regex
+  return /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(message);
+}
+
+const ChatMessageSchema = z
+  .string()
   .trim()
   .min(1)
   .max(1000)
-  .refine((message) => !/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(message));
+  .refine((message) => !containsDisallowedControlCharacter(message));
 
-router.post('/chat', async (req, res, next) => {
+router.post("/chat", async (req, res, next) => {
   const ticker = normalizeTicker(req.body?.ticker);
   if (!ticker) {
     return res.status(200).json(insufficientData("Invalid ticker format"));
@@ -78,7 +92,7 @@ router.post('/chat', async (req, res, next) => {
   }
 });
 
-router.post('/analyze', async (req, res, next) => {
+router.post("/analyze", async (req, res, next) => {
   const ticker = normalizeTicker(req.body?.ticker);
   if (!ticker) {
     return res.status(200).json(insufficientData("Invalid ticker format"));
@@ -91,21 +105,41 @@ router.post('/analyze', async (req, res, next) => {
 
   try {
     broadcastAnalyzeKickoff(ticker, agents, totalAgents, userId);
-    const manualPrice = req.body.manual_price ? Number.parseFloat(req.body.manual_price) : null;
+    const manualPrice = req.body.manual_price
+      ? Number.parseFloat(req.body.manual_price)
+      : null;
     const packet =
-      manualPrice && !Number.isNaN(manualPrice) && manualPrice > 0 && manualPrice < 1000000
-        ? await buildManualVerifiedPacket(ticker, manualPrice, decisionMode, { userId })
+      manualPrice &&
+      !Number.isNaN(manualPrice) &&
+      manualPrice > 0 &&
+      manualPrice < 1000000
+        ? await buildManualVerifiedPacket(ticker, manualPrice, decisionMode, {
+            userId,
+          })
         : await getVerifiedPacket(ticker, decisionMode, { userId });
 
     if (packet.status === "INSUFFICIENT_DATA") {
-      broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }, { userId });
-      return res.status(200).json(buildInsufficientAnalyzeResponse(packet, ticker, decisionMode));
+      broadcast(
+        { type: "AGENT_STATE_CHANGE", agent: "cio", state: "IDLE", ticker },
+        { userId },
+      );
+      return res
+        .status(200)
+        .json(buildInsufficientAnalyzeResponse(packet, ticker, decisionMode));
     }
 
     const oracleData = await runMarketOracle(ticker);
-    const geminiData = await analyzeTicker(ticker, packet.portfolio_context, oracleData);
+    const geminiData = await analyzeTicker(
+      ticker,
+      packet.portfolio_context,
+      oracleData,
+    );
 
-    packet.fundamental_packet = { ...packet.fundamental_packet, gemini_scores: geminiData, oracle: oracleData };
+    packet.fundamental_packet = {
+      ...packet.fundamental_packet,
+      gemini_scores: geminiData,
+      oracle: oracleData,
+    };
 
     const agentResults = buildAgentResultsFromGemini(geminiData);
     const analysis = evaluateDecision(packet, {
@@ -124,12 +158,15 @@ router.post('/analyze', async (req, res, next) => {
       ...analysis,
     });
   } catch (error) {
-    broadcast({ type: 'AGENT_STATE_CHANGE', agent: 'cio', state: 'IDLE', ticker }, { userId });
+    broadcast(
+      { type: "AGENT_STATE_CHANGE", agent: "cio", state: "IDLE", ticker },
+      { userId },
+    );
     return next(error);
   }
 });
 
-router.get('/market-oracle/:ticker', async (req, res, next) => {
+router.get("/market-oracle/:ticker", async (req, res, next) => {
   const ticker = normalizeTicker(req.params.ticker);
   if (!ticker) {
     return res.status(400).json({ error: "Invalid ticker format" });

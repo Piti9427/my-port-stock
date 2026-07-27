@@ -8,7 +8,17 @@ function numeric(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-export function TradeTicket({ open, ticker, decisionMode, quotePrice, currentHolding, onClose, onSubmit, saving = false, serverError = '' }) {
+export function TradeTicket({
+  open,
+  ticker,
+  decisionMode,
+  quotePrice = null,
+  currentHolding = null,
+  onClose,
+  onSubmit,
+  saving = false,
+  serverError = '',
+}) {
   const [type, setType] = useState('BUY');
   const [shares, setShares] = useState('');
   const [price, setPrice] = useState(quotePrice ? String(quotePrice) : '');

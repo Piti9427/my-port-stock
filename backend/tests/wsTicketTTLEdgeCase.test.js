@@ -57,7 +57,9 @@ describe("WebSocket Ticket TTL & Expiry Edge Cases", () => {
     const ticketRecord = store.issue("user_timeout");
     mockTime += 30_005; // Advance past TTL
 
-    const status = await getConnectStatus(`${baseUrl}/ws/agent-events?ticket=${ticketRecord.ticket}`);
+    const status = await getConnectStatus(
+      `${baseUrl}/ws/agent-events?ticket=${ticketRecord.ticket}`,
+    );
     assert.equal(status, 401);
   });
 
@@ -68,12 +70,16 @@ describe("WebSocket Ticket TTL & Expiry Edge Cases", () => {
     const ticketRecord = store.issue("user_single_use");
 
     // First attempt succeeds
-    const socket = await connectWs(`${baseUrl}/ws/agent-events?ticket=${ticketRecord.ticket}`);
+    const socket = await connectWs(
+      `${baseUrl}/ws/agent-events?ticket=${ticketRecord.ticket}`,
+    );
     cleanups.push(() => closeSocket(socket));
     assert.equal(socket.readyState, WebSocket.OPEN);
 
     // Second attempt with same ticket fails with 401
-    const secondStatus = await getConnectStatus(`${baseUrl}/ws/agent-events?ticket=${ticketRecord.ticket}`);
+    const secondStatus = await getConnectStatus(
+      `${baseUrl}/ws/agent-events?ticket=${ticketRecord.ticket}`,
+    );
     assert.equal(secondStatus, 401);
   });
 });
@@ -81,8 +87,12 @@ describe("WebSocket Ticket TTL & Expiry Edge Cases", () => {
 async function startEventBus(ticketStore) {
   const server = http.createServer((_req, res) => res.end("ok"));
   const bus = createAgentEventBus(server, { ticketStore });
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  await new Promise((resolve) =>
+    server.listen(0, "127.0.0.1", () => resolve()),
+  );
   const address = server.address();
+  if (!address || typeof address === "string")
+    throw new Error("Expected TCP server address");
   cleanups.push(() => bus.close());
   cleanups.push(() => new Promise((resolve) => server.close(resolve)));
   return { baseUrl: `ws://127.0.0.1:${address.port}`, bus };

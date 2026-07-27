@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('Trade Execution Journey E2E Flow', () => {
   test.use({
@@ -7,56 +7,32 @@ test.describe('Trade Execution Journey E2E Flow', () => {
     },
   });
 
-  test('user can execute a trade journey from Command Center to Journal', async ({ page }) => {
-    test.slow();
+  test('user records an executed trade and sees the persisted journal row', async ({ page }) => {
+    await page.goto('/command-center');
+    await page.getByLabel('Ticker symbol').fill('NVDA');
+    await page.getByRole('button', { name: 'Load quote' }).click();
+    await expect(page.getByText('Price gate: PASS — dual-source confirmed')).toBeVisible();
 
-    try {
-      // 1. Navigate to Command Center
-      await page.goto('/command-center');
+    await page.getByRole('radio', { name: 'Swing Trade' }).click();
+    await page.getByRole('button', { name: 'วิเคราะห์', exact: true }).click();
+    await expect(page.getByRole('region', { name: 'Decision snapshot' })).toBeVisible();
+    await page.getByRole('button', { name: 'Log executed trade' }).click();
 
-      // 2. Wait for page to load (loading text disappears)
-      await expect(page.locator('text=กำลังโหลดข้อมูล')).not.toBeVisible({ timeout: 15000 });
+    await page.getByLabel('Shares').fill('2');
+    await page.getByLabel('Execution price').fill('100');
+    await page.getByLabel('Stop loss').fill('90');
+    await page.getByLabel('Target').fill('120');
+    await page.getByLabel('Notes').fill('Deterministic E2E trade');
+    const journalWrite = page.waitForResponse(
+      (response) => response.url().endsWith('/api/journal') && response.request().method() === 'POST' && response.ok()
+    );
+    await page.getByRole('button', { name: 'Record executed trade' }).click();
+    await journalWrite;
 
-      // 3. Verify main content area is visible
-      const mainContainer = page.locator('main, .command-center-page, .page-header').first();
-      await expect(mainContainer).toBeVisible({ timeout: 15000 });
-
-      // 4. Fill ticker input #command-ticker with 'NVDA'
-      const tickerInput = page.locator('#command-ticker, input[placeholder="NVDA"]').first();
-      if (await tickerInput.isVisible()) {
-        await tickerInput.fill('NVDA');
-      }
-
-      // 5. Click 'Load quote' button (.btn-analyze)
-      const loadBtn = page.locator('.btn-analyze, button:has-text("Load quote")').first();
-      if (await loadBtn.isVisible()) {
-        await loadBtn.click();
-      }
-
-      // 6. Wait for quote panel to appear or handle timeout gracefully
-      const quotePanel = page.locator('.quote-panel, .snapshot-panel, .quote-data').first();
-      if (await quotePanel.isVisible()) {
-        await expect(quotePanel).toBeVisible({ timeout: 15000 });
-      }
-
-      // 7. Navigate to /journal
-      await page.goto('/journal');
-
-      // 8. Wait for page to load
-      await expect(page.locator('text=กำลังโหลดข้อมูล')).not.toBeVisible({ timeout: 15000 });
-
-      // 9. Verify journal page content is visible
-      const journalContainer = page.locator('main, .journal-page, #main-content').first();
-      await expect(journalContainer).toBeVisible({ timeout: 15000 });
-
-      // 10. Check for 'Log Trade' or trade-related button presence
-      const logTradeBtn = page.locator('button:has-text("Log Trade"), button:has-text("Add Trade"), .log-trade-btn').first();
-      if (await logTradeBtn.isVisible()) {
-        await expect(logTradeBtn).toBeVisible({ timeout: 15000 });
-      }
-    } catch (e) {
-      await page.screenshot({ path: 'test-results/debug-screenshot.png' });
-      throw e;
-    }
+    await expect(page).toHaveURL(/\/journal\?ticker=NVDA/);
+    const journalTable = page.getByRole('table');
+    await expect(journalTable).toContainText('NVDA');
+    await expect(journalTable).toContainText('2');
+    await expect(journalTable.locator('td[data-label="Price"]')).toContainText('100.00');
   });
 });

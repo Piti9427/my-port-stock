@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('Trade Thesis Submission E2E Flow (Option A: Dev Auth Bypass)', () => {
   test.use({
@@ -7,37 +7,25 @@ test.describe('Trade Thesis Submission E2E Flow (Option A: Dev Auth Bypass)', ()
     },
   });
 
-  test('user can open Command Center, fill trade parameters, and view decision snapshot', async ({ page }) => {
-    test.slow();
-    try {
-      // 1. Navigate to Command Center
-      await page.goto('/command-center');
-      await expect(page).toHaveURL(/\/command-center/);
+  test('user loads a verified quote and receives a decision snapshot', async ({ page }) => {
+    await page.goto('/command-center');
+    await expect(page).toHaveURL(/\/command-center/);
 
-      // 2. Wait for preferences gateway loading to settle
-      await expect(page.locator('text=กำลังโหลดข้อมูล')).not.toBeVisible({ timeout: 15000 });
+    await page.getByLabel('Ticker symbol').fill('NVDA');
+    const quoteResponse = page.waitForResponse((response) => response.url().includes('/api/quote/NVDA') && response.ok());
+    await page.getByRole('button', { name: 'Load quote' }).click();
+    await quoteResponse;
+    await expect(page.getByText('Price gate: PASS — dual-source confirmed')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'NVDA' })).toBeVisible();
 
-      // 3. Verify main content or header presence
-      const container = page.locator('main, .command-center-page, .page-header').first();
-      await expect(container).toBeVisible({ timeout: 15000 });
+    const analysisResponse = page.waitForResponse((response) => response.url().endsWith('/api/analyze') && response.ok());
+    await page.getByRole('radio', { name: 'Swing Trade' }).click();
+    await page.getByRole('button', { name: 'วิเคราะห์', exact: true }).click();
+    await analysisResponse;
 
-      // 4. Fill in Ticker Input (#command-ticker)
-      const tickerInput = page.locator('#command-ticker, input[placeholder="NVDA"]').first();
-      if (await tickerInput.isVisible()) {
-        await tickerInput.fill('NVDA');
-      }
-
-      // 5. Click Load quote button if present
-      const loadBtn = page.locator('button.btn-analyze, button:has-text("Load quote")').first();
-      if (await loadBtn.isVisible()) {
-        await loadBtn.click();
-      }
-
-      // 6. Verify page content is visible and rendered
-      await expect(page.locator('.command-center-page, main').first()).toBeVisible({ timeout: 15000 });
-    } catch (e) {
-      await page.screenshot({ path: 'test-results/debug-screenshot.png' });
-      throw e;
-    }
+    const snapshot = page.getByRole('region', { name: 'Decision snapshot' });
+    await expect(snapshot).toBeVisible();
+    await expect(snapshot).toContainText('NVDA');
+    await expect(snapshot.getByRole('button', { name: 'Log executed trade' })).toBeEnabled();
   });
 });

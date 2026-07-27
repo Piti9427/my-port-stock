@@ -3,7 +3,7 @@ import { RotateCcw, X } from 'lucide-react';
 
 const EXIT_DURATION_MS = 150;
 
-export function Toast({ message, undoAction, onDismiss, duration = 5000 }) {
+export function Toast({ message, undoAction = null, onDismiss = null, duration = 5000 }) {
   const [isExiting, setIsExiting] = useState(false);
   const dismissTimerRef = useRef(null);
   const exitingRef = useRef(false);
@@ -47,9 +47,13 @@ export function Toast({ message, undoAction, onDismiss, duration = 5000 }) {
           className="ui-toast-progress"
           role="progressbar"
           aria-label="Notification timeout"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          style={{ '--toast-duration': `${duration}ms` }}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          style={
+            /** @type {import('react').CSSProperties & Record<`--${string}`, string>} */ ({
+              '--toast-duration': `${duration}ms`,
+            })
+          }
         />
       )}
     </output>

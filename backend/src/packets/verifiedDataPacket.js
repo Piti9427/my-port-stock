@@ -1,5 +1,8 @@
 const { normalizeDecisionMode } = require("../common/format");
-const { readJournalContext, readTickerPortfolioContext } = require("../journal/journalReader");
+const {
+  readJournalContext,
+  readTickerPortfolioContext,
+} = require("../journal/journalReader");
 
 function buildVerifiedDataPacket(ticker, quotePacket, options = {}) {
   const decisionMode = normalizeDecisionMode(options.decisionMode);
@@ -11,11 +14,15 @@ function buildVerifiedDataPacket(ticker, quotePacket, options = {}) {
   const stalenessWarnings = [];
 
   if (!quotePacket || quotePacket.status === "INSUFFICIENT_DATA") {
-    knownConflicts.push(quotePacket ? quotePacket.error_details : "Missing quote packet");
+    knownConflicts.push(
+      quotePacket ? quotePacket.error_details : "Missing quote packet",
+    );
   }
 
   if (portfolioContext?.stale_hypothesis) {
-    stalenessWarnings.push("Portfolio/watchlist data is historical context only");
+    stalenessWarnings.push(
+      "Portfolio/watchlist data is historical context only",
+    );
   }
 
   if (historicalContextWarning) {
@@ -44,7 +51,8 @@ function buildVerifiedDataPacket(ticker, quotePacket, options = {}) {
     current_price_acceptance_gate: currentPriceGate,
     fundamental_packet: {
       status: "INSUFFICIENT_DATA",
-      reason: "v1 packet does not fetch filings, earnings, guidance, or valuation data yet",
+      reason:
+        "v1 packet does not fetch filings, earnings, guidance, or valuation data yet",
     },
     technical_packet: {
       status:

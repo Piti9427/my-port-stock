@@ -12,7 +12,7 @@ function formatTimestamp(timestamp) {
   });
 }
 
-export function DataStamp({ source, timestamp, stale = false }) {
+export function DataStamp({ source, timestamp = null, stale = false }) {
   const formattedTimestamp = formatTimestamp(timestamp);
 
   return (
@@ -22,7 +22,7 @@ export function DataStamp({ source, timestamp, stale = false }) {
       {formattedTimestamp && (
         <>
           <span aria-hidden="true">/</span>
-          <time dateTime={timestamp}>{formattedTimestamp}</time>
+          <time dateTime={timestamp || undefined}>{formattedTimestamp}</time>
         </>
       )}
       {stale && (

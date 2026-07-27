@@ -13,10 +13,15 @@ describe("Investment SOP Mathematical Boundary Gates", () => {
     it("rejects Risk/Reward ratio of 1.99 (adds risk plan blocker)", () => {
       const mockPacket = {
         ticker: "AAPL",
+        last_price: 110,
         current_price_acceptance_gate: "pass",
         decision_mode: "Long-Term/Core",
         portfolio_context: { is_held: false },
-        journal_context: { is_repeat_ticker: false, journal_checked: true, unresolved_issues: [] },
+        journal_context: {
+          is_repeat_ticker: false,
+          journal_checked: true,
+          unresolved_issues: [],
+        },
         fundamental_packet: {
           oracle: { piotroski_f_score: 8, altman_z_score: 4.5, roce: 15.0 },
         },
@@ -37,18 +42,32 @@ describe("Investment SOP Mathematical Boundary Gates", () => {
 
       const result = evaluateDecision(mockPacket, options);
       assert.equal(result.decision_snapshot.verdict, "Wait");
-      assert.ok(result.adaptive_drilldown.blockers.some((b) => b.includes("R/R >= 1:2")));
+      assert.ok(
+        result.adaptive_drilldown.blockers.some((b) =>
+          b.includes("R/R >= 1:2"),
+        ),
+      );
     });
 
     it("accepts Risk/Reward ratio of 2.00 (passes risk plan blocker)", () => {
       const mockPacket = {
         ticker: "AAPL",
+        last_price: 110,
         current_price_acceptance_gate: "pass",
         decision_mode: "Long-Term/Core",
         portfolio_context: { is_held: false },
-        journal_context: { is_repeat_ticker: false, journal_checked: true, unresolved_issues: [] },
+        journal_context: {
+          is_repeat_ticker: false,
+          journal_checked: true,
+          unresolved_issues: [],
+        },
         fundamental_packet: {
-          oracle: { piotroski_f_score: 8, altman_z_score: 4.5, roce: 15.0, macro: { index_above_ema200: true } },
+          oracle: {
+            piotroski_f_score: 8,
+            altman_z_score: 4.5,
+            roce: 15.0,
+            macro: { index_above_ema200: true },
+          },
         },
       };
 
@@ -61,7 +80,7 @@ describe("Investment SOP Mathematical Boundary Gates", () => {
         riskPlan: {
           stop_loss: 100,
           hard_risk_thb: 5000,
-          rr_ratio: 2.00, // Exactly 2.0
+          rr_ratio: 2.0, // Exactly 2.0
         },
       };
 
@@ -99,12 +118,22 @@ describe("Investment SOP Mathematical Boundary Gates", () => {
     it("yields Buy for Score >= 7.0 when all hard gates pass", () => {
       const mockPacket = {
         ticker: "MSFT",
+        last_price: 100,
         current_price_acceptance_gate: "pass",
         decision_mode: "Long-Term/Core",
         portfolio_context: { is_held: false },
-        journal_context: { is_repeat_ticker: false, journal_checked: true, unresolved_issues: [] },
+        journal_context: {
+          is_repeat_ticker: false,
+          journal_checked: true,
+          unresolved_issues: [],
+        },
         fundamental_packet: {
-          oracle: { piotroski_f_score: 8, altman_z_score: 4.5, roce: 15.0, macro: { index_above_ema200: true } },
+          oracle: {
+            piotroski_f_score: 8,
+            altman_z_score: 4.5,
+            roce: 15.0,
+            macro: { index_above_ema200: true },
+          },
         },
       };
 
@@ -127,10 +156,15 @@ describe("Investment SOP Mathematical Boundary Gates", () => {
     it("yields Wait for Score 6.9 even when all gates pass", () => {
       const mockPacket = {
         ticker: "MSFT",
+        last_price: 100,
         current_price_acceptance_gate: "pass",
         decision_mode: "Long-Term/Core",
         portfolio_context: { is_held: false },
-        journal_context: { is_repeat_ticker: false, journal_checked: true, unresolved_issues: [] },
+        journal_context: {
+          is_repeat_ticker: false,
+          journal_checked: true,
+          unresolved_issues: [],
+        },
         fundamental_packet: {
           oracle: { piotroski_f_score: 8, altman_z_score: 4.5, roce: 15.0 },
         },
@@ -155,10 +189,15 @@ describe("Investment SOP Mathematical Boundary Gates", () => {
     it("yields Avoid for Score < 5.0 on new ticker", () => {
       const mockPacket = {
         ticker: "XYZ",
+        last_price: 100,
         current_price_acceptance_gate: "pass",
         decision_mode: "Long-Term/Core",
         portfolio_context: { is_held: false },
-        journal_context: { is_repeat_ticker: false, journal_checked: true, unresolved_issues: [] },
+        journal_context: {
+          is_repeat_ticker: false,
+          journal_checked: true,
+          unresolved_issues: [],
+        },
       };
 
       const agentResults = {

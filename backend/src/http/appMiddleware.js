@@ -1,7 +1,10 @@
 "use strict";
 
 const { randomUUID } = require("node:crypto");
-const helmet = require("helmet");
+const { isTestMode } = require("../providers/testMode");
+const helmet = /** @type {typeof import("helmet").default} */ (
+  /** @type {unknown} */ (require("helmet"))
+);
 const { rateLimit } = require("express-rate-limit");
 
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
@@ -22,7 +25,9 @@ function getClerkOrigin(publishableKey) {
   if (!encoded) return null;
 
   try {
-    const host = Buffer.from(encoded, "base64").toString("utf8").replace(/\$$/, "");
+    const host = Buffer.from(encoded, "base64")
+      .toString("utf8")
+      .replace(/\$$/, "");
     return /^[a-z0-9.-]+$/i.test(host) ? `https://${host}` : null;
   } catch {
     return null;
@@ -37,9 +42,12 @@ function buildContentSecurityPolicy(env = process.env) {
   const clerkOrigin = getClerkOrigin(
     env.VITE_CLERK_PUBLISHABLE_KEY || env.CLERK_PUBLISHABLE_KEY,
   );
-  const supabaseOrigin = toHttpsOrigin(env.VITE_SUPABASE_URL || env.SUPABASE_URL);
-  const sentryOrigin = toHttpsOrigin(env.VITE_SENTRY_DSN || env.SENTRY_DSN)
-    || "https://o4511540696383488.ingest.us.sentry.io";
+  const supabaseOrigin = toHttpsOrigin(
+    env.VITE_SUPABASE_URL || env.SUPABASE_URL,
+  );
+  const sentryOrigin =
+    toHttpsOrigin(env.VITE_SENTRY_DSN || env.SENTRY_DSN) ||
+    "https://o4511540696383488.ingest.us.sentry.io";
 
   return {
     defaultSrc: ["'self'"],
@@ -88,20 +96,23 @@ function requestContext(req, res, next) {
   res.setHeader("X-Request-ID", req.id);
 
   res.on("finish", () => {
-    console.log(JSON.stringify({
-      type: "http_request",
-      requestId: req.id,
-      method: req.method,
-      path: req.path,
-      status: res.statusCode,
-      durationMs: Date.now() - startedAt,
-    }));
+    if (isTestMode() && process.env.MPS_LOAD_MODE === "1") return;
+    console.log(
+      JSON.stringify({
+        type: "http_request",
+        requestId: req.id,
+        method: req.method,
+        path: req.path,
+        status: res.statusCode,
+        durationMs: Date.now() - startedAt,
+      }),
+    );
   });
 
   next();
 }
 
-function createLimiter({ identifier, limit, windowMs, skip }) {
+function createLimiter({ identifier, limit, windowMs, skip = undefined }) {
   return rateLimit({
     windowMs,
     limit,

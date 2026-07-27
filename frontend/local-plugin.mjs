@@ -61,6 +61,7 @@ const getStaticJsxAttributeValue = (attribute) => {
   return null;
 };
 
+/** @type {import('eslint').Rule.RuleModule} */
 const requireWindowOpenNoopenerRule = {
   meta: {
     type: 'problem',
@@ -177,6 +178,7 @@ const requireWindowOpenNoopenerRule = {
   },
 };
 
+/** @type {import('eslint').Rule.RuleModule} */
 const requireBlankTargetRelRule = {
   meta: {
     type: 'problem',
@@ -225,9 +227,12 @@ const requireBlankTargetRelRule = {
   },
 };
 
-export default {
+/** @type {import('eslint').ESLint.Plugin} */
+const localPlugin = {
   rules: {
     'require-window-open-noopener': requireWindowOpenNoopenerRule,
     'require-blank-target-rel': requireBlankTargetRelRule,
   },
 };
+
+export default localPlugin;

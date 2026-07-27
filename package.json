@@ -10,31 +10,55 @@
     "start": "npm run start --workspace=backend",
     "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
     "dev:ui": "concurrently \"npm run dev:ui --workspace=backend\" \"npm run dev:ui --workspace=frontend\"",
+    "serve:e2e": "concurrently \"MPS_TEST_MODE=1 MPS_TEST_SCENARIO=matrix NODE_ENV=test DEV_UI_AUTH_BYPASS=true PORT=8180 node backend/server.js\" \"VITE_DEV_AUTH_BYPASS=true MPS_BACKEND_URL=http://127.0.0.1:8180 npm run dev --workspace=frontend -- --port 4173 --strictPort\"",
     "test": "npm run test --workspaces --if-present",
     "test:unit": "npm run test --workspaces --if-present",
     "test:e2e": "npx playwright test",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "lint:fix": "npm run lint:fix --workspaces --if-present",
-    "format": "npm run format --workspaces --if-present",
-    "format:check": "npm run format:check --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "check:format": "npm run format:check --workspaces --if-present",
+    "format": "prettier --write \"*.json\" \"package*.json\" \".github/**/*.{yml,yaml}\" \"backend/**/*.{js,json}\" \"frontend/**/*.{js,jsx,ts,json,css}\" \"scripts/**/*.js\" --ignore-path .prettierignore",
+    "format:check": "prettier --check \"*.json\" \"package*.json\" \".github/**/*.{yml,yaml}\" \"backend/**/*.{js,json}\" \"frontend/**/*.{js,jsx,ts,json,css}\" \"scripts/**/*.js\" --ignore-path .prettierignore",
+    "typecheck": "tsc -p tsconfig.checkjs.json && npm run typecheck --workspaces --if-present",
+    "check:format": "npm run format:check",
     "check:lint": "npm run lint --workspaces --if-present",
-    "check:type": "npm run typecheck --workspaces --if-present",
+    "check:type": "npm run typecheck",
     "check:build": "npm run build --workspaces --if-present",
-    "check:unit": "npm run test:unit --workspaces --if-present",
+    "check:unit": "npm run test:unit",
     "check:coverage": "npm run test --workspace=frontend -- --run --coverage",
     "check:python": "python3 tools/market_oracle_test.py",
+    "check:property": "node --test backend/tests/financialProperties.test.js && npm run test --workspace=frontend -- --run tests/formatProperties.test.js",
+    "check:database": "node scripts/check-database.js",
     "check:e2e": "npx playwright test --config=frontend/playwright.config.ts",
+    "check:secrets": "gitleaks git --redact --config=.gitleaks.toml .",
+    "check:secrets:staged": "gitleaks git --redact --config=.gitleaks.toml --staged .",
+    "check:dependencies": "npm audit --omit=dev --audit-level=high",
+    "check:load": "node scripts/load-assurance.js",
     "check:pr": "node scripts/check-pr.js",
     "check:frontend-standard": "npm run check:frontend-standard --workspaces --if-present",
     "check:all": "node scripts/check-pr.js",
     "prepare": "npm run prepare --workspaces --if-present"
   },
+  "lint-staged": {
+    "frontend/**/*.{js,jsx}": [
+      "prettier --write",
+      "eslint --fix --config frontend/eslint.config.js"
+    ],
+    "{backend,scripts}/**/*.js": [
+      "prettier --write",
+      "eslint --fix --config backend/eslint.config.mjs"
+    ],
+    "*.{js,json,css,md,yml,yaml,ts}": [
+      "prettier --write"
+    ]
+  },
   "devDependencies": {
     "@playwright/test": "^1.62.0",
     "@types/node": "^26.1.1",
-    "concurrently": "^10.0.3"
+    "autocannon": "8.0.0",
+    "concurrently": "^10.0.3",
+    "fast-check": "4.9.0",
+    "supabase": "2.109.1",
+    "typescript": "5.9.3"
   }
 }

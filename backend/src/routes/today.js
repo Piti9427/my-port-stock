@@ -1,13 +1,15 @@
 // backend/src/routes/today.js
-'use strict';
+"use strict";
 
-const express = require('express');
-const { getRequestUserId } = require('../auth/requestAuth');
-const { getScopedDb } = require('../db');
-const { supabaseConfigured } = require('../db/supabaseClient');
-const { enrichWithMarketData } = require('../services/quoteEnricher');
-const { getForUser: getPrefsForUser } = require('../preferences/preferenceRepository');
-const { isSpeculative, getSpeculativeWeightPct } = require('../common/portfolio');
+const express = require("express");
+const { getRequestUserId } = require("../auth/requestAuth");
+const { getScopedDb } = require("../db");
+const { supabaseConfigured } = require("../db/supabaseClient");
+const { enrichWithMarketData } = require("../services/quoteEnricher");
+const {
+  getForUser: getPrefsForUser,
+} = require("../preferences/preferenceRepository");
+const { getSpeculativeWeightPct } = require("../common/portfolio");
 
 const router = express.Router();
 
@@ -19,7 +21,7 @@ const STOP_PROXIMITY_BUFFER = 0.025; // 2.5% above stop
 const EARNINGS_WARN_DAYS = 7;
 const SWING_TIME_STOP_DAYS = 15;
 const QUICK_TIME_STOP_DAYS = 5;
-const MISTAKE_TAGS = ['#fomo', '#chasing', '#revenge', '#failed', '#broken'];
+const MISTAKE_TAGS = ["#fomo", "#chasing", "#revenge", "#failed", "#broken"];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -43,7 +45,7 @@ function daysUntil(ts) {
 function hasThesisFailure(notes) {
   if (!notes) return false;
   const lower = String(notes).toLowerCase();
-  return lower.includes('#failed') || lower.includes('#broken');
+  return lower.includes("#failed") || lower.includes("#broken");
 }
 
 function hasMistakeTags(notes) {
@@ -59,7 +61,8 @@ function isEmptyNotes(notes) {
 // ─── Portfolio pulse ─────────────────────────────────────────────────────────
 
 function buildPulse(enrichedHoldings, prefs, thbRate = 35.0) {
-  const maxDrawdownPct = num(prefs?.max_portfolio_drawdown_pct) || DEFAULT_MAX_DRAWDOWN_PCT;
+  const maxDrawdownPct =
+    num(prefs?.max_portfolio_drawdown_pct) || DEFAULT_MAX_DRAWDOWN_PCT;
 
   let totalCost = 0;
   let totalValue = 0;
@@ -71,7 +74,9 @@ function buildPulse(enrichedHoldings, prefs, thbRate = 35.0) {
     const price = num(h.price) || avgCost;
     const beta = num(h.beta) || 1.0;
 
-    const isUsd = !String(h.ticker || '').toUpperCase().endsWith('.BK');
+    const isUsd = !String(h.ticker || "")
+      .toUpperCase()
+      .endsWith(".BK");
     const rate = isUsd ? thbRate : 1.0;
 
     totalCost += shares * avgCost * rate;
@@ -83,13 +88,18 @@ function buildPulse(enrichedHoldings, prefs, thbRate = 35.0) {
   const drawdownPct =
     totalCost > 0 && totalPl < 0 ? (Math.abs(totalPl) / totalCost) * 100 : 0;
   const portfolioBeta = totalValue > 0 ? totalWeightedBeta / totalValue : 1.0;
-  const speculativeWeightPct = getSpeculativeWeightPct(enrichedHoldings, totalValue);
+  const speculativeWeightPct = getSpeculativeWeightPct(
+    enrichedHoldings,
+    totalValue,
+  );
 
   // Sector map
   const sectorMap = new Map();
   for (const h of enrichedHoldings) {
-    const sector = h.sector || 'Unknown';
-    const isUsd = !String(h.ticker || '').toUpperCase().endsWith('.BK');
+    const sector = h.sector || "Unknown";
+    const isUsd = !String(h.ticker || "")
+      .toUpperCase()
+      .endsWith(".BK");
     const rate = isUsd ? thbRate : 1.0;
     const val = num(h.shares) * (num(h.price) || num(h.avg_cost)) * rate;
     sectorMap.set(sector, (sectorMap.get(sector) || 0) + val);
@@ -121,15 +131,15 @@ function buildProtectItems(enrichedHoldings, journalEntries, pulse) {
   const items = [];
   const openByTicker = new Map();
   for (const j of journalEntries) {
-    if (String(j.status || '').toUpperCase() === 'OPEN') {
-      openByTicker.set(String(j.ticker || '').toUpperCase(), j);
+    if (String(j.status || "").toUpperCase() === "OPEN") {
+      openByTicker.set(String(j.ticker || "").toUpperCase(), j);
     }
   }
 
   let missingStopCount = 0;
 
   for (const h of enrichedHoldings) {
-    const ticker = String(h.ticker || '').toUpperCase();
+    const ticker = String(h.ticker || "").toUpperCase();
     const price = num(h.price) || num(h.avg_cost);
     const openTrade = openByTicker.get(ticker);
     const stopLoss = openTrade ? num(openTrade.stop_loss) : null;
@@ -138,12 +148,12 @@ function buildProtectItems(enrichedHoldings, journalEntries, pulse) {
     // Thesis failure
     if (openTrade && hasThesisFailure(openTrade.notes)) {
       items.push({
-        category: 'protect',
-        type: 'thesis_failure',
+        category: "protect",
+        type: "thesis_failure",
         ticker,
         reason: `Thesis failure detected for ${ticker} — review or exit this position`,
-        cta: 'Review Journal',
-        ctaRoute: '/journal',
+        cta: "Review Journal",
+        ctaRoute: "/journal",
         evidence: { notes: openTrade.notes },
       });
     }
@@ -152,12 +162,12 @@ function buildProtectItems(enrichedHoldings, journalEntries, pulse) {
     if (!openTrade || !hasValidStop) {
       missingStopCount++;
       items.push({
-        category: 'protect',
-        type: 'missing_stop',
+        category: "protect",
+        type: "missing_stop",
         ticker,
         reason: `${ticker} has no stop-loss defined — new buy decisions blocked until a stop is set`,
-        cta: 'Log Stop-Loss',
-        ctaRoute: '/journal',
+        cta: "Log Stop-Loss",
+        ctaRoute: "/journal",
         evidence: { price },
       });
       continue; // stop proximity doesn't apply without a stop
@@ -166,13 +176,17 @@ function buildProtectItems(enrichedHoldings, journalEntries, pulse) {
     // Stop proximity
     if (price > 0 && price <= stopLoss * (1 + STOP_PROXIMITY_BUFFER)) {
       items.push({
-        category: 'protect',
-        type: 'stop_proximity',
+        category: "protect",
+        type: "stop_proximity",
         ticker,
         reason: `${ticker} is within 2.5% of stop-loss (price ${price.toFixed(2)}, stop ${stopLoss.toFixed(2)}) — consider exit or review`,
-        cta: 'Analyze',
+        cta: "Analyze",
         ctaRoute: `/command-center?ticker=${ticker}`,
-        evidence: { price, stop_loss: stopLoss, distancePct: +(((price - stopLoss) / price) * 100).toFixed(2) },
+        evidence: {
+          price,
+          stop_loss: stopLoss,
+          distancePct: +(((price - stopLoss) / price) * 100).toFixed(2),
+        },
       });
     }
   }
@@ -180,31 +194,37 @@ function buildProtectItems(enrichedHoldings, journalEntries, pulse) {
   // Portfolio drawdown breach
   if (pulse.drawdownPct >= pulse.maxDrawdownPct) {
     items.push({
-      category: 'protect',
-      type: 'drawdown_limit',
+      category: "protect",
+      type: "drawdown_limit",
       ticker: null,
       reason: `Portfolio drawdown ${pulse.drawdownPct.toFixed(1)}% has reached the ${pulse.maxDrawdownPct}% circuit-breaker — new buys suspended`,
-      cta: 'View Risk',
-      ctaRoute: '/risk',
-      evidence: { drawdownPct: pulse.drawdownPct, maxDrawdownPct: pulse.maxDrawdownPct },
+      cta: "View Risk",
+      ctaRoute: "/risk",
+      evidence: {
+        drawdownPct: pulse.drawdownPct,
+        maxDrawdownPct: pulse.maxDrawdownPct,
+      },
     });
   }
 
   // Concentration breach (per position)
   const totalValue = pulse.totalValue;
   for (const h of enrichedHoldings) {
-    const ticker = String(h.ticker || '').toUpperCase();
+    const ticker = String(h.ticker || "").toUpperCase();
     const val = num(h.shares) * (num(h.price) || num(h.avg_cost));
     const posWeight = totalValue > 0 ? (val / totalValue) * 100 : 0;
     if (posWeight > DEFAULT_MAX_POSITION_PCT) {
       items.push({
-        category: 'protect',
-        type: 'concentration_breach',
+        category: "protect",
+        type: "concentration_breach",
         ticker,
         reason: `${ticker} is ${posWeight.toFixed(1)}% of portfolio — exceeds the 10% single-position limit`,
-        cta: 'View Risk',
-        ctaRoute: '/risk',
-        evidence: { posWeight: +posWeight.toFixed(1), limit: DEFAULT_MAX_POSITION_PCT },
+        cta: "View Risk",
+        ctaRoute: "/risk",
+        evidence: {
+          posWeight: +posWeight.toFixed(1),
+          limit: DEFAULT_MAX_POSITION_PCT,
+        },
       });
     }
   }
@@ -212,25 +232,28 @@ function buildProtectItems(enrichedHoldings, journalEntries, pulse) {
   // Speculative cap breach
   if (pulse.speculativeWeightPct > DEFAULT_MAX_SPECULATIVE_PCT) {
     items.push({
-      category: 'protect',
-      type: 'speculative_cap',
+      category: "protect",
+      type: "speculative_cap",
       ticker: null,
       reason: `Speculative names are ${pulse.speculativeWeightPct.toFixed(1)}% of portfolio — exceeds the 20% speculative allocation cap`,
-      cta: 'View Risk',
-      ctaRoute: '/risk',
-      evidence: { speculativeWeightPct: pulse.speculativeWeightPct, limit: DEFAULT_MAX_SPECULATIVE_PCT },
+      cta: "View Risk",
+      ctaRoute: "/risk",
+      evidence: {
+        speculativeWeightPct: pulse.speculativeWeightPct,
+        limit: DEFAULT_MAX_SPECULATIVE_PCT,
+      },
     });
   }
 
   // Sector breaches
   for (const breach of pulse.sectorBreaches) {
     items.push({
-      category: 'protect',
-      type: 'sector_breach',
+      category: "protect",
+      type: "sector_breach",
       ticker: null,
       reason: `${breach.sector} sector is ${breach.weight}% of portfolio — exceeds the 35% sector concentration limit`,
-      cta: 'View Risk',
-      ctaRoute: '/risk',
+      cta: "View Risk",
+      ctaRoute: "/risk",
       evidence: breach,
     });
   }
@@ -242,26 +265,30 @@ function buildPrepareItems(enrichedHoldings, journalEntries) {
   const items = [];
   const openByTicker = new Map();
   for (const j of journalEntries) {
-    if (String(j.status || '').toUpperCase() === 'OPEN') {
-      openByTicker.set(String(j.ticker || '').toUpperCase(), j);
+    if (String(j.status || "").toUpperCase() === "OPEN") {
+      openByTicker.set(String(j.ticker || "").toUpperCase(), j);
     }
   }
 
   for (const h of enrichedHoldings) {
-    const ticker = String(h.ticker || '').toUpperCase();
+    const ticker = String(h.ticker || "").toUpperCase();
     const openTrade = openByTicker.get(ticker);
-    const mode = (openTrade?.mode || h.mode || '').trim();
+    const mode = (openTrade?.mode || h.mode || "").trim();
 
     // Earnings proximity
     const earningsTs = h.earningsTimestamp;
     const daysToEarnings = daysUntil(earningsTs);
-    if (daysToEarnings !== null && daysToEarnings >= 0 && daysToEarnings <= EARNINGS_WARN_DAYS) {
+    if (
+      daysToEarnings !== null &&
+      daysToEarnings >= 0 &&
+      daysToEarnings <= EARNINGS_WARN_DAYS
+    ) {
       items.push({
-        category: 'prepare',
-        type: 'upcoming_earnings',
+        category: "prepare",
+        type: "upcoming_earnings",
         ticker,
-        reason: `${ticker} reports earnings in ${daysToEarnings} day${daysToEarnings === 1 ? '' : 's'} — consider sizing down or reviewing thesis`,
-        cta: 'Analyze',
+        reason: `${ticker} reports earnings in ${daysToEarnings} day${daysToEarnings === 1 ? "" : "s"} — consider sizing down or reviewing thesis`,
+        cta: "Analyze",
         ctaRoute: `/command-center?ticker=${ticker}`,
         evidence: { daysToEarnings, earningsTimestamp: earningsTs },
       });
@@ -270,17 +297,21 @@ function buildPrepareItems(enrichedHoldings, journalEntries) {
     // Time stop
     if (openTrade) {
       const ageDays = daysSince(openTrade.opened_at || h.opened_at);
-      const isSwing = mode === 'Swing Trade';
-      const isQuick = mode === 'Quick Trade';
-      const limit = isSwing ? SWING_TIME_STOP_DAYS : isQuick ? QUICK_TIME_STOP_DAYS : null;
+      const isSwing = mode === "Swing Trade";
+      const isQuick = mode === "Quick Trade";
+      const limit = isSwing
+        ? SWING_TIME_STOP_DAYS
+        : isQuick
+          ? QUICK_TIME_STOP_DAYS
+          : null;
       if (limit && ageDays > limit) {
         items.push({
-          category: 'prepare',
-          type: 'time_stop',
+          category: "prepare",
+          type: "time_stop",
           ticker,
           reason: `${ticker} (${mode}) has been held ${ageDays} days — exceeds the ${limit}-day time stop. Exit or re-evaluate thesis`,
-          cta: 'Review Journal',
-          ctaRoute: '/journal',
+          cta: "Review Journal",
+          ctaRoute: "/journal",
           evidence: { ageDays, limit, mode },
         });
       }
@@ -293,24 +324,24 @@ function buildPrepareItems(enrichedHoldings, journalEntries) {
 function buildOpportunityItems(enrichedWatchlists) {
   const items = [];
   for (const w of enrichedWatchlists) {
-    const ticker = String(w.ticker || '').toUpperCase();
+    const ticker = String(w.ticker || "").toUpperCase();
     const price = num(w.price);
     const alertPrice = num(w.alert_price);
-    const alertType = String(w.alert_type || '').toLowerCase();
+    const alertType = String(w.alert_type || "").toLowerCase();
 
     if (!alertPrice || !alertType || !price) continue;
 
     const triggered =
-      (alertType === 'above' && price >= alertPrice) ||
-      (alertType === 'below' && price <= alertPrice);
+      (alertType === "above" && price >= alertPrice) ||
+      (alertType === "below" && price <= alertPrice);
 
     if (triggered) {
       items.push({
-        category: 'opportunity',
-        type: 'watchlist_alert',
+        category: "opportunity",
+        type: "watchlist_alert",
         ticker,
         reason: `${ticker} has crossed your alert at ${alertPrice} (${alertType}) — current price ${price.toFixed(2)}`,
-        cta: 'Analyze',
+        cta: "Analyze",
         ctaRoute: `/ticker/${ticker}`,
         evidence: { price, alertPrice, alertType },
       });
@@ -322,29 +353,32 @@ function buildOpportunityItems(enrichedWatchlists) {
 function buildLearnItems(journalEntries) {
   const items = [];
   for (const j of journalEntries) {
-    if (String(j.status || '').toUpperCase() !== 'CLOSED') continue;
-    const ticker = String(j.ticker || '').toUpperCase();
-    const notes = String(j.notes || '');
+    if (String(j.status || "").toUpperCase() !== "CLOSED") continue;
+    const ticker = String(j.ticker || "").toUpperCase();
+    const notes = String(j.notes || "");
 
     if (isEmptyNotes(notes)) {
       items.push({
-        category: 'learn',
-        type: 'post_mortem_missing',
+        category: "learn",
+        type: "post_mortem_missing",
         ticker,
         reason: `${ticker} trade closed with no post-mortem — capture the lesson before it fades`,
-        cta: 'Write Post-Mortem',
-        ctaRoute: '/journal',
+        cta: "Write Post-Mortem",
+        ctaRoute: "/journal",
         evidence: { ticker },
       });
     } else if (hasMistakeTags(notes)) {
       items.push({
-        category: 'learn',
-        type: 'mistake_pattern',
+        category: "learn",
+        type: "mistake_pattern",
         ticker,
         reason: `${ticker} trade contains a mistake tag — review this entry to break the pattern`,
-        cta: 'Review Journal',
-        ctaRoute: '/journal',
-        evidence: { ticker, tags: MISTAKE_TAGS.filter((t) => notes.toLowerCase().includes(t)) },
+        cta: "Review Journal",
+        ctaRoute: "/journal",
+        evidence: {
+          ticker,
+          tags: MISTAKE_TAGS.filter((t) => notes.toLowerCase().includes(t)),
+        },
       });
     }
   }
@@ -353,9 +387,9 @@ function buildLearnItems(journalEntries) {
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
-router.get('/', async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   const userId = getRequestUserId(req);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   if (!supabaseConfigured) {
     return res.status(200).json({ queue: [], pulse: buildPulse([], null) });
@@ -371,7 +405,7 @@ router.get('/', async (req, res, next) => {
       getPrefsForUser(userId).catch(() => null),
     ]);
 
-    const { getUsdThbRate } = require('../services/marketData');
+    const { getUsdThbRate } = require("../services/marketData");
     const [enrichedHoldings, enrichedWatchlists, thbRate] = await Promise.all([
       enrichWithMarketData(rawHoldings),
       enrichWithMarketData(rawWatchlists),
@@ -379,14 +413,23 @@ router.get('/', async (req, res, next) => {
     ]);
 
     const pulse = buildPulse(enrichedHoldings, prefs, thbRate);
-    const { items: protectItems, missingStopCount } = buildProtectItems(enrichedHoldings, allJournal, pulse);
+    const { items: protectItems, missingStopCount } = buildProtectItems(
+      enrichedHoldings,
+      allJournal,
+      pulse,
+    );
     pulse.missingStopCount = missingStopCount;
 
     const prepareItems = buildPrepareItems(enrichedHoldings, allJournal);
     const opportunityItems = buildOpportunityItems(enrichedWatchlists);
     const learnItems = buildLearnItems(allJournal);
 
-    const queue = [...protectItems, ...prepareItems, ...opportunityItems, ...learnItems];
+    const queue = [
+      ...protectItems,
+      ...prepareItems,
+      ...opportunityItems,
+      ...learnItems,
+    ];
 
     return res.status(200).json({ queue, pulse });
   } catch (err) {

@@ -44,16 +44,28 @@ npm test --workspace=backend
 
 ### End-to-end / browser
 
-- **Preferred:** Targeted CDP scripts under `output/` when Playwright MCP unavailable
-- **Not default CI gate:** Full browser E2E unless explicitly added to `check:all`
+- **Runner:** Playwright against real Express and WebSocket routes
+- **Providers:** deterministic backend fixtures; never browser-side MSW
+- **Accessibility:** axe WCAG 2.1 A/AA checks
+
+### Database
+
+- **Runner:** local Supabase CLI + pgTAP
+- **Source:** `supabase/migrations`; `supabase/schema.sql` is reference-only
+- **Evidence:** empty replay, RLS user isolation, grants/constraints, direct holdings-write denial, journal trigger
 
 ## Workspace gates
 
-| Command | Scope |
-|---|---|
-| `npm test` | All workspaces |
-| `npm run check:all --workspace=frontend` | format → lint → architecture → typecheck → vitest → build |
-| `npm run lint --workspace=backend` | Backend lint when configured |
+| Command                                  | Scope                                                            |
+| ---------------------------------------- | ---------------------------------------------------------------- |
+| `npm test`                               | All workspaces                                                   |
+| `npm run check:type`                     | TypeScript 5.9 checkJs across source, tests, scripts, and config |
+| `npm run check:property`                 | Financial fail-closed and formatter property tests               |
+| `npm run check:database`                 | Empty local Supabase replay and pgTAP                            |
+| `npm run check:e2e`                      | Deterministic Express/WebSocket/browser/WCAG assurance           |
+| `npm run check:pr`                       | All 11 local Merge Gates, fail-fast                              |
+| `npm run check:all --workspace=frontend` | format → lint → architecture → typecheck → vitest → build        |
+| `npm run lint --workspace=backend`       | Backend lint when configured                                     |
 
 ## TDD expectation (code changes)
 
@@ -68,7 +80,7 @@ Investment logic changes **must** add fail-closed tests.
 
 ## Coverage
 
-No enforced percentage target. Prefer high-signal contract tests over line coverage.
+Coverage is an Advisory Check with no enforced percentage target until a stable baseline is reviewed.
 
 ## Docs verification
 

@@ -18,14 +18,14 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: 0,
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [['html', { outputFolder: '../artifacts/reports/playwright' }]],
   use: {
-    baseURL: 'http://127.0.0.1:5173',
-    trace: 'on-first-retry',
+    baseURL: 'http://127.0.0.1:4173',
+    trace: 'retain-on-failure',
   },
 
   projects: [
@@ -36,10 +36,10 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev:ui',
+    command: 'npm run serve:e2e',
     cwd: '..',
-    url: 'http://127.0.0.1:5173',
-    reuseExistingServer: !process.env.CI,
+    url: 'http://127.0.0.1:4173',
+    reuseExistingServer: false,
     timeout: 30000,
   },
 });

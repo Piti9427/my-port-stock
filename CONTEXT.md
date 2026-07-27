@@ -161,6 +161,22 @@ _Avoid_: dark aesthetic, moody UI, cinematic terminal
 
 ## Product Delivery Language
 
+**Merge Gate**:
+A CI assurance that must pass before a change may merge into a protected branch. Normal delivery cannot bypass it; emergency use follows the documented Break-Glass Merge process.
+_Avoid_: hard gate, optional check, advisory gate
+
+**Advisory Check**:
+A CI assurance that reports decision-supporting evidence without blocking a merge while its acceptance baseline is still being established.
+_Avoid_: merge gate, required check, soft gate
+
+**Scheduled Assurance**:
+A CI assurance that runs on a defined cadence or by explicit request because it is too slow, costly, or environment-sensitive for every pull request.
+_Avoid_: merge gate, nightly gate, optional test
+
+**Break-Glass Merge**:
+An exceptional merge path requiring two approvers, a linked incident or issue, and remediation within 24 hours when a Merge Gate cannot be satisfied during an urgent recovery.
+_Avoid_: admin bypass, force merge, skip CI
+
 **Progressive Web App (PWA)**:
 The installable web application form factor for MyPortStock. It uses a service worker for application-shell static asset caching and Web Push notifications, and a manifest for standalone display mode. Authenticated `/api/*` responses are never runtime-cached. It is not a native app and does not require App Store distribution.
 _Avoid_: mobile app, native app, hybrid app (unless Capacitor is explicitly added)

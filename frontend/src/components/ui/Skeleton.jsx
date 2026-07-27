@@ -27,7 +27,7 @@ function TableSkeleton({ rows = 5, columns = 4 }) {
   );
 }
 
-export function Skeleton({ variant = 'text', rows, columns, width, height }) {
+export function Skeleton({ variant = 'text', rows = 5, columns = 4, width = undefined, height = undefined }) {
   if (variant === 'table') {
     return <TableSkeleton rows={rows} columns={columns} />;
   }

@@ -6,7 +6,12 @@ const DEFAULT_TTL_MS = 30_000;
 const DEFAULT_MAX_PENDING = 1_000;
 
 class WsTicketStore {
-  constructor({ now = Date.now, ttlMs = DEFAULT_TTL_MS, maxPending = DEFAULT_MAX_PENDING } = {}) {
+  /** @param {{now?: () => number, ttlMs?: number, maxPending?: number}} [options] */
+  constructor({
+    now = Date.now,
+    ttlMs = DEFAULT_TTL_MS,
+    maxPending = DEFAULT_MAX_PENDING,
+  } = {}) {
     this.now = now;
     this.ttlMs = ttlMs;
     this.maxPending = maxPending;

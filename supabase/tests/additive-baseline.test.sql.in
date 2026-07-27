@@ -1,0 +1,26 @@
+BEGIN;
+SET LOCAL search_path TO public, extensions;
+SELECT plan(2);
+
+CREATE TEMP TABLE baseline_identity AS
+SELECT 'public.holdings'::regclass::oid AS holdings_oid;
+
+INSERT INTO public.holdings (user_id, ticker, shares, avg_cost)
+VALUES ('baseline_sentinel', 'SAFE', 7, 11);
+
+-- BASELINE_SQL
+
+SELECT results_eq(
+  $$ SELECT shares FROM public.holdings WHERE user_id = 'baseline_sentinel' AND ticker = 'SAFE' $$,
+  $$ VALUES (7::numeric) $$,
+  'reapplying the additive baseline preserves existing rows'
+);
+
+SELECT results_eq(
+  $$ SELECT 'public.holdings'::regclass::oid $$,
+  $$ SELECT holdings_oid FROM baseline_identity $$,
+  'reapplying the additive baseline preserves existing table identity'
+);
+
+SELECT * FROM finish();
+ROLLBACK;

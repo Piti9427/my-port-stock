@@ -8,11 +8,14 @@ describe("quoteEnricher", () => {
   let currentFetchSparkline;
 
   beforeEach(() => {
+    delete process.env.MPS_TEST_MODE;
     currentFetchSparkline = async () => [145, 148, 150];
     delete require.cache[require.resolve("../src/services/quoteEnricher")];
-    
-    mock.method(marketData, "fetchSparkline", async (...args) => currentFetchSparkline(...args));
-    
+
+    mock.method(marketData, "fetchSparkline", async (...args) =>
+      currentFetchSparkline(...args),
+    );
+
     const quoteEnricher = require("../src/services/quoteEnricher");
     enrichWithMarketData = quoteEnricher.enrichWithMarketData;
     getSparkline = quoteEnricher.getSparkline;
@@ -28,6 +31,7 @@ describe("quoteEnricher", () => {
   });
 
   afterEach(() => {
+    process.env.MPS_TEST_MODE = "1";
     mock.restoreAll();
   });
 
@@ -46,7 +50,9 @@ describe("quoteEnricher", () => {
 
   it("enrichWithMarketData gracefully handles quote failure", async () => {
     yahooFinance.quote.mock.restore();
-    mock.method(yahooFinance, "quote", async () => { throw new Error("Quote failed"); });
+    mock.method(yahooFinance, "quote", async () => {
+      throw new Error("Quote failed");
+    });
 
     const items = [{ ticker: "AAPL", shares: 10 }];
     const result = await enrichWithMarketData(items);
@@ -76,7 +82,11 @@ describe("quoteEnricher", () => {
 
     assert.deepEqual(spark1, [1, 2, 3]);
     assert.deepEqual(spark2, [1, 2, 3]);
-    assert.equal(callCount, 1, "fetchSparkline should have been called only once");
+    assert.equal(
+      callCount,
+      1,
+      "fetchSparkline should have been called only once",
+    );
   });
 
   it("getSparkline returns [0, 0] on fetchSparkline failure", async () => {

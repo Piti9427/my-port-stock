@@ -4,7 +4,11 @@ const express = require("express");
 const request = require("supertest");
 const http = require("http");
 
-async function loadIsolatedApi({ userId, scopedDb, scopedClientFactory }) {
+async function loadIsolatedApi({
+  userId = null,
+  scopedDb = () => ({}),
+  scopedClientFactory = undefined,
+}) {
   const prevUrl = process.env.SUPABASE_URL;
   const prevKey = process.env.SUPABASE_ANON_KEY;
 
@@ -22,7 +26,9 @@ async function loadIsolatedApi({ userId, scopedDb, scopedClientFactory }) {
   const supabaseClient = require("../src/db/supabaseClient");
   const originalGetScopedDb = db.getScopedDb;
   const originalCreateScopedClient = supabaseClient.createScopedClient;
-  db.getScopedDb = scopedDb;
+  db.getScopedDb = /** @type {typeof db.getScopedDb} */ (
+    /** @type {unknown} */ (scopedDb)
+  );
   if (scopedClientFactory) {
     supabaseClient.createScopedClient = scopedClientFactory;
   }
@@ -37,7 +43,9 @@ async function loadIsolatedApi({ userId, scopedDb, scopedClientFactory }) {
   app.use("/api", router);
 
   const server = http.createServer(app);
-  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  await new Promise((resolve) =>
+    server.listen(0, "127.0.0.1", () => resolve()),
+  );
 
   return {
     app: server,
@@ -91,7 +99,7 @@ describe("routesIntegration", () => {
         ticker: "NVDA",
         type: "BUY",
         shares: 10,
-        price: 150
+        price: 150,
       });
       assert.equal(res.statusCode, 200);
       assert.deepEqual(res.body, { id: "123", ticker: "NVDA" });
@@ -114,7 +122,7 @@ describe("routesIntegration", () => {
         }),
       });
       restore = loaded.restore;
-      
+
       const res = await request(loaded.app).get("/api/watchlists");
       assert.equal(res.statusCode, 200);
       assert.ok(Array.isArray(res.body), "Response should be an array");
@@ -143,23 +151,24 @@ describe("routesIntegration", () => {
         from: () => ({
           select: () => ({
             eq: () => ({
-              eq: () => Promise.resolve({ data: [] })
-            })
+              eq: () => Promise.resolve({ data: [] }),
+            }),
           }),
           insert: () => ({
-            select: () => Promise.resolve({ data: [{ id: "w1", ticker: "NVDA" }] })
-          })
-        })
+            select: () =>
+              Promise.resolve({ data: [{ id: "w1", ticker: "NVDA" }] }),
+          }),
+        }),
       };
 
       const loaded = await loadIsolatedApi({
         userId: "user_1",
-        scopedClientFactory: () => mockSupabaseClient
+        scopedClientFactory: () => mockSupabaseClient,
       });
       restore = loaded.restore;
       const res = await request(loaded.app).post("/api/watchlists").send({
         ticker: "NVDA",
-        name: "Nvidia"
+        name: "Nvidia",
       });
       assert.equal(res.statusCode, 200);
       assert.deepEqual(res.body, [{ id: "w1", ticker: "NVDA" }]);
@@ -170,7 +179,9 @@ describe("routesIntegration", () => {
     it("Returns 401 when unauthenticated", async () => {
       const loaded = await loadIsolatedApi({ userId: null });
       restore = loaded.restore;
-      const res = await request(loaded.app).delete("/api/journal/123e4567-e89b-12d3-a456-426614174000");
+      const res = await request(loaded.app).delete(
+        "/api/journal/123e4567-e89b-12d3-a456-426614174000",
+      );
       assert.equal(res.statusCode, 401);
     });
 
@@ -188,22 +199,29 @@ describe("routesIntegration", () => {
           update: () => ({
             eq: () => ({
               eq: () => ({
-                select: () => Promise.resolve({ data: [{ id: "123e4567-e89b-12d3-a456-426614174000" }] })
-              })
-            })
-          })
-        })
+                select: () =>
+                  Promise.resolve({
+                    data: [{ id: "123e4567-e89b-12d3-a456-426614174000" }],
+                  }),
+              }),
+            }),
+          }),
+        }),
       };
 
       const loaded = await loadIsolatedApi({
         userId: "user_1",
-        scopedClientFactory: () => mockSupabaseClient
+        scopedClientFactory: () => mockSupabaseClient,
       });
       restore = loaded.restore;
-      const res = await request(loaded.app).delete("/api/journal/123e4567-e89b-12d3-a456-426614174000");
+      const res = await request(loaded.app).delete(
+        "/api/journal/123e4567-e89b-12d3-a456-426614174000",
+      );
       assert.equal(res.statusCode, 200);
       assert.equal(res.body.message, "Journal entry soft-deleted successfully");
-      assert.deepEqual(res.body.data, [{ id: "123e4567-e89b-12d3-a456-426614174000" }]);
+      assert.deepEqual(res.body.data, [
+        { id: "123e4567-e89b-12d3-a456-426614174000" },
+      ]);
     });
   });
 });

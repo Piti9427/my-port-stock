@@ -17,7 +17,7 @@ function sparklinePoints(data) {
     .join(' ');
 }
 
-export function MetricCard({ label, value, change, changeType = 'neutral', sparklineData, dataStamp, mono = false }) {
+export function MetricCard({ label, value, change = null, changeType = 'neutral', sparklineData = null, dataStamp = null, mono = false }) {
   const points = sparklinePoints(sparklineData);
 
   return (

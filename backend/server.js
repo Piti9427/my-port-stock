@@ -1,14 +1,30 @@
 require("./instrument");
-require("dotenv").config({ path: require("node:path").resolve(__dirname, ".env") });
+require("dotenv").config({
+  path: require("node:path").resolve(__dirname, ".env"),
+});
+const {
+  assertTestModeIsSafe,
+  installOutboundNetworkGuard,
+  isTestMode,
+} = require("./src/providers/testMode");
+assertTestModeIsSafe();
+installOutboundNetworkGuard();
 const Sentry = require("@sentry/node");
 const express = require("express");
 const http = require("node:http");
 const path = require("node:path");
-const { clerkMiddleware } = require('@clerk/express');
+const { clerkMiddleware } = require("@clerk/express");
 const { createAgentEventBus } = require("./src/ws/agentEventBus");
 const { WsTicketStore } = require("./src/ws/wsTicketStore");
-const { applyDevUiAuthBypass, getRequestUserId } = require("./src/auth/requestAuth");
-const { createApiRateLimiters, requestContext, securityHeaders } = require("./src/http/appMiddleware");
+const {
+  applyDevUiAuthBypass,
+  getRequestUserId,
+} = require("./src/auth/requestAuth");
+const {
+  createApiRateLimiters,
+  requestContext,
+  securityHeaders,
+} = require("./src/http/appMiddleware");
 const { errorHandler, notFoundHandler } = require("./src/http/errors");
 const {
   CACHE_TTL_MS,
@@ -19,20 +35,26 @@ const {
   SOURCE_STOOQ,
   SOURCE_YAHOO,
 } = require("./src/common/constants");
-const { insufficientData, normalizeDecisionMode, normalizeTicker } = require("./src/common/format");
+const {
+  insufficientData,
+  normalizeDecisionMode,
+  normalizeTicker,
+} = require("./src/common/format");
 const {
   buildFinnhubQuoteSource,
   buildNasdaqQuoteSource,
   buildStooqQuoteSource,
   buildYahooQuoteSource,
-  fetchStooqQuoteSource,
   normalizeNasdaqTimestamp,
   normalizeStooqTimestamp,
   parseMoney,
   parseSimpleCsv,
 } = require("./src/sources/quoteSources");
 const { getNewYorkMarketSession } = require("./src/sources/time");
-const { buildTwoSourceQuotePacket, isValidQuoteSource } = require("./src/gates/priceGate");
+const {
+  buildTwoSourceQuotePacket,
+  isValidQuoteSource,
+} = require("./src/gates/priceGate");
 const { buildVerifiedDataPacket } = require("./src/packets/verifiedDataPacket");
 const { evaluateDecision } = require("./src/decision/decisionEngine");
 const {
@@ -42,7 +64,9 @@ const {
   buildAuthenticatedAnalysisContext,
   buildRuntimeVerifiedPacket,
 } = require("./src/services/analysisContextService");
-const { buildDeepAnalysisPayload } = require("./src/services/deepAnalysisService");
+const {
+  buildDeepAnalysisPayload,
+} = require("./src/services/deepAnalysisService");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -63,17 +87,21 @@ app.use(express.json({ limit: "256kb" }));
 
 if (process.env.CLERK_SECRET_KEY) {
   const clerkAuth = clerkMiddleware({
-    publishableKey: process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY,
+    publishableKey:
+      process.env.CLERK_PUBLISHABLE_KEY ||
+      process.env.VITE_CLERK_PUBLISHABLE_KEY,
     secretKey: process.env.CLERK_SECRET_KEY,
   });
   app.use((req, res, next) => {
     if (applyDevUiAuthBypass(req)) return next();
     return clerkAuth(req, res, next);
   });
-} else if (process.env.NODE_ENV === 'production') {
+} else if (process.env.NODE_ENV === "production") {
   app.use(clerkMiddleware());
 } else {
-  console.warn("⚠️ CLERK_SECRET_KEY is missing! Bypassing Clerk auth for development.");
+  console.warn(
+    "⚠️ CLERK_SECRET_KEY is missing! Bypassing Clerk auth for development.",
+  );
   app.use((req, res, next) => {
     if (applyDevUiAuthBypass(req)) return next();
     req.auth = { userId: "dev_mock_user_123" };
@@ -84,11 +112,11 @@ if (process.env.CLERK_SECRET_KEY) {
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 // Mount API Routers
-const apiRoutes = require('./src/routes/api');
-const aiRoutes = require('./src/routes/aiRoutes');
+const apiRoutes = require("./src/routes/api");
+const aiRoutes = require("./src/routes/aiRoutes");
 
-app.use('/api', apiRoutes);
-app.use('/api', aiRoutes);
+app.use("/api", apiRoutes);
+app.use("/api", aiRoutes);
 
 app.get("/favicon.ico", (req, res) => res.status(204).end());
 
@@ -138,30 +166,41 @@ app.get("/api/quote/:ticker", async (req, res) => {
   const packet = await getQuotePacket(ticker);
   const responsePacket = { ...packet };
 
-  try {
-    const { default: YahooFinance } = require('yahoo-finance2');
-    const yf = new YahooFinance();
-    const quote = await yf.quote(ticker);
-    
-    responsePacket.high = quote.regularMarketDayHigh || null;
-    responsePacket.low = quote.regularMarketDayLow || null;
-    responsePacket.volume = quote.regularMarketVolume || null;
-    responsePacket.marketCap = quote.marketCap || null;
-    responsePacket.currency = quote.currency || 'USD';
-    
-    if (!responsePacket.last_price && quote.regularMarketPrice) {
-      responsePacket.last_price = quote.regularMarketPrice;
+  if (isTestMode()) {
+    responsePacket.high = 101;
+    responsePacket.low = 99;
+    responsePacket.volume = 1_000_000;
+    responsePacket.marketCap = 1_000_000_000;
+    responsePacket.currency = "USD";
+    responsePacket.current_price = responsePacket.last_price || null;
+  } else
+    try {
+      const { default: YahooFinance } = require("yahoo-finance2");
+      const yf = new YahooFinance();
+      const quote = await yf.quote(ticker);
+
+      responsePacket.high = quote.regularMarketDayHigh || null;
+      responsePacket.low = quote.regularMarketDayLow || null;
+      responsePacket.volume = quote.regularMarketVolume || null;
+      responsePacket.marketCap = quote.marketCap || null;
+      responsePacket.currency = quote.currency || "USD";
+
+      if (!responsePacket.last_price && quote.regularMarketPrice) {
+        responsePacket.last_price = quote.regularMarketPrice;
+      }
+      if (responsePacket.last_price && !responsePacket.current_price) {
+        responsePacket.current_price = responsePacket.last_price;
+      }
+    } catch (error) {
+      console.error(
+        `[Server] Error fetching Yahoo Finance fundamentals for ${ticker}:`,
+        error.message,
+      );
+      responsePacket.high = null;
+      responsePacket.low = null;
+      responsePacket.volume = null;
+      responsePacket.marketCap = null;
     }
-    if (responsePacket.last_price && !responsePacket.current_price) {
-      responsePacket.current_price = responsePacket.last_price;
-    }
-  } catch (error) {
-    console.error(`[Server] Error fetching Yahoo Finance fundamentals for ${ticker}:`, error.message);
-    responsePacket.high = null;
-    responsePacket.low = null;
-    responsePacket.volume = null;
-    responsePacket.marketCap = null;
-  }
 
   return res.status(200).json(responsePacket);
 });
@@ -230,18 +269,25 @@ function createGracefulShutdown({
 }
 
 function startServer({ port = PORT, host = HOST } = {}) {
+  const listenPort = Number(port);
+  if (!Number.isInteger(listenPort) || listenPort < 0 || listenPort > 65535) {
+    throw new TypeError(`Invalid server port: ${port}`);
+  }
   const server = http.createServer(app);
   const eventBus = createAgentEventBus(server, { ticketStore: wsTicketStore });
   const shutdown = createGracefulShutdown({ eventBus, server });
 
   server.on("error", (error) => {
-    console.error(`Investment Agent failed to listen on ${host}:${port}: ${error.message}`);
+    console.error(
+      `Investment Agent failed to listen on ${host}:${port}: ${error.message}`,
+    );
     process.exit(1);
   });
 
-  server.listen(port, host, () => {
+  server.listen(listenPort, host, () => {
     const address = server.address();
-    const activePort = typeof address === "object" && address ? address.port : port;
+    const activePort =
+      typeof address === "object" && address ? address.port : listenPort;
     console.log(`Investment Agent listening on http://${host}:${activePort}`);
   });
 

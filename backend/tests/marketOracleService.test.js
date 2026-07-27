@@ -6,10 +6,14 @@ describe("marketOracleService", () => {
   let runMarketOracle;
 
   beforeEach(() => {
-    delete require.cache[require.resolve("../src/services/marketOracleService")];
+    delete process.env.MPS_TEST_MODE;
+    delete require.cache[
+      require.resolve("../src/services/marketOracleService")
+    ];
   });
 
   afterEach(() => {
+    process.env.MPS_TEST_MODE = "1";
     mock.restoreAll();
   });
 
@@ -17,7 +21,8 @@ describe("marketOracleService", () => {
     mock.method(childProcess, "execFile", (cmd, args, options, callback) => {
       callback(null, JSON.stringify({ NVDA: { score: 9.5 } }), "");
     });
-    runMarketOracle = require("../src/services/marketOracleService").runMarketOracle;
+    runMarketOracle =
+      require("../src/services/marketOracleService").runMarketOracle;
     const result = await runMarketOracle("NVDA");
     assert.deepEqual(result, { score: 9.5 });
   });
@@ -26,7 +31,8 @@ describe("marketOracleService", () => {
     mock.method(childProcess, "execFile", (cmd, args, options, callback) => {
       callback(new Error("Python not found"), "", "");
     });
-    runMarketOracle = require("../src/services/marketOracleService").runMarketOracle;
+    runMarketOracle =
+      require("../src/services/marketOracleService").runMarketOracle;
     const result = await runMarketOracle("NVDA");
     assert.deepEqual(result, { error: "Python not found" });
   });
@@ -35,7 +41,8 @@ describe("marketOracleService", () => {
     mock.method(childProcess, "execFile", (cmd, args, options, callback) => {
       callback(null, "invalid json", "");
     });
-    runMarketOracle = require("../src/services/marketOracleService").runMarketOracle;
+    runMarketOracle =
+      require("../src/services/marketOracleService").runMarketOracle;
     const result = await runMarketOracle("NVDA");
     assert.deepEqual(result, { error: "Failed to parse oracle output" });
   });
@@ -44,7 +51,8 @@ describe("marketOracleService", () => {
     mock.method(childProcess, "execFile", (cmd, args, options, callback) => {
       callback(null, JSON.stringify({ AAPL: { score: 8 } }), "");
     });
-    runMarketOracle = require("../src/services/marketOracleService").runMarketOracle;
+    runMarketOracle =
+      require("../src/services/marketOracleService").runMarketOracle;
     const result = await runMarketOracle("NVDA");
     assert.deepEqual(result, { error: "No data returned" });
   });
@@ -53,7 +61,8 @@ describe("marketOracleService", () => {
     mock.method(childProcess, "execFile", (cmd, args, options, callback) => {
       callback(new Error("Command failed: timeout"), "", "");
     });
-    runMarketOracle = require("../src/services/marketOracleService").runMarketOracle;
+    runMarketOracle =
+      require("../src/services/marketOracleService").runMarketOracle;
     const result = await runMarketOracle("NVDA");
     assert.deepEqual(result, { error: "Command failed: timeout" });
   });

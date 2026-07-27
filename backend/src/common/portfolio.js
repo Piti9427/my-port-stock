@@ -1,11 +1,23 @@
-'use strict';
+"use strict";
 
 /**
  * Canonical list of speculative tickers for portfolio risk calculations.
  * Used by decisionEngine and today queue logic.
  */
 const SPECULATIVE_SET = new Set([
-  'RKLB', 'ALAB', 'PLTR', 'BE', 'IREN', 'ASTS', 'LUNR', 'ONDS', 'IONQ', 'PL', 'BKSY', 'IRDM', 'GSAT',
+  "RKLB",
+  "ALAB",
+  "PLTR",
+  "BE",
+  "IREN",
+  "ASTS",
+  "LUNR",
+  "ONDS",
+  "IONQ",
+  "PL",
+  "BKSY",
+  "IRDM",
+  "GSAT",
 ]);
 
 /**
@@ -15,7 +27,7 @@ const SPECULATIVE_SET = new Set([
  */
 function isSpeculative(ticker) {
   if (!ticker) return false;
-  const symbol = String(ticker).toUpperCase().split('.')[0];
+  const symbol = String(ticker).toUpperCase().split(".")[0];
   return SPECULATIVE_SET.has(symbol);
 }
 

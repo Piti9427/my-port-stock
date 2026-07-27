@@ -16,18 +16,19 @@
 
 ## Keyword Map
 
-| Keyword             | Meaning                                                                          | Primary File                                                        |
-| :------------------ | :------------------------------------------------------------------------------- | :------------------------------------------------------------------ |
-| `portfolio-review`  | Full held-portfolio health review                                                | `stock_portfolio.md`, `trade_journal.md`                            |
-| `space-data-center` | Orbital compute / space data center theme from BT beartai clip                   | `stock_portfolio.md`, `notes/2026-05-30-space-data-center-theme.md` |
-| `theme-watchlist`   | Research/watchlist additions, not executed trades                                | `stock_portfolio.md`                                                |
-| `risk-plan-missing` | Holdings or active trades missing stop/R/R/hard THB risk                         | `trade_journal.md`                                                  |
-| `ANET-conflict`     | [Resolved 2026-06-01] ANET limit order was never filled; trade journal corrected | `trade_journal.md`                                                  |
-| `no-chase`          | Avoid buying extended momentum names without pullback/R/R                        | `ELITE_INVESTOR_SOP.md`                                             |
-| `skills-workflow`   | Project developer workflow using integrated Agent Skills                         | `docs/PROJECT_SKILLS_WORKFLOW.md`                                   |
-| `clerk-isolation`   | Clerk user data isolation and Supabase database RLS architecture                 | `docs/adr/0002-clerk-user-isolation-rls.md`                         |
-| `autonomous-search` | Sub-agent contextual search and hybrid oracle contract architecture              | `docs/adr/0003-subagent-autonomous-search.md`                       |
-| `cls-vrt-deep-dive` | Celestica and Vertiv 7-Dimension SOP deep dive                                    | `notes/2026-07-07-cls-vrt-deep-dive.md`                             |
+| Keyword                  | Meaning                                                                          | Primary File                                                        |
+| :----------------------- | :------------------------------------------------------------------------------- | :------------------------------------------------------------------ |
+| `portfolio-review`       | Full held-portfolio health review                                                | `stock_portfolio.md`, `trade_journal.md`                            |
+| `space-data-center`      | Orbital compute / space data center theme from BT beartai clip                   | `stock_portfolio.md`, `notes/2026-05-30-space-data-center-theme.md` |
+| `theme-watchlist`        | Research/watchlist additions, not executed trades                                | `stock_portfolio.md`                                                |
+| `risk-plan-missing`      | Holdings or active trades missing stop/R/R/hard THB risk                         | `trade_journal.md`                                                  |
+| `ANET-conflict`          | [Resolved 2026-06-01] ANET limit order was never filled; trade journal corrected | `trade_journal.md`                                                  |
+| `no-chase`               | Avoid buying extended momentum names without pullback/R/R                        | `ELITE_INVESTOR_SOP.md`                                             |
+| `skills-workflow`        | Project developer workflow using integrated Agent Skills                         | `docs/PROJECT_SKILLS_WORKFLOW.md`                                   |
+| `clerk-isolation`        | Clerk user data isolation and Supabase database RLS architecture                 | `docs/adr/0002-clerk-user-isolation-rls.md`                         |
+| `autonomous-search`      | Sub-agent contextual search and hybrid oracle contract architecture              | `docs/adr/0003-subagent-autonomous-search.md`                       |
+| `cls-vrt-deep-dive`      | Celestica and Vertiv 7-Dimension SOP deep dive                                   | `notes/2026-07-07-cls-vrt-deep-dive.md`                             |
+| `enterprise-qa-pipeline` | Merge Gates, Advisory Checks, Scheduled Assurance, QA/security pipeline          | `docs/plans/2026-07-26-enterprise-qa-security-pipeline-plan.md`     |
 
 ## Durable Entries
 
@@ -454,25 +455,35 @@
 - Source: `supabase/migrations/20260703160000_user_preferences.sql`, `backend/tests/preferencesRoutes.test.js`, `frontend/src/preferences/PreferencesContext.jsx`, `frontend/src/styles/animations.css`, `frontend/tests/onboardingPreferences.test.jsx`
 
 ### 2026-07-04 - Slice 2: Today Decision Hub and Portfolio Risk
+
 - Keywords: `today-page`, `portfolio-pulse`, `deterministic-priority`, `card-dismissal`, `motion-entrance`, `purity-guardrails`
 - Decision: Replaced default authenticated route `/` with a rule-based Today action queue sorted Protect -> Prepare -> Opportunity -> Learn, accompanied by a dynamic Portfolio Pulse sidebar. Implemented card dismissal with local expiry rules, mobile responsive card prev/next navigation, and compliance with strict linter purity checks.
 - Action: Created backend `/api/today` route and tests, frontend `useToday` hook, `TodayPage` component, Vitest test suite, shared utility refactoring, and CSS animations.
 - Source: `backend/src/routes/today.js`, `frontend/src/pages/TodayPage.jsx`, `frontend/tests/todayPage.test.jsx`, `backend/tests/todayRoutes.test.js`, `frontend/src/styles/pages.css`
 
 ### 2026-07-04 - Spacing Polish & System Theme Support
+
 - Keywords: `spacing-polish`, `system-theme`, `layout-unification`, `clerk-avatar`, `empty-states`, `resolved-theme`, `select-chevron`, `config-layout`, `global-select-rules`, `inline-style-cleanups`
 - Decision: Unified layout spacing and margins to horizontal 28px across all pages. Cleaned up duplicate headers and resolved Clerk avatar centering. Extended visual theme settings to support System Mode colors matching the OS's prefers-color-scheme setting. Solved the select dropdown chevron indicator removal glitch and constrained the config page max-width to prevent input stretching on desktop. Created global select stylesheet rules with token-aware background variables to unify select dropdown designs and removed hardcoded inline styles in form drawer inputs.
 - Action: Updated database schema constraints, backend validators, route tests, pages/layout stylesheets, and onboarding/config layouts. Wrap user avatar button in center-aligned container wrappers, add custom SVG chevron asset to select dropdowns globally, and clean up inline CSS blocks in TradeTicket.jsx and TradeLogDrawer.jsx.
 - Source: `supabase/migrations/20260704170000_add_system_theme.sql`, `frontend/src/preferences/PreferencesContext.jsx`, `frontend/src/styles/pages.css`, `frontend/src/styles/layout.css`, `frontend/tests/portfolioRiskPage.test.jsx`, `frontend/src/pages/TodayPage.jsx`, `frontend/src/styles/tokens.css`, `frontend/src/components/command-center/TradeTicket.jsx`, `frontend/src/components/journal/TradeLogDrawer.jsx`
 
 ### 2026-07-07 - Celestica & Vertiv 7-Dimension SOP Deep Dive
+
 - Keywords: `cls-vrt-deep-dive`, `datacenter-hardware`, `liquid-cooling`, `customer-concentration`
 - Decision: Performed a full 7-Dimension SOP & SWOT audit on Celestica (CLS) and Vertiv (VRT) following user scoping. Both are set to WAIT due to short-term technical pullbacks.
+
 ### 2026-07-26 - Comprehensive Test Suite Coverage & Pre-PR 7-Gate Verification
+
 - Keywords: `test-suite-expansion`, `ws-ticket-ttl`, `quote-fallback-resiliency`, `sop-boundary-gates`, `event-bus-isolation`, `playwright-dev-bypass`, `pr-verification-7-gates`
 - Decision: Expanded test coverage across 5 key dimensions: WebSocket ticket TTL & auto-purge, Quote Provider fail-closed resiliency, Analysis Context caching, Event Bus multi-user channel isolation, and Investment SOP mathematical boundary gates. Configured Playwright E2E with Option A (Dev Auth Bypass) running against Vite dev server (127.0.0.1:5173).
 - Action: Created backend test suites (`wsTicketTTLEdgeCase.test.js`, `quoteSourcesFallback.test.js`, `analysisContextService.test.js`, `agentEventBus.test.js`, `sopBoundaryGates.test.js`), added Playwright specs (`tradeThesisSubmission.spec.ts`, `journalExitPostMortem.spec.ts`), updated `PreferencesContext.jsx` with fail-open fallback, and verified clean pass across all 7 Pre-PR verification gates (`npm run check:pr`).
 - Source: `test_suite_coverage_plan.md`, `walkthrough.md`, `backend/tests/`, `frontend/e2e/`, `frontend/src/preferences/PreferencesContext.jsx`
 
+### 2026-07-27 - Enterprise QA & Security Assurance Pipeline
 
-
+- Keywords: `enterprise-assurance`, `11-merge-gates`, `checkjs`, `deterministic-providers`, `pgtap-rls`, `gitleaks`, `scheduled-load`, `break-glass`
+- Decision: Use 11 evidence-based Merge Gates, advisory CodeQL/coverage, and loopback-only Scheduled Assurance. Supabase migrations are executable database truth; the schema snapshot is reference-only. Merge Gates have no normal bypass; Break-Glass Merge requires two approvers, a linked incident/issue, and remediation within 24 hours.
+- Action: Implemented TypeScript 5.9 full-repo checkJs, fail-closed property tests, deterministic Express/WebSocket providers, additive migration baseline and pgTAP, Gitleaks/dependency gates, six parallel CI gate jobs with an aggregate report, Dependabot, and bounded nightly load assurance.
+- Open follow-up: The production dependency gate intentionally remains red for React Router `GHSA-qwww-vcr4-c8h2`; npm reports no patched release as of 2026-07-27. Do not bypass the gate—upgrade when a fixed release is available or replace the affected dependency through a reviewed change.
+- Source: `docs/plans/2026-07-26-enterprise-qa-security-pipeline-plan.md`, `docs/adr/0006-supabase-migrations-source-of-truth.md`

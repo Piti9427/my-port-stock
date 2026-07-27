@@ -31,7 +31,8 @@ describe("Quote Sources Resiliency & Fallback Data Contracts", () => {
 
   describe("parseSimpleCsv utility", () => {
     it("parses two-line Stooq CSV format into an object", () => {
-      const csv = "Symbol,Date,Time,Open,High,Low,Close,Volume\nAAPL.US,2026-07-25,22:00:00,220.0,225.0,219.0,224.5,50000000";
+      const csv =
+        "Symbol,Date,Time,Open,High,Low,Close,Volume\nAAPL.US,2026-07-25,22:00:00,220.0,225.0,219.0,224.5,50000000";
       const result = parseSimpleCsv(csv);
       assert.equal(result.Symbol, "AAPL.US");
       assert.equal(result.Close, "224.5");

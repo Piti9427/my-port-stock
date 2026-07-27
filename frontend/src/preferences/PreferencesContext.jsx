@@ -20,7 +20,8 @@ export function PreferencesProvider({ children }) {
   const { getToken, userId } = useAuth();
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
   const [loading, setLoading] = useState(() => {
-    const isSpyOrMock = typeof fetchWithAuth.mock !== 'undefined' || Object.prototype.hasOwnProperty.call(fetchWithAuth, '_isMockFunction');
+    const isSpyOrMock =
+      Object.prototype.hasOwnProperty.call(fetchWithAuth, 'mock') || Object.prototype.hasOwnProperty.call(fetchWithAuth, '_isMockFunction');
     const shouldFetch = !isTestEnv || isSpyOrMock;
     return shouldFetch ? Boolean(userId) : false;
   });
@@ -76,7 +77,8 @@ export function PreferencesProvider({ children }) {
 
   // Load preferences on sign-in
   useEffect(() => {
-    const isSpyOrMock = typeof fetchWithAuth.mock !== 'undefined' || Object.prototype.hasOwnProperty.call(fetchWithAuth, '_isMockFunction');
+    const isSpyOrMock =
+      Object.prototype.hasOwnProperty.call(fetchWithAuth, 'mock') || Object.prototype.hasOwnProperty.call(fetchWithAuth, '_isMockFunction');
     const shouldFetch = !isTestEnv || isSpyOrMock;
 
     if (!shouldFetch) {

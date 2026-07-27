@@ -38,7 +38,8 @@ function loadServerWithoutSupabase() {
       else delete process.env.SUPABASE_URL;
       if (previousKey) process.env.SUPABASE_ANON_KEY = previousKey;
       else delete process.env.SUPABASE_ANON_KEY;
-      if (previousServiceKey) process.env.SUPABASE_SERVICE_ROLE_KEY = previousServiceKey;
+      if (previousServiceKey)
+        process.env.SUPABASE_SERVICE_ROLE_KEY = previousServiceKey;
       else delete process.env.SUPABASE_SERVICE_ROLE_KEY;
     },
   };
@@ -81,9 +82,15 @@ describe("runtime personal data endpoints", () => {
   });
 
   it("runtime routes do not auto-import owner markdown for empty users", () => {
-    const apiSource = fs.readFileSync(path.join(__dirname, "../src/routes/api.js"), "utf8");
+    const apiSource = fs.readFileSync(
+      path.join(__dirname, "../src/routes/api.js"),
+      "utf8",
+    );
 
-    assert.doesNotMatch(apiSource, /bootstrapUserData|importMarkdownSnapshotForOwner|Auto-migration/i);
+    assert.doesNotMatch(
+      apiSource,
+      /bootstrapUserData|importMarkdownSnapshotForOwner|Auto-migration/i,
+    );
   });
 
   it("builds authenticated analysis context from Supabase-scoped per-user rows", async () => {
@@ -93,7 +100,12 @@ describe("runtime personal data endpoints", () => {
       getUserPortfolio: async (userId) => {
         calls.push(["portfolio", userId]);
         return [
-          { ticker: "NVDA", shares: 2, avg_cost: 120, sector: "Semiconductors" },
+          {
+            ticker: "NVDA",
+            shares: 2,
+            avg_cost: 120,
+            sector: "Semiconductors",
+          },
           { ticker: "TSLA", shares: 1, avg_cost: 250, sector: "EV" },
         ];
       },
@@ -173,7 +185,13 @@ describe("runtime personal data endpoints", () => {
     assert.equal(packet.portfolio_context.source, "supabase");
     assert.equal(packet.journal_context.source, "supabase");
     assert.equal(packet.portfolio_context.stale_hypothesis, false);
-    assert.equal(packet.historical_context_warning.includes("historical context only"), true);
-    assert.doesNotMatch(JSON.stringify(packet.portfolio_context), /stock_portfolio\.md|markdown/i);
+    assert.equal(
+      packet.historical_context_warning.includes("historical context only"),
+      true,
+    );
+    assert.doesNotMatch(
+      JSON.stringify(packet.portfolio_context),
+      /stock_portfolio\.md|markdown/i,
+    );
   });
 });

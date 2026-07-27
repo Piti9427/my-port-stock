@@ -1,0 +1,47 @@
+name: Scheduled Load Assurance
+
+on:
+  schedule:
+    - cron: "30 20 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: scheduled-load-assurance
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Start loopback fixture backend
+        run: |
+          MPS_TEST_MODE=1 MPS_TEST_SCENARIO=valid MPS_LOAD_MODE=1 NODE_ENV=test DEV_UI_AUTH_BYPASS=true PORT=8080 node backend/server.js > /tmp/mps-load-backend.log 2>&1 &
+          backend_pid=$!
+          echo "LOAD_SERVER_PID=${backend_pid}" >> "$GITHUB_ENV"
+          for attempt in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8080/health >/dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Run bounded HTTP and WebSocket assurance
+        env:
+          LOAD_TARGET: http://127.0.0.1:8080
+          LOAD_HTTP_CLIENTS: "25"
+          LOAD_WS_CLIENTS: "50"
+          LOAD_DURATION_SECONDS: "30"
+        run: npm run check:load
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: load-assurance-report
+          path: artifacts/reports/load-assurance.json

@@ -14,6 +14,7 @@ __pycache__/
 # Keep generated artifacts local unless intentionally committed.
 artifacts/playwright-mcp/
 artifacts/reports/
+artifacts/gate-reports/
 
 # IDE and tool specific files
 .codegraph/
@@ -39,3 +40,5 @@ testsprite_tests/tmp/config.json
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+# Supabase CLI local branch state
+supabase/.branches/

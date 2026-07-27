@@ -52,7 +52,9 @@ describe("Analysis Context Service", () => {
 
     it("detects unresolved journal issues (missing stop loss and R/R < 1:2)", async () => {
       const mockDb = {
-        getUserPortfolio: async () => [{ ticker: "NVDA", shares: 10, avg_cost: 120 }],
+        getUserPortfolio: async () => [
+          { ticker: "NVDA", shares: 10, avg_cost: 120 },
+        ],
         getUserJournalByTicker: async () => [
           {
             id: "j1",
@@ -75,7 +77,11 @@ describe("Analysis Context Service", () => {
       assert.equal(context.journalContext.is_active_trade, true);
 
       const issues = context.journalContext.unresolved_issues;
-      assert.ok(issues.some((issue) => issue.includes("missing an executable stop-loss")));
+      assert.ok(
+        issues.some((issue) =>
+          issue.includes("missing an executable stop-loss"),
+        ),
+      );
       assert.ok(issues.some((issue) => issue.includes("below 1:2")));
     });
   });
@@ -87,10 +93,15 @@ describe("Analysis Context Service", () => {
         getUserJournalByTicker: async () => [],
       };
 
-      const packet = await buildManualVerifiedPacket("TSLA", 250.0, "Swing Trade", {
-        userId: "user_test_123",
-        db: mockDb,
-      });
+      const packet = await buildManualVerifiedPacket(
+        "TSLA",
+        250.0,
+        "Swing Trade",
+        {
+          userId: "user_test_123",
+          db: mockDb,
+        },
+      );
 
       assert.ok(packet);
       assert.equal(packet.ticker, "TSLA");

@@ -12,7 +12,7 @@ function fieldValueColor(isDanger, isWarn) {
   return 'var(--text-primary)';
 }
 
-export function SliderField({ id, label, description, value, min, max, step = 1, unit = '%', onChange, warn, danger }) {
+export function SliderField({ id, label, description, value, min, max, step = 1, unit = '%', onChange, warn = undefined, danger = undefined }) {
   const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
   const isWarn = warn !== undefined && value >= warn;
   const isDanger = danger !== undefined && value >= danger;
@@ -39,7 +39,12 @@ export function SliderField({ id, label, description, value, min, max, step = 1,
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
         className="config-slider"
-        style={{ '--track-fill': trackColor, '--fill-pct': `${pct}%` }}
+        style={
+          /** @type {import('react').CSSProperties & Record<`--${string}`, string>} */ ({
+            '--track-fill': trackColor,
+            '--fill-pct': `${pct}%`,
+          })
+        }
         aria-valuemin={min}
         aria-valuemax={max}
         aria-valuenow={value}

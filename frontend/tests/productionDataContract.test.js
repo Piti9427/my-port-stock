@@ -275,20 +275,21 @@ test('useApi marks cached data stale after staleMs', async () => {
 
 test('useApi aborts stale in-flight requests on unmount', async () => {
   const getToken = vi.fn().mockResolvedValue('token_123');
-  let requestSignal = null;
+  const capturedRequest = /** @type {{signal: AbortSignal | null}} */ ({ signal: null });
   const fetchMock = vi.fn((_url, options) => {
-    requestSignal = options.signal;
+    capturedRequest.signal = options.signal;
     return new Promise(() => {});
   });
   vi.stubGlobal('fetch', fetchMock);
 
   const { unmount } = renderHook(() => useApi('/api/holdings', { getToken }));
 
-  await waitFor(() => expect(requestSignal).not.toBe(null));
+  await waitFor(() => expect(capturedRequest.signal).not.toBe(null));
 
   unmount();
 
-  expect(requestSignal.aborted).toBe(true);
+  if (!capturedRequest.signal) throw new Error('Expected request AbortSignal to be captured');
+  expect(capturedRequest.signal.aborted).toBe(true);
 });
 
 test('usePortfolio normalizes holdings and portfolio summary', async () => {

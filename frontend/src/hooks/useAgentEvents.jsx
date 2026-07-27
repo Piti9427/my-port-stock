@@ -13,14 +13,16 @@ const WS_URL = (() => {
 
 export function AgentEventsProvider({ children }) {
   const { getToken, isLoaded, isSignedIn } = useAuth();
-  const [agentStates, setAgentStates] = useState({
-    cio: { state: 'IDLE', message: null },
-    'fundamental-auditor': { state: 'IDLE', message: null },
-    'quant-technician': { state: 'IDLE', message: null },
-    'macro-strategist': { state: 'IDLE', message: null },
-    'portfolio-risk-manager': { state: 'IDLE', message: null },
-    'catalyst-hunter': { state: 'IDLE', message: null },
-  });
+  const [agentStates, setAgentStates] = useState(
+    /** @type {Record<string, {state: string, message: unknown, ticker?: string}>} */ ({
+      cio: { state: 'IDLE', message: null },
+      'fundamental-auditor': { state: 'IDLE', message: null },
+      'quant-technician': { state: 'IDLE', message: null },
+      'macro-strategist': { state: 'IDLE', message: null },
+      'portfolio-risk-manager': { state: 'IDLE', message: null },
+      'catalyst-hunter': { state: 'IDLE', message: null },
+    })
+  );
   const [lastEvent, setLastEvent] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [connected, setConnected] = useState(false);

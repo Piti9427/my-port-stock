@@ -78,7 +78,9 @@ function buildTwoSourceQuotePacket(ticker, sources, asOf = new Date()) {
     },
     current_price_acceptance_gate: "pass",
     source_quotes: [primarySource, secondarySource],
-    fallback_used: [primarySource.source, secondarySource.source].includes(SOURCE_STOOQ),
+    fallback_used: [primarySource.source, secondarySource.source].includes(
+      SOURCE_STOOQ,
+    ),
     cross_check: {
       primary_source: primarySource.source,
       secondary_source: secondarySource.source,

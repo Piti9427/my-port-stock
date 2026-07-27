@@ -17,7 +17,7 @@ function renderCellValue(column, row) {
   return value ?? '';
 }
 
-export function DataTable({ columns, data = [], onRowClick, emptyState, loading = false, skeletonRows = 5 }) {
+export function DataTable({ columns, data = [], onRowClick = null, emptyState = null, loading = false, skeletonRows = 5 }) {
   const [sort, setSort] = useState(null);
   const sortedData = useMemo(() => {
     if (!sort) return data;

@@ -9,7 +9,14 @@ gate and final user or broker quote confirmation when required.
 ## Install
 
 ```bash
-npm install
+npm ci
+```
+
+Required assurance prerequisites: Node 22, Python 3.12, Docker Desktop, Gitleaks, and Chromium installed through Playwright.
+
+```bash
+python3 -m pip install --requirement requirements-ci.txt
+npx playwright install chromium
 ```
 
 ## Run
@@ -107,10 +114,17 @@ Only successful packets are cached. Cache TTL is 60 seconds.
 
 ```bash
 npm test
+npm run check:type
+npm run check:property
+npm run check:database
+npm run check:e2e
+npm run check:pr
 curl http://localhost:3000/health
 curl http://localhost:3000/api/quote/nvda
 curl http://localhost:3000/api/quote/NOT_A_REAL_TICKER_123
 ```
+
+`npm run check:database` is local-only: it removes remote Supabase credentials, resets an empty local database, runs pgTAP, and stops the stack even after failure. `npm run check:pr` also requires the `gitleaks` CLI. See the [canonical assurance plan](docs/plans/2026-07-26-enterprise-qa-security-pipeline-plan.md).
 
 ## Important Boundary
 

@@ -1,17 +1,41 @@
 const { CACHE_TTL_MS } = require("../common/constants");
 const { BoundedMap } = require("../common/BoundedMap");
 const { insufficientData, normalizeTicker } = require("../common/format");
-const { fetchQuoteSources, fetchStooqQuoteSource } = require("../sources/quoteSources");
-const { buildTwoSourceQuotePacket, isValidQuoteSource } = require("../gates/priceGate");
+const {
+  fetchQuoteSources,
+  fetchStooqQuoteSource,
+} = require("../sources/quoteSources");
+const {
+  buildTwoSourceQuotePacket,
+  isValidQuoteSource,
+} = require("../gates/priceGate");
 const { buildVerifiedDataPacket } = require("../packets/verifiedDataPacket");
 const { supabaseConfigured } = require("../db/supabaseClient");
 const { getScopedDb } = require("../db");
 const { runtimeInsufficientData } = require("./deepAnalysisService");
+const { getTestProviders } = require("../providers/providerRegistry");
 
 const quoteCache = new BoundedMap(200);
 
 const HISTORICAL_CONTEXT_WARNING =
   "Markdown portfolio/journal is historical context only; runtime analysis uses Supabase per-user rows.";
+
+/**
+ * @typedef {object} RuntimeAnalysisContext
+ * @property {string} status
+ * @property {string=} error_details
+ * @property {{
+ *   source?: string, user_scope?: string, ticker?: string|null, is_held?: boolean,
+ *   stale_hypothesis?: boolean, holdings_count?: number, holdings_rows?: Array<Record<string, unknown>>
+ * }=} portfolioContext
+ * @property {{
+ *   source?: string, user_scope?: string, ticker?: string|null, journal_checked?: boolean,
+ *   is_repeat_ticker?: boolean, is_active_trade?: boolean,
+ *   active_trade_rows?: Array<Record<string, unknown>>, trade_rows?: Array<Record<string, unknown>>,
+ *   unresolved_issues?: string[]
+ * }=} journalContext
+ * @property {string=} historicalContextWarning
+ */
 
 function getCachedQuote(ticker) {
   const cached = quoteCache.get(ticker);
@@ -34,14 +58,23 @@ async function getQuotePacket(ticker) {
   }
 
   const asOf = new Date();
-  let quoteSources = await fetchQuoteSources(ticker, asOf);
+  const testProviders = getTestProviders();
+  /** @type {Array<{
+   * status?: string, error_details?: string, source?: string, tier?: string,
+   * last_price?: number, quote_timestamp?: string, quote_delay_status?: string
+   * }>} */
+  let quoteSources = testProviders
+    ? await testProviders.quote.fetchQuoteSources(ticker)
+    : await fetchQuoteSources(ticker, asOf);
   let packet = buildTwoSourceQuotePacket(ticker, quoteSources, asOf);
 
   if (
     packet.status === "INSUFFICIENT_DATA" &&
     quoteSources.filter(isValidQuoteSource).length < 2
   ) {
-    const stooqSource = await fetchStooqQuoteSource(ticker);
+    const stooqSource = testProviders
+      ? await testProviders.quote.fetchFallbackQuoteSource(ticker)
+      : await fetchStooqQuoteSource(ticker);
     quoteSources = quoteSources.concat(stooqSource);
     packet = buildTwoSourceQuotePacket(ticker, quoteSources, asOf);
   }
@@ -96,27 +129,40 @@ function sanitizeJournalRow(row) {
 }
 
 function isOpenJournalRow(row) {
-  const status = String(row?.status || "").trim().toUpperCase();
+  const status = String(row?.status || "")
+    .trim()
+    .toUpperCase();
   return status === "OPEN" || status === "ACTIVE";
 }
 
 function buildJournalUnresolvedIssues(rows) {
   const issues = [];
   rows.forEach((row) => {
-    const status = String(row?.status || "").trim().toUpperCase();
+    const status = String(row?.status || "")
+      .trim()
+      .toUpperCase();
     if (!isOpenJournalRow(row)) return;
 
-    if (!Number.isFinite(Number(row?.stop_loss)) || Number(row.stop_loss) <= 0) {
-      issues.push(`${normalizeTicker(row?.ticker) || "Ticker"} open trade is missing an executable stop-loss`);
+    if (
+      !Number.isFinite(Number(row?.stop_loss)) ||
+      Number(row.stop_loss) <= 0
+    ) {
+      issues.push(
+        `${normalizeTicker(row?.ticker) || "Ticker"} open trade is missing an executable stop-loss`,
+      );
     }
 
     const riskReward = Number(row?.risk_reward);
     if (Number.isFinite(riskReward) && riskReward < 2) {
-      issues.push(`${normalizeTicker(row?.ticker) || "Ticker"} open trade risk/reward is below 1:2`);
+      issues.push(
+        `${normalizeTicker(row?.ticker) || "Ticker"} open trade risk/reward is below 1:2`,
+      );
     }
 
     if (!status) {
-      issues.push(`${normalizeTicker(row?.ticker) || "Ticker"} journal status is missing`);
+      issues.push(
+        `${normalizeTicker(row?.ticker) || "Ticker"} journal status is missing`,
+      );
     }
   });
   return issues;
@@ -140,18 +186,26 @@ function unavailableRuntimeContexts(ticker) {
       is_repeat_ticker: false,
       is_active_trade: false,
       active_trade_rows: [],
-      unresolved_issues: ["Supabase runtime data unavailable for authenticated analysis context"],
+      unresolved_issues: [
+        "Supabase runtime data unavailable for authenticated analysis context",
+      ],
     },
   };
 }
 
 function getRuntimeDbForUser(userId) {
+  const testRuntimeData = getTestProviders()?.runtimeData;
+  if (testRuntimeData) return testRuntimeData;
   if (!userId || !supabaseConfigured) {
     return null;
   }
   return getScopedDb(userId);
 }
 
+/**
+ * @param {{userId?: string|null, ticker?: string|null, db?: Record<string, Function>|null}} [options]
+ * @returns {Promise<RuntimeAnalysisContext>}
+ */
 async function buildAuthenticatedAnalysisContext({ userId, ticker, db } = {}) {
   const normalizedTicker = normalizeTicker(ticker);
   if (!normalizedTicker) {
@@ -162,10 +216,13 @@ async function buildAuthenticatedAnalysisContext({ userId, ticker, db } = {}) {
   }
 
   if (!userId) {
-    return runtimeInsufficientData("Missing authenticated user for analysis context", {
-      historicalContextWarning: HISTORICAL_CONTEXT_WARNING,
-      ...unavailableRuntimeContexts(normalizedTicker),
-    });
+    return runtimeInsufficientData(
+      "Missing authenticated user for analysis context",
+      {
+        historicalContextWarning: HISTORICAL_CONTEXT_WARNING,
+        ...unavailableRuntimeContexts(normalizedTicker),
+      },
+    );
   }
 
   if (
@@ -173,10 +230,13 @@ async function buildAuthenticatedAnalysisContext({ userId, ticker, db } = {}) {
     typeof db.getUserPortfolio !== "function" ||
     typeof db.getUserJournalByTicker !== "function"
   ) {
-    return runtimeInsufficientData("Supabase runtime data unavailable for authenticated analysis context", {
-      historicalContextWarning: HISTORICAL_CONTEXT_WARNING,
-      ...unavailableRuntimeContexts(normalizedTicker),
-    });
+    return runtimeInsufficientData(
+      "Supabase runtime data unavailable for authenticated analysis context",
+      {
+        historicalContextWarning: HISTORICAL_CONTEXT_WARNING,
+        ...unavailableRuntimeContexts(normalizedTicker),
+      },
+    );
   }
 
   try {
@@ -219,13 +279,25 @@ async function buildAuthenticatedAnalysisContext({ userId, ticker, db } = {}) {
     };
   } catch (error) {
     console.error("Runtime analysis context lookup failed:", error.message);
-    return runtimeInsufficientData("Supabase runtime data unavailable for authenticated analysis context", {
-      historicalContextWarning: HISTORICAL_CONTEXT_WARNING,
-      ...unavailableRuntimeContexts(normalizedTicker),
-    });
+    return runtimeInsufficientData(
+      "Supabase runtime data unavailable for authenticated analysis context",
+      {
+        historicalContextWarning: HISTORICAL_CONTEXT_WARNING,
+        ...unavailableRuntimeContexts(normalizedTicker),
+      },
+    );
   }
 }
 
+/**
+ * @param {{
+ *   ticker?: string,
+ *   decisionMode?: string,
+ *   quotePacket?: Record<string, unknown>,
+ *   userId?: string|null,
+ *   db?: Record<string, Function>|null
+ * }} [options]
+ */
 async function buildRuntimeVerifiedPacket({
   ticker,
   decisionMode,
@@ -239,7 +311,9 @@ async function buildRuntimeVerifiedPacket({
   }
 
   if (!quotePacket || quotePacket.status === "INSUFFICIENT_DATA") {
-    return insufficientData(quotePacket?.error_details || "Missing quote packet");
+    return insufficientData(
+      quotePacket?.error_details || "Missing quote packet",
+    );
   }
 
   const runtimeContext = await buildAuthenticatedAnalysisContext({
@@ -265,7 +339,7 @@ async function buildRuntimeVerifiedPacket({
 }
 
 async function getVerifiedPacket(ticker, decisionMode, options = {}) {
-  const quotePacket = options.quotePacket || await getQuotePacket(ticker);
+  const quotePacket = options.quotePacket || (await getQuotePacket(ticker));
 
   return buildRuntimeVerifiedPacket({
     ticker,
@@ -276,7 +350,12 @@ async function getVerifiedPacket(ticker, decisionMode, options = {}) {
   });
 }
 
-async function buildManualVerifiedPacket(ticker, manualPrice, decisionMode, options = {}) {
+async function buildManualVerifiedPacket(
+  ticker,
+  manualPrice,
+  decisionMode,
+  options = {},
+) {
   const quotePacket = {
     as_of: new Date().toISOString(),
     ticker,

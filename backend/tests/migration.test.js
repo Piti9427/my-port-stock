@@ -1,11 +1,11 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { 
+const {
   assertMarkdownImportOwner,
   buildMarkdownImportPayload,
-  parsePortfolioHoldings, 
-  parseJournalTrades, 
-  parseWatchlist 
+  parsePortfolioHoldings,
+  parseJournalTrades,
+  parseWatchlist,
 } = require("../src/services/migrationService");
 
 const samplePortfolioMarkdown = `
@@ -74,8 +74,11 @@ test("parseWatchlist parses correct tickers, sectors, and target prices as alert
 
 test("assertMarkdownImportOwner rejects non-owner user IDs", () => {
   assert.throws(
-    () => assertMarkdownImportOwner("user_two", { MARKDOWN_IMPORT_OWNER_USER_ID: "user_one" }),
-    /refusing markdown import for non-owner user/
+    () =>
+      assertMarkdownImportOwner("user_two", {
+        MARKDOWN_IMPORT_OWNER_USER_ID: "user_one",
+      }),
+    /refusing markdown import for non-owner user/,
   );
 });
 
@@ -93,7 +96,9 @@ test("buildMarkdownImportPayload uses audit metadata and ADJUST startup balances
   assert.equal(payload.journalEntries.length, 4);
   assert.equal(payload.watchlistItems.length, 2);
 
-  const adjust = payload.journalEntries.find((entry) => entry.ticker === "ASTS");
+  const adjust = payload.journalEntries.find(
+    (entry) => entry.ticker === "ASTS",
+  );
   assert.equal(adjust.type, "ADJUST");
   assert.equal(adjust.source_note, "startup_balance_import");
   assert.equal(adjust.import_batch_id, payload.batch.import_batch_id);
@@ -123,7 +128,17 @@ test("buildMarkdownImportPayload is idempotent for the same markdown and user", 
 
   assert.equal(first.batch.import_batch_id, second.batch.import_batch_id);
   assert.deepEqual(
-    first.journalEntries.map((entry) => [entry.ticker, entry.type, entry.shares, entry.source_hash]),
-    second.journalEntries.map((entry) => [entry.ticker, entry.type, entry.shares, entry.source_hash])
+    first.journalEntries.map((entry) => [
+      entry.ticker,
+      entry.type,
+      entry.shares,
+      entry.source_hash,
+    ]),
+    second.journalEntries.map((entry) => [
+      entry.ticker,
+      entry.type,
+      entry.shares,
+      entry.source_hash,
+    ]),
   );
 });

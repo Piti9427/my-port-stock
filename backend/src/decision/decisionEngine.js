@@ -1,7 +1,6 @@
 const { normalizeDecisionMode } = require("../common/format");
 const { isSpeculative } = require("../common/portfolio");
 
-
 const SCORE_WEIGHTS = {
   "Quick Trade": {
     fundamental: 0.2,
@@ -30,7 +29,9 @@ function capPoorModeFit(agentResult) {
     return agentResult;
   }
 
-  const modeFit = String(agentResult?.mode_fit ?? agentResult?.["Mode Fit"] ?? "").toLowerCase();
+  const modeFit = String(
+    agentResult?.mode_fit ?? agentResult?.["Mode Fit"] ?? "",
+  ).toLowerCase();
   const score = Number(agentResult.score);
 
   if (modeFit === "poor" && Number.isFinite(score) && score > 5) {
@@ -51,7 +52,8 @@ function hasInsufficientSubAgent(agentResults) {
 }
 
 function calculateConvictionScore(decisionMode, agentResults = {}) {
-  const weights = SCORE_WEIGHTS[decisionMode] || SCORE_WEIGHTS["Long-Term/Core"];
+  const weights =
+    SCORE_WEIGHTS[decisionMode] || SCORE_WEIGHTS["Long-Term/Core"];
   const normalized = {
     fundamental: capPoorModeFit(agentResults.fundamental),
     technical: capPoorModeFit(agentResults.technical),
@@ -74,7 +76,8 @@ function calculateConvictionScore(decisionMode, agentResults = {}) {
   }
 
   return {
-    score: totalWeight > 0 ? Number((weightedScore / totalWeight).toFixed(1)) : null,
+    score:
+      totalWeight > 0 ? Number((weightedScore / totalWeight).toFixed(1)) : null,
     agent_results: normalized,
   };
 }
@@ -87,7 +90,8 @@ function buildDefaultAgentResults(packet) {
       status: "INSUFFICIENT_DATA",
       score: null,
       mode_fit: "Mixed",
-      reason: "No filings, earnings, guidance, or valuation packet available in v1",
+      reason:
+        "No filings, earnings, guidance, or valuation packet available in v1",
     },
     technical: {
       status: priceGatePass ? "PARTIAL_CONTEXT" : "INSUFFICIENT_DATA",
@@ -109,14 +113,30 @@ function buildDefaultAgentResults(packet) {
 function isHeldOrRepeatTicker(packet) {
   const portfolio = packet.portfolio_context;
   const journal = packet.journal_context;
-  return Boolean(portfolio?.is_held || (portfolio && journal?.is_repeat_ticker));
+  return Boolean(
+    portfolio?.is_held || (portfolio && journal?.is_repeat_ticker),
+  );
 }
 
 function collectDecisionBlockers(packet, isHeldOrRepeat) {
   const blockers = [];
 
-  if (packet.current_price_acceptance_gate !== "pass" && packet.current_price_acceptance_gate !== "pass_manual_override") {
+  if (
+    !Number.isFinite(Number(packet.last_price)) ||
+    Number(packet.last_price) <= 0
+  ) {
+    blockers.push("Last price is missing, non-finite, or non-positive");
+  }
+
+  if (
+    packet.current_price_acceptance_gate !== "pass" &&
+    packet.current_price_acceptance_gate !== "pass_manual_override"
+  ) {
     blockers.push("Current Price Acceptance Gate failed");
+  }
+
+  if ((packet.known_conflicts?.length ?? 0) > 0) {
+    blockers.push("Quote or data-source conflict remains unresolved");
   }
 
   if (isHeldOrRepeat && packet.journal_context?.journal_checked !== true) {
@@ -124,7 +144,9 @@ function collectDecisionBlockers(packet, isHeldOrRepeat) {
   }
 
   if ((packet.journal_context?.unresolved_issues?.length ?? 0) > 0) {
-    blockers.push("Journal has unresolved risk plan or thesis verification items");
+    blockers.push(
+      "Journal has unresolved risk plan or thesis verification items",
+    );
   }
 
   return blockers;
@@ -133,9 +155,12 @@ function collectDecisionBlockers(packet, isHeldOrRepeat) {
 function hasExecutableRiskPlan(riskPlan) {
   return Boolean(
     riskPlan &&
-      Number.isFinite(Number(riskPlan.stop_loss)) &&
-      Number.isFinite(Number(riskPlan.hard_risk_thb)) &&
-      Number(riskPlan.rr_ratio) >= 2,
+    Number.isFinite(Number(riskPlan.stop_loss)) &&
+    Number(riskPlan.stop_loss) > 0 &&
+    Number.isFinite(Number(riskPlan.hard_risk_thb)) &&
+    Number(riskPlan.hard_risk_thb) > 0 &&
+    Number.isFinite(Number(riskPlan.rr_ratio)) &&
+    Number(riskPlan.rr_ratio) >= 2,
   );
 }
 
@@ -144,8 +169,12 @@ function thesisBlockerVerdict(decisionMode, blockers) {
     return null;
   }
 
-  const verdict = decisionMode === "Existing Position / Exit Review" ? "Exit Review" : "Wait";
-  return { verdict, trafficLight: verdict === "Exit Review" ? "red" : "yellow" };
+  const verdict =
+    decisionMode === "Existing Position / Exit Review" ? "Exit Review" : "Wait";
+  return {
+    verdict,
+    trafficLight: verdict === "Exit Review" ? "red" : "yellow",
+  };
 }
 
 function lowScoreVerdict(decisionMode, score) {
@@ -154,13 +183,26 @@ function lowScoreVerdict(decisionMode, score) {
   }
 
   return {
-    verdict: decisionMode === "Existing Position / Exit Review" ? "Trim" : "Avoid",
+    verdict:
+      decisionMode === "Existing Position / Exit Review" ? "Trim" : "Avoid",
     trafficLight: "red",
   };
 }
 
-function highScoreVerdict(isHeldOrRepeat, blockers, warnings, score, hasRiskPlan) {
-  if (score === null || score < 7 || blockers.length > 0 || warnings.length > 0 || !hasRiskPlan) {
+function highScoreVerdict(
+  isHeldOrRepeat,
+  blockers,
+  warnings,
+  score,
+  hasRiskPlan,
+) {
+  if (
+    score === null ||
+    score < 7 ||
+    blockers.length > 0 ||
+    warnings.length > 0 ||
+    !hasRiskPlan
+  ) {
     return null;
   }
 
@@ -242,7 +284,7 @@ function evaluateDecision(packet, options = {}) {
     }
   }
   const decisionMode = normalizeDecisionMode(rawMode);
-  
+
   const agentResults = options.agentResults || buildDefaultAgentResults(packet);
   const scoreResult = calculateConvictionScore(decisionMode, agentResults);
   const isHeldOrRepeat = isHeldOrRepeatTicker(packet);
@@ -256,15 +298,29 @@ function evaluateDecision(packet, options = {}) {
   const zvr = oracle?.daily_technicals?.zvr_ratio;
 
   // 2. Portfolio Drawdown Circuit Breaker (Hard Gate)
-  const maxDrawdown = Number(options.maxPortfolioDrawdownPct ?? packet.portfolio_context?.maxPortfolioDrawdownPct ?? 15);
-  const currentDrawdown = Number(options.currentPortfolioDrawdownPct ?? packet.portfolio_context?.currentPortfolioDrawdownPct ?? 0);
+  const maxDrawdown = Number(
+    options.maxPortfolioDrawdownPct ??
+      packet.portfolio_context?.maxPortfolioDrawdownPct ??
+      15,
+  );
+  const currentDrawdown = Number(
+    options.currentPortfolioDrawdownPct ??
+      packet.portfolio_context?.currentPortfolioDrawdownPct ??
+      0,
+  );
   if (currentDrawdown >= maxDrawdown) {
-    blockers.push(`Portfolio drawdown limit exceeded (Drawdown Circuit Breaker active: ${currentDrawdown}% >= ${maxDrawdown}%)`);
+    blockers.push(
+      `Portfolio drawdown limit exceeded (Drawdown Circuit Breaker active: ${currentDrawdown}% >= ${maxDrawdown}%)`,
+    );
   }
 
   // 3. Sector Concentration Limit (Soft Block & Warning)
   const holdingsRows = packet.portfolio_context?.holdings_rows || [];
-  const candidateSector = packet.portfolio_context?.sector || oracle?.balance_sheet?.sector || options.sector || null;
+  const candidateSector =
+    packet.portfolio_context?.sector ||
+    oracle?.balance_sheet?.sector ||
+    options.sector ||
+    null;
   if (candidateSector && holdingsRows.length > 0) {
     let totalPortfolioValue = 0;
     let sectorValue = 0;
@@ -275,9 +331,12 @@ function evaluateDecision(packet, options = {}) {
         sectorValue += rowVal;
       }
     }
-    const sectorAllocationPct = totalPortfolioValue > 0 ? (sectorValue / totalPortfolioValue) * 100 : 0;
+    const sectorAllocationPct =
+      totalPortfolioValue > 0 ? (sectorValue / totalPortfolioValue) * 100 : 0;
     if (sectorAllocationPct > 30) {
-      warnings.push(`Sector concentration limit (30%) exceeded: ${candidateSector} is ${sectorAllocationPct.toFixed(1)}% of portfolio`);
+      warnings.push(
+        `Sector concentration limit (30%) exceeded: ${candidateSector} is ${sectorAllocationPct.toFixed(1)}% of portfolio`,
+      );
       if (scoreResult.score > 5.0) {
         scoreResult.score = 5.0;
       }
@@ -295,12 +354,20 @@ function evaluateDecision(packet, options = {}) {
       const stopLoss = lastActive.stop_loss;
       const target = lastActive.target;
       const shares = lastActive.shares || 0;
-      const hardRiskThb = lastActive.shares && lastActive.entry && lastActive.stop_loss
-        ? Number((lastActive.shares * (lastActive.entry - lastActive.stop_loss)).toFixed(2))
-        : null;
-      const rr = lastActive.risk_reward || (target && entry && stopLoss && (entry - stopLoss > 0)
-        ? Number(((target - entry) / (entry - stopLoss)).toFixed(2))
-        : null);
+      const hardRiskThb =
+        lastActive.shares && lastActive.entry && lastActive.stop_loss
+          ? Number(
+              (
+                lastActive.shares *
+                (lastActive.entry - lastActive.stop_loss)
+              ).toFixed(2),
+            )
+          : null;
+      const rr =
+        lastActive.risk_reward ||
+        (target && entry && stopLoss && entry - stopLoss > 0
+          ? Number(((target - entry) / (entry - stopLoss)).toFixed(2))
+          : null);
 
       finalRiskPlan = {
         entry,
@@ -309,7 +376,7 @@ function evaluateDecision(packet, options = {}) {
         shares,
         hard_risk_thb: hardRiskThb,
         rr_ratio: rr,
-        source: "database_journal"
+        source: "database_journal",
       };
     }
   }
@@ -326,19 +393,22 @@ function evaluateDecision(packet, options = {}) {
         specValue += rowVal;
       }
     }
-    
+
     // Add the candidate position value if we are buying/adding
     let candidateVal = 0;
     if (finalRiskPlan && finalRiskPlan.shares && finalRiskPlan.entry) {
       candidateVal = finalRiskPlan.shares * finalRiskPlan.entry;
     }
-    
+
     const nextTotalValue = totalPortfolioValue + candidateVal;
     const nextSpecValue = specValue + candidateVal;
-    const specAllocationPct = nextTotalValue > 0 ? (nextSpecValue / nextTotalValue) * 100 : 0;
-    
+    const specAllocationPct =
+      nextTotalValue > 0 ? (nextSpecValue / nextTotalValue) * 100 : 0;
+
     if (specAllocationPct > 15) {
-      blockers.push(`Speculative allocation cap limit (15%) exceeded: speculative names would be ${specAllocationPct.toFixed(1)}% of portfolio`);
+      blockers.push(
+        `Speculative allocation cap limit (15%) exceeded: speculative names would be ${specAllocationPct.toFixed(1)}% of portfolio`,
+      );
     }
   }
 
@@ -348,7 +418,9 @@ function evaluateDecision(packet, options = {}) {
     finalRiskPlan.hard_risk_thb = finalRiskPlan.hard_risk_thb / 2;
     warnings.push("Macro bearish regime - individual trade risk limit halved");
   } else if (isAboveEMA200 !== true) {
-    warnings.push("Macro regime unavailable - verify index trend before sizing risk");
+    warnings.push(
+      "Macro regime unavailable - verify index trend before sizing risk",
+    );
   }
 
   // 5. Earnings Proximity Gate (Cap position size if earnings <= 5 days away)
@@ -359,7 +431,9 @@ function evaluateDecision(packet, options = {}) {
     const diffTime = nextEarningsDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     if (diffDays >= 0 && diffDays <= 5) {
-      warnings.push(`Earnings proximity gate: Next earnings in ${diffDays} days (≤ 5 days). Position size capped to ไม้ 1 (30% max).`);
+      warnings.push(
+        `Earnings proximity gate: Next earnings in ${diffDays} days (≤ 5 days). Position size capped to ไม้ 1 (30% max).`,
+      );
     }
   }
 
@@ -373,7 +447,7 @@ function evaluateDecision(packet, options = {}) {
     const riskPerShare = entry - stopLoss;
     const t1Target = entry + 2 * riskPerShare;
     if (lastPrice >= t1Target) {
-      calculatedTrailingStop = Number((lastPrice - (atr * 1.5)).toFixed(2));
+      calculatedTrailingStop = Number((lastPrice - atr * 1.5).toFixed(2));
     }
   }
 
@@ -381,7 +455,9 @@ function evaluateDecision(packet, options = {}) {
     if (piotroski === null || piotroski === undefined) {
       blockers.push("Piotroski F-Score data unavailable");
     } else if (piotroski < 7) {
-      blockers.push(`Piotroski F-Score ${piotroski}/9 is below required 7/9 for Core`);
+      blockers.push(
+        `Piotroski F-Score ${piotroski}/9 is below required 7/9 for Core`,
+      );
     }
 
     if (altman === null || altman === undefined) {
@@ -399,23 +475,44 @@ function evaluateDecision(packet, options = {}) {
     if (piotroski === null || piotroski === undefined) {
       blockers.push("Piotroski F-Score data unavailable");
     } else if (piotroski < 5) {
-      blockers.push(`Piotroski F-Score ${piotroski}/9 is below required 5/9 for Swing`);
+      blockers.push(
+        `Piotroski F-Score ${piotroski}/9 is below required 5/9 for Swing`,
+      );
     }
 
     if (zvr === null || zvr === undefined) {
       blockers.push("ZVR data unavailable");
     } else if (zvr < 1.5) {
-      blockers.push(`ZVR ratio ${zvr} is below required 1.5 for Swing Daily Confluence`);
+      blockers.push(
+        `ZVR ratio ${zvr} is below required 1.5 for Swing Daily Confluence`,
+      );
     }
   }
 
   if (hasInsufficientSubAgent(agentResults)) {
-    blockers.push("At least one sub-agent returned INSUFFICIENT_DATA (fail-closed analysis active)");
+    blockers.push(
+      "At least one sub-agent returned INSUFFICIENT_DATA (fail-closed analysis active)",
+    );
   }
 
   const riskPlanReady = hasExecutableRiskPlan(finalRiskPlan);
   if (!riskPlanReady) {
-    blockers.push("No executable stop-loss, R/R >= 1:2 (Reward >= 2x Risk), and hard THB risk plan supplied");
+    blockers.push(
+      "No executable stop-loss, R/R >= 1:2 (Reward >= 2x Risk), and hard THB risk plan supplied",
+    );
+  }
+  const maxHardRiskThb = Number(
+    options.maxHardRiskThb ?? packet.portfolio_context?.max_hard_risk_thb,
+  );
+  if (
+    finalRiskPlan &&
+    Number.isFinite(maxHardRiskThb) &&
+    maxHardRiskThb > 0 &&
+    Number(finalRiskPlan.hard_risk_thb) > maxHardRiskThb
+  ) {
+    blockers.push(
+      `Hard THB risk budget exceeded (${finalRiskPlan.hard_risk_thb} > ${maxHardRiskThb})`,
+    );
   }
 
   let { verdict: initialVerdict, trafficLight } = resolveVerdict({
@@ -427,13 +524,21 @@ function evaluateDecision(packet, options = {}) {
     hasRiskPlan: riskPlanReady,
   });
 
-  if (decisionMode === "Long-Term/Core" && altman !== null && altman !== undefined && altman < 1.81) {
+  if (
+    decisionMode === "Long-Term/Core" &&
+    altman !== null &&
+    altman !== undefined &&
+    altman < 1.81
+  ) {
     initialVerdict = isHeldOrRepeat ? "Trim" : "Avoid";
     trafficLight = "red";
   }
 
   const verdict =
-    (packet.current_price_acceptance_gate === "pass" || packet.current_price_acceptance_gate === "pass_manual_override") ? initialVerdict : "Wait";
+    packet.current_price_acceptance_gate === "pass" ||
+    packet.current_price_acceptance_gate === "pass_manual_override"
+      ? initialVerdict
+      : "Wait";
 
   const gateStatus = blockers.length === 0 ? "pass" : "fail";
   const immediateNextAction =
@@ -470,7 +575,8 @@ function evaluateDecision(packet, options = {}) {
       },
       risk_plan: finalRiskPlan || {
         status: "MISSING",
-        requirement: "Need stop-loss, R/R >= 1:2, and hard THB risk before Buy/Add",
+        requirement:
+          "Need stop-loss, R/R >= 1:2, and hard THB risk before Buy/Add",
       },
       calculated_trailing_stop: calculatedTrailingStop,
       agent_scores: scoreResult.agent_results,

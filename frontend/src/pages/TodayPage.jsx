@@ -315,7 +315,12 @@ export default function TodayPage() {
                         <span>{item.cta}</span>
                         <ArrowRight className="cta-icon" />
                       </button>
-                      <button className="today-card-expand-btn">
+                      <button
+                        type="button"
+                        className="today-card-expand-btn"
+                        aria-label={isExpanded ? `ย่อรายละเอียด ${item.title}` : `ขยายรายละเอียด ${item.title}`}
+                        aria-expanded={isExpanded}
+                      >
                         {isExpanded ? <ChevronUp className="expand-icon" /> : <ChevronDown className="expand-icon" />}
                       </button>
                     </div>

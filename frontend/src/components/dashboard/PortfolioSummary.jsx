@@ -16,7 +16,7 @@ function formatMoney(value, { signed = false } = {}) {
   return `${sign}฿${absolute}`;
 }
 
-export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', timestamp, stale = false }) {
+export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', timestamp = null, stale = false }) {
   const metrics = holdings.reduce(
     (result, holding) => {
       const shares = numberValue(holding.shares);
