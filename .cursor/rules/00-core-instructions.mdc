@@ -1,0 +1,8 @@
+---
+description: MyPortStock Multi-Agent Core Instructions Pointer
+globs: *
+---
+# Cursor Adapter
+Read root `AGENTS.md` first.
+Follow `INVESTMENT_CIO_PERSONA.md` and `ELITE_INVESTOR_SOP.md` for investment logic.
+Doc tasks -> read `docs/DOCUMENTATION_MAP.md` first.
