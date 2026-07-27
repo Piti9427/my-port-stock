@@ -36,7 +36,7 @@ CodeQL and coverage are Advisory Checks. HTTP/WebSocket load testing is Schedule
 
 ## CI topology
 
-Pull requests and pushes to `main` and `develop` run six parallel Merge-Gate jobs: `quality`, `tests`, `database`, `e2e`, `secrets`, and `dependency-security`. A non-gating aggregation job uploads `pr-check-report.json` after all six finish. Jobs use concurrency cancellation, explicit timeouts, Node 22, Python 3.12, least-privilege permissions, immutable Action SHAs, and no production credentials.
+Pull requests and pushes to `main` and `develop` run six parallel Merge-Gate jobs: `quality`, `tests`, `database`, `e2e`, `secrets`, and `dependency-security`. A non-gating aggregation job uploads `pr-check-report.json` after all six finish. Jobs use concurrency cancellation, explicit timeouts, Node 22.22, Python 3.12, least-privilege permissions, immutable Action SHAs, and no production credentials.
 
 Branch protection must require the six Merge-Gate jobs, an up-to-date branch, and resolved review conversations.
 
@@ -93,7 +93,7 @@ It records p50/p95/p99 latency, throughput, errors/non-2xx, WebSocket connection
 ## Acceptance
 
 - Deliberate format, lint, type, secret, dependency, migration, RLS, property, and E2E failures fail their owning Merge Gate.
-- A clean checkout with the root lockfile, Node 22, Python 3.12, Docker, Gitleaks, and browser prerequisites reproduces required jobs.
+- A clean checkout with the root lockfile, Node 22.22 or newer, Python 3.12, Docker, Gitleaks, and browser prerequisites reproduces required jobs.
 - Required PR wall time remains below ten minutes through parallel execution.
 - Logs and artifacts contain no credentials or sensitive runtime rows.
 - Production/linked Supabase, Yahoo, and Gemini are unreachable from deterministic jobs by construction.

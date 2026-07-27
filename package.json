@@ -2,6 +2,9 @@
   "name": "myportstock-monorepo",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.22.0"
+  },
   "workspaces": [
     "backend",
     "frontend"
@@ -10,7 +13,7 @@
     "start": "npm run start --workspace=backend",
     "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
     "dev:ui": "concurrently \"npm run dev:ui --workspace=backend\" \"npm run dev:ui --workspace=frontend\"",
-    "serve:e2e": "concurrently \"MPS_TEST_MODE=1 MPS_TEST_SCENARIO=matrix NODE_ENV=test DEV_UI_AUTH_BYPASS=true PORT=8180 node backend/server.js\" \"VITE_DEV_AUTH_BYPASS=true MPS_BACKEND_URL=http://127.0.0.1:8180 npm run dev --workspace=frontend -- --port 4173 --strictPort\"",
+    "serve:e2e": "concurrently \"MPS_TEST_MODE=1 MPS_TEST_SCENARIO=matrix NODE_ENV=test DEV_UI_AUTH_BYPASS=true PORT=48180 node backend/server.js\" \"VITE_DEV_AUTH_BYPASS=true MPS_BACKEND_URL=http://127.0.0.1:48180 npm run dev --workspace=frontend -- --force --port 43173 --strictPort\"",
     "test": "npm run test --workspaces --if-present",
     "test:unit": "npm run test --workspaces --if-present",
     "test:e2e": "npx playwright test",
@@ -60,5 +63,8 @@
     "fast-check": "4.9.0",
     "supabase": "2.109.1",
     "typescript": "5.9.3"
+  },
+  "overrides": {
+    "@hono/node-server": "^2.0.5"
   }
 }

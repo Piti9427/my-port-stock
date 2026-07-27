@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router';
 import { beforeEach, expect, test, vi } from 'vitest';
 import AnalyticsPage from '../src/pages/AnalyticsPage.jsx';
 

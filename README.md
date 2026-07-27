@@ -12,7 +12,7 @@ gate and final user or broker quote confirmation when required.
 npm ci
 ```
 
-Required assurance prerequisites: Node 22, Python 3.12, Docker Desktop, Gitleaks, and Chromium installed through Playwright.
+Required assurance prerequisites: Node 22.22 or newer, Python 3.12, Docker Desktop, Gitleaks, and Chromium installed through Playwright.
 
 ```bash
 python3 -m pip install --requirement requirements-ci.txt

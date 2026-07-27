@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { TrendingUp, Clock, ArrowRight, ChevronDown, ChevronUp, ShieldAlert, HelpCircle, Activity, CheckCircle, X } from 'lucide-react';
 import { useAuth } from '../auth/clerkAdapter';

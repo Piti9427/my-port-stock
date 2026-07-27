@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { useAuth } from '../auth/clerkAdapter';
 import { AnalyticsFilters } from '../components/analytics/AnalyticsFilters.jsx';
 import { buildAnalyticsStats, formatMoney } from '../components/analytics/analyticsCalculations.js';

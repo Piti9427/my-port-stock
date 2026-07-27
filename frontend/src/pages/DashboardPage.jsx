@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../auth/clerkAdapter';
 import { AIChatCard } from '../components/dashboard/AIChatCard.jsx';
 import { HoldingsTable } from '../components/dashboard/HoldingsTable.jsx';

@@ -24,7 +24,7 @@ export default defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [['html', { outputFolder: '../artifacts/reports/playwright' }]],
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: 'http://127.0.0.1:43173',
     trace: 'retain-on-failure',
   },
 
@@ -38,7 +38,7 @@ export default defineConfig({
   webServer: {
     command: 'npm run serve:e2e',
     cwd: '..',
-    url: 'http://127.0.0.1:4173',
+    url: 'http://127.0.0.1:43173',
     reuseExistingServer: false,
     timeout: 30000,
   },
