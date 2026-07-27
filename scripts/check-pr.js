@@ -67,7 +67,14 @@ const results = [];
 const suiteStartedAt = Date.now();
 let failed = false;
 
-for (const [id, name, command] of steps) {
+const totalSteps = steps.length;
+for (let i = 0; i < totalSteps; i++) {
+  const [id, name, command] = steps[i];
+  console.log(`\n▶ [Gate ${i + 1}/${totalSteps}] ${name} (${command})`);
+  console.log(
+    "--------------------------------------------------------------------------------",
+  );
+
   const startedAt = Date.now();
   const result = run(command);
   const durationMs = Date.now() - startedAt;
@@ -160,13 +167,14 @@ if (failed) {
     console.log(
       "--------------------------------------------------------------------------------",
     );
-    console.log(" ❌ FAILURE DETAILS & ACTIONABLE FIX STEPS");
+    console.log(" ❌ FAILURE DETAILS & DEBUGGING GUIDE");
     console.log(
       "--------------------------------------------------------------------------------",
     );
     console.log(` Failed Gate   : ${failedCheck.name} (${failedCheck.id})`);
     console.log(` Executed Cmd  : ${failedCheck.command}`);
     console.log(` Failure Status: ${failedCheck.failureSummary}`);
+    console.log(` Debug Command : ${failedCheck.command}`);
     if (actionHints[failedCheck.id]) {
       console.log(` Suggested Fix : ${actionHints[failedCheck.id]}`);
     }
