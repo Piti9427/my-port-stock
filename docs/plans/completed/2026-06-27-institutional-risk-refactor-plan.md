@@ -1,5 +1,5 @@
 ---
-status: Draft
+status: Completed
 audience: Human Developer & AI Agent
 associated_adr: docs/adr/0004-unbiased-institutional-quality-gates.md
 primary_tests: "npm test"

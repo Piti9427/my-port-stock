@@ -1,3 +1,9 @@
+---
+status: Archived
+updated_at: "2026-07-27"
+owner: AI Agent / Developer
+---
+
 # Command Center Implementation Todo
 
 ## Task 1: Refactor Backend API

@@ -1,3 +1,9 @@
+---
+status: Completed
+updated_at: "2026-07-27"
+owner: AI Agent / Developer
+---
+
 # Roadmap: UI/UX Improvement with UI Skills
 
 This roadmap outlines how we will systematically apply industry-standard design engineering skills from the **UI Skills Library** to upgrade the visual quality, interactivity, accessibility, and performance of the **MyPortStock** dashboard.

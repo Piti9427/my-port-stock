@@ -1,3 +1,9 @@
+---
+status: Archived
+updated_at: "2026-07-27"
+owner: AI Agent / Developer
+---
+
 # Project Status Summary & Next Steps (14 June 2026)
 
 ## 🎯 สิ่งที่ทำเสร็จแล้ว (Completed)

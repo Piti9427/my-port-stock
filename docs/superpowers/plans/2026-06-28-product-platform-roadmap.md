@@ -1,3 +1,9 @@
+---
+status: Pending
+updated_at: "2026-07-27"
+owner: AI Agent / Developer
+---
+
 # MyPortStock Product Platform Delivery Roadmap
 
 > **For agentic workers:** This file coordinates vertical slices. Execute only the currently approved detailed plan with `superpowers:executing-plans`; do not implement later slices directly from this roadmap.

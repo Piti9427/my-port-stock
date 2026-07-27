@@ -1,3 +1,9 @@
+---
+status: Pending
+updated_at: "2026-07-27"
+owner: AI Agent / Developer
+---
+
 # Implementation Plan: Close Test Coverage Gaps
 
 ## Goal

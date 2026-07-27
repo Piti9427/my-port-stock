@@ -1,5 +1,5 @@
 ---
-status: Active Development
+status: Completed
 audience: Human Developer & AI Agent
 associated_adr: ../adr/0006-supabase-migrations-source-of-truth.md
 primary_tests: npm run check:pr

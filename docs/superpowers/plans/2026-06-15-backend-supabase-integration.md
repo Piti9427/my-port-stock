@@ -1,3 +1,9 @@
+---
+status: Completed
+updated_at: "2026-07-27"
+owner: AI Agent / Developer
+---
+
 # Backend & Supabase Integration Plan
 **Date:** 2026-06-15
 **Goal:** Implement fully robust, secure, and automated backend data infrastructure as defined in `ADR-0001: Supabase Is Runtime Source Of Truth` and the `/grill-me` decisions.

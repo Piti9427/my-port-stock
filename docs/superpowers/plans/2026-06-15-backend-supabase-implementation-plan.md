@@ -1,3 +1,9 @@
+---
+status: Completed
+updated_at: "2026-07-27"
+owner: AI Agent / Developer
+---
+
 # Backend & Supabase Implementation Plan
 **Date:** 2026-06-15
 **Source Spec:** `docs/superpowers/plans/2026-06-15-backend-supabase-integration.md`
