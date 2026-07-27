@@ -36,6 +36,7 @@
     "check:secrets": "gitleaks git --redact --config=.gitleaks.toml .",
     "check:secrets:staged": "gitleaks git --redact --config=.gitleaks.toml --staged .",
     "check:dependencies": "npm audit --omit=dev --audit-level=high",
+    "check:docs": "node scripts/check-docs.js",
     "check:load": "node scripts/load-assurance.js",
     "check:pr": "node scripts/check-pr.js",
     "check:frontend-standard": "npm run check:frontend-standard --workspaces --if-present",

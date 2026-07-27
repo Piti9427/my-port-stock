@@ -12,6 +12,7 @@ const reportPath = path.join(
 );
 const steps = [
   ["format", "Format", "npm run check:format"],
+  ["docs", "Markdown & documentation structure", "npm run check:docs"],
   ["lint", "Lint", "npm run check:lint"],
   ["typecheck", "Full-repo JavaScript typecheck", "npm run check:type"],
   ["build", "Production build", "npm run check:build"],

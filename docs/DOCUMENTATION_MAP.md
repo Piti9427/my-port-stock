@@ -40,10 +40,12 @@ This map is designed for AI agents to discover, evaluate, and navigate the markd
 ### 4. Code & Visual Style Guides
 *   **`docs/architecture/DESIGN.md`** (Size: Medium)
     *   *Intent:* Defines the dark terminal UI styling guidelines, colors, font rules, spacing, and CSS constraints.
-*   **`docs/FILE_ORGANIZATION.md`** (Size: Medium)
-    *   *Intent:* Standardizes directory structure, generated artifacts, scratch files, and template notes naming.
-*   **`docs/plans/`**, **`docs/specs/`**, **`docs/architecture/`**, **`docs/guidelines/`**
-    *   *Intent:* Subdivided categories for project plans, feature specs, system architecture, and developer guidelines.
+*   **`docs/guidelines/TOOL_INTEGRATION_MAP.md`** (Size: Low)
+    *   *Intent:* Central registry listing all multi-agent tool directories (`.agents`, `.claude`, `.codex`, `.cursor`, `.gemini`, `.superpowers`), git tracking status, and SOT links.
+*   **`docs/plans/completed/`**, **`docs/plans/pending/`**, **`docs/specs/`**, **`docs/architecture/`**, **`docs/guidelines/`**
+    *   *Intent:* Subdivided categories for completed & pending project plans, feature specs, system architecture, and developer guidelines.
+
+
 
 ---
 

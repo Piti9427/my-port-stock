@@ -28,17 +28,27 @@
 | `clerk-isolation`        | Clerk user data isolation and Supabase database RLS architecture                 | `docs/adr/0002-clerk-user-isolation-rls.md`                         |
 | `autonomous-search`      | Sub-agent contextual search and hybrid oracle contract architecture              | `docs/adr/0003-subagent-autonomous-search.md`                       |
 | `cls-vrt-deep-dive`      | Celestica and Vertiv 7-Dimension SOP deep dive                                   | `notes/2026-07-07-cls-vrt-deep-dive.md`                             |
-| `enterprise-qa-pipeline` | Merge Gates, Advisory Checks, Scheduled Assurance, QA/security pipeline          | `docs/plans/2026-07-26-enterprise-qa-security-pipeline-plan.md`     |
-| `test-coverage-gap-plan` | 3-Phase Test Coverage Gap Implementation Plan (+31 tests)                         | `docs/plans/2026-07-27-test-coverage-gap-plan.md`                  |
+| `enterprise-qa-pipeline` | Merge Gates, Advisory Checks, Scheduled Assurance, QA/security pipeline          | `docs/plans/completed/2026-07-26-enterprise-qa-security-pipeline-plan.md` |
+| `test-coverage-gap-plan` | 3-Phase Test Coverage Gap Implementation Plan (+31 tests)                         | `docs/plans/pending/2026-07-27-test-coverage-gap-plan.md`          |
+| `tool-integration-map`  | Multi-Agent Tool Integration Architecture & Directory Registry                   | `docs/guidelines/TOOL_INTEGRATION_MAP.md`                           |
 
 ## Durable Entries
 
+### 2026-07-27 - Multi-Agent Tool Integration & Single Source of Truth Architecture
+
+- Keywords: `tool-integration-map`, `multi-agent-architecture`, `cursor-rules`, `thin-adapter`, `hub-and-spoke`
+- Decision: Implemented Hub & Spoke multi-agent architecture. Root `AGENTS.md` is SOT; `.agents/`, `.claude/`, `.codex/`, `.cursor/rules/` act as thin adapter pointers. Created central registry `docs/guidelines/TOOL_INTEGRATION_MAP.md` and added CI verification.
+- Action: Created [TOOL_INTEGRATION_MAP.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/guidelines/TOOL_INTEGRATION_MAP.md) and `.cursor/rules/00-core-instructions.mdc`.
+- Source: `docs/guidelines/TOOL_INTEGRATION_MAP.md`
+
 ### 2026-07-27 - Test Coverage Gap Implementation Plan
+
 
 - Keywords: `test-coverage-gap-plan`, `pgtap`, `rls-isolation`, `landing-page-test`, `ui-primitives-contract`
 - Decision: Saved 3-Phase actionable test coverage plan (+31 tests across DB, Frontend, Backend). Phase 1 (DB RLS & CHECK constraints), Phase 2 (LandingPage & 7 shadcn UI primitives), Phase 3 (Backend helpers & routes).
-- Action: Created [2026-07-27-test-coverage-gap-plan.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/plans/2026-07-27-test-coverage-gap-plan.md).
-- Source: `docs/plans/2026-07-27-test-coverage-gap-plan.md`
+- Action: Created [2026-07-27-test-coverage-gap-plan.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/plans/pending/2026-07-27-test-coverage-gap-plan.md).
+- Source: `docs/plans/pending/2026-07-27-test-coverage-gap-plan.md`
+
 
 
 ### 2026-06-28 - Gate 0 Backend Hardening Local Implementation
@@ -47,7 +57,7 @@
 - Decision: Gate 0 Tasks 0–7 are implemented on `feature/backend-production-hardening`; the local exit gate is accepted for continued slice development, while real one-hop OCI/nginx and confirmed non-production Supabase verification are explicitly deferred and still block production deployment.
 - Evidence: 79 backend tests and 130 frontend tests pass; production build succeeds; lint has zero errors; local production smoke returns health `200`, API JSON `404`, SPA `200`, security/rate headers, anonymous WebSocket `401`, and graceful shutdown exit `0`.
 - Action: Proceed with the reviewed Slice 1 plan; before the first OCI deployment, confirm the linked Supabase project, run migration preflight/advisors and RLS verification, then verify nginx client IP/header behavior.
-- Source: `docs/superpowers/plans/2026-06-28-backend-production-hardening.md`, `supabase/migrations/20260628160000_backend_integrity_constraints.sql`
+- Source: `docs/plans/completed/2026-06-28-backend-production-hardening.md`, `supabase/migrations/20260628160000_backend_integrity_constraints.sql`
 
 ### 2026-06-27 - Clerk User Isolation and RLS in Supabase (ADR 0002)
 
@@ -67,8 +77,8 @@
 
 - Keywords: `skills-workflow`, `agent-skills`, `planning-workflow`, `tdd`, `supabase`, `qa`
 - Decision: Formulated a project-wide developer workflow by mapping and integrating existing Agent Skills (Supabase, TDD, React best practices, security, QA) with the MyPortStock technology stack.
-- Action: Created the canonical developer guide at [PROJECT_SKILLS_WORKFLOW.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/PROJECT_SKILLS_WORKFLOW.md).
-- Source: [PROJECT_SKILLS_WORKFLOW.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/PROJECT_SKILLS_WORKFLOW.md)
+- Action: Created the canonical developer guide at [PROJECT_SKILLS_WORKFLOW.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/guidelines/PROJECT_SKILLS_WORKFLOW.md).
+- Source: [PROJECT_SKILLS_WORKFLOW.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/guidelines/PROJECT_SKILLS_WORKFLOW.md)
 
 ### 2026-06-21 - UX/UI Refactor Manual Gate Scope
 
@@ -89,7 +99,7 @@
 - Keywords: `supabase-runtime`, `per-user-data`, `task-plan`, `markdown-redaction`, `rls`
 - Decision: Finish Supabase runtime migration through an additive task plan, not direct destructive schema application. Runtime rows must stay per Clerk `user_id`; second user starts empty.
 - Action: Created implementation task plan for additive migration, RLS/user isolation tests, frontend empty states, live verification, and markdown redaction.
-- Source: `docs/superpowers/plans/2026-06-17-per-user-markdown-runtime-data.md`
+- Source: `docs/plans/completed/2026-06-17-per-user-markdown-runtime-data.md`
 
 ### 2026-06-17 - Owner-Only Supabase Markdown Import
 
@@ -131,7 +141,7 @@
 - Keywords: `impeccable-critique`, `ui-remediation`, `dark-terminal`, `anti-slop`, `frontend-ux`
 - Decision: Treat all existing Impeccable critique files as one remediation backlog; fix trust/data UX first, power-user efficiency second, and visual anti-slop cleanup third.
 - Action: Saved implementation plan with audit matrix, current detector baseline, route-by-route tasks, regression tests, and browser verification gates.
-- Source: `docs/superpowers/plans/2026-06-15-impeccable-critique-ui-remediation.md`
+- Source: `docs/plans/completed/2026-06-15-impeccable-critique-ui-remediation.md`
 
 ### 2026-06-15 - Supabase Runtime Source Of Truth
 
@@ -251,7 +261,7 @@
 - Keywords: `impeccable-critique`, `ui-remediation`, `dark-terminal`, `anti-slop`, `frontend-ux`
 - Decision: Treat all existing Impeccable critique files as one remediation backlog; fix trust/data UX first, power-user efficiency second, and visual anti-slop cleanup third.
 - Action: Saved implementation plan with audit matrix, current detector baseline, route-by-route tasks, regression tests, and browser verification gates.
-- Source: `docs/superpowers/plans/2026-06-15-impeccable-critique-ui-remediation.md`
+- Source: `docs/plans/completed/2026-06-15-impeccable-critique-ui-remediation.md`
 
 ### 2026-06-15 - Supabase Runtime Source Of Truth
 
@@ -265,7 +275,7 @@
 - Keywords: `database-schema`, `soft-delete`, `rls`, `partial-unique-index`, `event-sourced-trigger`
 - Decision: Drop redundant `portfolio` table; utilize `is_deleted` column for soft deletions; create partial unique indexes; enforce Clerk JWT-based RLS; implement event-sourced `recalculate_holdings` trigger to eliminate float drift.
 - Action: Updated `backend/supabase_schema.sql` and `supabase/schema.sql` with the new schema, policies, triggers, and created verification script `backend/tests/verify_schema_rls.sql`. Updated `backend/src/db.js` and tests.
-- Source: `docs/superpowers/plans/2026-06-15-backend-supabase-implementation-plan.md`
+- Source: `docs/plans/completed/2026-06-15-backend-supabase-implementation-plan.md`
 
 ### 2026-06-16 - Deep 7-Dimension SOP & SWOT Stock Analysis Design
 
@@ -432,8 +442,8 @@
 
 - Keywords: `ux-ui-refactor`, `design-taste-frontend`, `impeccable`, `baseline-ui`, `oklch-skill`, `web-quality-audit`
 - Decision: Completed the visual design polish of MyPortStock. Added text-wrap balance rules for alerts, unified font-mono layouts, explicitly linked form elements, standard WAI-ARIA roles, and refactored TableSkeleton to use real HTML tables to eliminate layout shift (CLS).
-- Action: Placed visual polish plan at [ux_ui_polish_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/ux_ui_polish_plan.md) and skills roadmap at [skills_ui_improvement_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/skills_ui_improvement_plan.md).
-- Source: [ux_ui_polish_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/ux_ui_polish_plan.md), [skills_ui_improvement_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/skills_ui_improvement_plan.md)
+- Action: Placed visual polish plan at [ux_ui_polish_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/plans/completed/2026-06-27-ux-ui-polish-plan.md) and skills roadmap at [skills_ui_improvement_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/plans/completed/2026-06-27-skills-ui-improvement-plan.md).
+- Source: [ux_ui_polish_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/plans/completed/2026-06-27-ux-ui-polish-plan.md), [skills_ui_improvement_plan.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/plans/completed/2026-06-27-skills-ui-improvement-plan.md)
 
 ### 2026-06-28 - Full Page Layout Alignment, OKLCH Color Conversion & Watchlist API Wiring
 
@@ -454,7 +464,7 @@
 - Keywords: `product-platform`, `decision-hub`, `progressive-disclosure`, `vertical-slices`, `backend-hardening`
 - Decision: Deliver the approved multi-user Personal Investment OS through just-in-time vertical plans. Gate 0 backend hardening precedes per-user preferences, Today/Portfolio Risk, PWA/Inbox, Analyze/Plan, Discover, and Journal Learning.
 - Action: Added the master roadmap and detailed Gate 0 plan; later slice plans are written only after the preceding repository state is verified.
-- Source: `docs/superpowers/specs/2026-06-28-myportstock-product-platform-design.md`, `docs/superpowers/plans/2026-06-28-product-platform-roadmap.md`, `docs/superpowers/plans/2026-06-28-backend-production-hardening.md`
+- Source: `docs/superpowers/specs/2026-06-28-myportstock-product-platform-design.md`, `docs/plans/pending/2026-06-28-product-platform-roadmap.md`, `docs/plans/completed/2026-06-28-backend-production-hardening.md`
 
 ### 2026-07-03 - Per-User Onboarding, Visual Themes & RLS Constraints
 
