@@ -779,15 +779,3 @@ p,
 .command-trade-warning {
   text-wrap: pretty;
 }
-
-@media (max-width: 900px) {
-  .command-center-page.command-workspace .command-progressive-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.command-chat-thread {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
