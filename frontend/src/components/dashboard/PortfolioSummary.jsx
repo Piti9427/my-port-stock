@@ -50,38 +50,38 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
   const isDrawdownBreached = drawdownPct >= 15;
 
   return (
-    <section className="portfolio-summary" role="region" aria-label="Portfolio summary">
+    <section className="relative p-6 border border-[#262626] hover:border-[#38383a] rounded-2xl bg-[#121212] flex flex-col gap-6 transition-all duration-200 shadow-sm" role="region" aria-label="Portfolio summary">
       {isDrawdownBreached && (
-        <div className="drawdown-banner">
+        <div className="px-4 py-2.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-400 font-semibold text-xs animate-pulse">
           <span>🛑 DRAWDOWN LIMIT HIT — New buys suspended ({drawdownPct.toFixed(1)}% / 15%)</span>
         </div>
       )}
-      <div className="portfolio-summary-primary">
-        <span className="portfolio-summary-label">มูลค่ารวมพอร์ต</span>
-        <strong className="portfolio-summary-value">{formatMoney(metrics.totalValue)}</strong>
+      <div className="flex flex-col gap-1">
+        <span className="text-[0.72rem] font-semibold text-[#a1a1aa] uppercase tracking-wider">มูลค่ารวมพอร์ต</span>
+        <strong className="portfolio-summary-value text-[2.2rem] font-bold font-mono text-[#ededed] leading-none tracking-tight tabular-nums">{formatMoney(metrics.totalValue)}</strong>
         <DataStamp source={source} timestamp={timestamp} stale={stale} />
       </div>
-      <dl className="portfolio-summary-metrics">
+      <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-5 border-t border-[#262626]">
         <div>
-          <dt>กำไร/ขาดทุนรายวัน</dt>
-          <dd className={metrics.dayPl >= 0 ? 'semantic-positive' : 'semantic-negative'}>
+          <dt className="text-[0.72rem] font-medium text-[#a1a1aa] mb-1">กำไร/ขาดทุนรายวัน</dt>
+          <dd className={`text-base font-semibold font-mono tabular-nums flex items-center gap-1.5 ${metrics.dayPl >= 0 ? 'semantic-positive text-emerald-400' : 'semantic-negative text-rose-400'}`}>
             {formatMoney(metrics.dayPl, { signed: true })}
-            <span>{dayPlPct == null ? '—' : `${dayPlPct >= 0 ? '+' : ''}${dayPlPct.toFixed(2)}%`}</span>
+            <span className="text-xs">{dayPlPct == null ? '—' : `${dayPlPct >= 0 ? '+' : ''}${dayPlPct.toFixed(2)}%`}</span>
           </dd>
         </div>
         <div>
-          <dt>กำไร/ขาดทุนรวม</dt>
-          <dd className={totalPl >= 0 ? 'semantic-positive' : 'semantic-negative'}>{formatMoney(totalPl, { signed: true })}</dd>
+          <dt className="text-[0.72rem] font-medium text-[#a1a1aa] mb-1">กำไร/ขาดทุนรวม</dt>
+          <dd className={`text-base font-semibold font-mono tabular-nums ${totalPl >= 0 ? 'semantic-positive text-emerald-400' : 'semantic-negative text-rose-400'}`}>{formatMoney(totalPl, { signed: true })}</dd>
         </div>
         <div>
-          <dt>Portfolio Beta</dt>
-          <dd style={{ color: portfolioBeta > 1.2 ? 'var(--fin-loss)' : portfolioBeta < 0.8 ? 'var(--accent-primary)' : 'var(--fin-profit)' }}>
+          <dt className="text-[0.72rem] font-medium text-[#a1a1aa] mb-1">Portfolio Beta</dt>
+          <dd className={`text-base font-semibold font-mono tabular-nums ${portfolioBeta > 1.2 ? 'text-rose-400' : portfolioBeta < 0.8 ? 'text-blue-400' : 'text-emerald-400'}`}>
             {portfolioBeta.toFixed(2)}
           </dd>
         </div>
         <div>
-          <dt>จำนวนสถานะ</dt>
-          <dd>{holdings.length}</dd>
+          <dt className="text-[0.72rem] font-medium text-[#a1a1aa] mb-1">จำนวนสถานะ</dt>
+          <dd className="text-base font-semibold font-mono tabular-nums text-[#ededed]">{holdings.length}</dd>
         </div>
       </dl>
     </section>
