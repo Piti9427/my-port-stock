@@ -1,3 +1,9 @@
+---
+status: Pending
+updated_at: "2026-07-28"
+owner: AI Agent / Developer
+---
+
 # Implementation Plan: E2E Playwright Networkidle Remediation
 
 **Date:** July 28, 2026  

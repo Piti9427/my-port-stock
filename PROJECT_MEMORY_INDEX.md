@@ -29,11 +29,19 @@
 | `autonomous-search`      | Sub-agent contextual search and hybrid oracle contract architecture              | `docs/adr/0003-subagent-autonomous-search.md`                             |
 | `cls-vrt-deep-dive`      | Celestica and Vertiv 7-Dimension SOP deep dive                                   | `notes/2026-07-07-cls-vrt-deep-dive.md`                                   |
 | `enterprise-qa-pipeline` | Merge Gates, Advisory Checks, Scheduled Assurance, QA/security pipeline          | `docs/plans/completed/2026-07-26-enterprise-qa-security-pipeline-plan.md` |
+| `agent-domain-boundary`  | Separate engineering verification from investment decision rules                | `AGENTS.md`                                                              |
 | `test-coverage-gap-plan` | 3-Phase Test Coverage Gap Implementation Plan (+31 tests)                        | `docs/plans/pending/2026-07-27-test-coverage-gap-plan.md`                 |
 | `e2e-networkidle-fix-plan` | Remediation Plan for Playwright E2E Gate 10 Networkidle Timeout Failure | `docs/plans/pending/2026-07-28-e2e-networkidle-fix-plan.md` |
 | `tool-integration-map`   | Multi-Agent Tool Integration Architecture & Directory Registry                   | `docs/guidelines/TOOL_INTEGRATION_MAP.md`                                 |
 
 ## Durable Entries
+
+### 2026-07-28 - Engineering and Investment Agent Domain Boundary
+
+- Keywords: `agent-domain-boundary`, `engineering-change-contract`, `check-pr`, `context7`
+- Decision: Separate engineering rules from investment and trade-entry rules. Every repository mutation requires a fresh, non-concurrent `npm run check:pr`; Context7 supports current library guidance without overriding pinned repository truth.
+- Action: Updated `AGENTS.md` with explicit General, Engineering, and Investment sections plus lower-cost agent verification limits.
+- Source: `AGENTS.md`
 
 ### 2026-07-28 - Playwright E2E Gate 10 Networkidle Remediation Plan
 

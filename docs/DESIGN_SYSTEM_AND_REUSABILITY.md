@@ -1,114 +1,104 @@
-# MyPortStock System Design & Reusable Component Specification
+# MyPortStock Design System and Reusable Component Specification
 
-> **Mandatory Agent Instructions:** Every AI agent working on frontend code, UI components, styles, or page layouts MUST read and strictly adhere to this document. Zero code duplication, zero hardcoded hex styles, and 100% component reusability are strictly enforced.
+This is the canonical frontend styling contract. Preserve the existing dark-first, high-legibility financial dashboard language; changes to the styling architecture are not permission to redesign the product.
 
----
+## 1. Styling source of truth
 
-## 1. Core Reusability Mandates (Anti-Duplication Standard)
+CSS custom properties in `frontend/src/styles/tokens.css` own all colors. Tailwind `v3.4` maps those values to semantic utilities in `frontend/tailwind.config.js`.
 
-### Rule 1: DRY (Don't Repeat Yourself)
-- If a UI pattern, layout snippet, table format, card, or modal is used in **2 or more places**, it MUST be extracted into a shared component under `frontend/src/components/ui/` or `frontend/src/components/shared/`.
-- Never copy-paste JSX code blocks between pages or feature modules.
+Use semantic classes:
 
-### Rule 2: Single Source of Truth for Design Tokens
-- **Colors & Surfaces:** Always use Tailwind theme tokens (`bg-surface`, `bg-background`, `text-foreground`, `text-muted`, `border-border`).
-- **Hardcoded Colors Forbidden:** Dynamic hex strings (`#1e293b`, `#000`) or arbitrary inline styles (`style={{ color: '#fff' }}`) are strictly forbidden.
-- **Financial Signals:** Always use financial data classes (`text-fin-buy`, `text-fin-sell`, `text-fin-warning` or `--fin-profit`, `--fin-loss`, `--fin-warning`).
-
-### Rule 3: Variant-Driven Styling with `cva()`
-- Stateful components (e.g. `StatusBadge`, `MetricCard`, `Button`) MUST use `class-variance-authority` (`cva`) inside the shared component definition to encapsulate variants (`success`, `danger`, `warning`, `info`, `buy`, `sell`).
-- Pages must pass clean props (e.g., `<StatusBadge variant="buy" />`) instead of duplicating inline conditional class logic.
-
-### Rule 4: Centralized Barrel Imports
-- Always import shared UI components from `@/components/ui`:
-  ```javascript
-  import { MetricCard, StatusBadge, Button, Input, DataTable } from '@/components/ui';
-  ```
-- Always import shared formatters and utilities from `@/lib`:
-  ```javascript
-  import { cn, formatCurrency, formatPercent } from '@/lib';
-  ```
-
----
-
-## 2. Design System Token Specifications
-
-### Typography System
-- **Primary UI Text:** `Plus Jakarta Sans` (English) / `IBM Plex Sans Thai` (Thai)
-  - Used for headings, labels, body text, buttons, navigation, and badges.
-- **Financial & Monospace Data:** `JetBrains Mono`
-  - Used for prices (`$142.50`, `฿5,200`), percentages (`+3.45%`), tickers (`NVDA`, `BDMS.BK`), Risk/Reward ratios (`1:2.5`), Piotroski scores (`7/9`), and technical readouts.
-
-### Color Tokens & Financial Signals
-
-| Token Name | Hex / Value | Usage | Tailwind Class |
-|---|---|---|---|
-| **Dark Void** | `#0a0a0a` | Main App Background | `bg-background` / `bg-void` |
-| **Shell** | `#111111` | Sidebar / App Frame | `bg-shell` |
-| **Surface / Panel** | `#171717` | Cards, Tables, Drawers | `bg-surface` / `bg-card` |
-| **Surface Hover** | `#1f1f1f` | Hover state for panels | `bg-accent` / `hover:bg-surface-hover` |
-| **Primary Text** | `#ededed` | Headings & Body | `text-foreground` / `text-primary` |
-| **Secondary Text** | `#a3a3a3` | Labels & Subtitles | `text-secondary` |
-| **Muted Text** | `#737373` | Metadata & Captions | `text-muted` |
-| **Profit / Buy** | `#34d399` / `#10b981` | Positive P&L, Buy Signal | `text-fin-buy` / `text-emerald-400` |
-| **Loss / Sell** | `#f87171` | Negative P&L, Sell/Trim Signal | `text-fin-sell` / `text-rose-400` |
-| **Warning / Wait** | `#facc15` | Hold/Wait Status, Warnings | `text-fin-warning` / `text-amber-400` |
-| **Bias / Accent** | `#60a5fa` | Info badges, Active tabs | `text-accent-primary` / `text-blue-400` |
-
-### Geometry & Borders
-- **Borders:** 1px flat solid borders (`--border`: `#262626`, `--border-hover`: `#333333`). Zero heavy drop shadows.
-- **Border Radii:**
-  - `sm`: `8px` (Badges, Chips, Small Buttons)
-  - `md`: `12px` (Cards, Inputs, Modals)
-  - `lg`: `16px` (Main Layout Containers)
-
----
-
-## 3. Component Architecture Directory
-
-```text
-frontend/src/
-├── components/
-│   ├── ui/                    # Base UI Primitives & Financial Shared Components
-│   │   ├── index.js           # Central Barrel Export
-│   │   ├── button.jsx
-│   │   ├── input.jsx
-│   │   ├── card.jsx
-│   │   ├── badge.jsx
-│   │   ├── dialog.jsx
-│   │   ├── progress.jsx
-│   │   ├── alert.jsx
-│   │   ├── MetricCard.jsx
-│   │   ├── StatusBadge.jsx
-│   │   ├── DataTable.jsx
-│   │   ├── DataStamp.jsx
-│   │   ├── Drawer.jsx
-│   │   ├── EmptyState.jsx
-│   │   ├── Skeleton.jsx
-│   │   ├── Toast.jsx
-│   │   └── Tooltip.jsx
-│   ├── dashboard/             # Dashboard Domain Slices
-│   ├── command-center/        # Command Center Domain Slices
-│   ├── analytics/             # Analytics Domain Slices
-│   ├── journal/               # Journal Domain Slices
-│   ├── risk/                  # Risk Domain Slices
-│   └── config/                # Config Domain Slices
-├── lib/
-│   ├── index.js               # Central Utility Barrel Export
-│   ├── utils.js               # cn() helper
-│   ├── format.js              # formatCurrency, formatPercent, currencySymbol
-│   ├── api.js                 # API Client
-│   └── supabase.js            # Supabase Client
+```jsx
+<section className="border border-border bg-panel text-foreground">
+  <p className="text-text-secondary">Updated recently</p>
+  <strong className="text-fin-profit">+3.4%</strong>
+</section>
 ```
 
----
+Do not use:
 
-## 4. Agent Self-Check Verification Gate
+- raw hex, `rgb`, `rgba`, or `0x` colors in JSX
+- Tailwind palette colors such as `text-zinc-*`, `bg-emerald-*`, or `border-red-*`
+- `dark:` variants for base theme colors
+- dynamically constructed Tailwind strings
+- static inline styles
 
-Before completing any frontend or UI task, every agent MUST verify:
-- [ ] No duplicated JSX snippets across pages.
-- [ ] No hardcoded hex colors or inline pixel styles.
-- [ ] Component imported cleanly via `@/components/ui` or `@/lib`.
-- [ ] Financial metrics formatted using `formatCurrency()` / `formatPercent()`.
-- [ ] `npm test --workspace=frontend` passes 100%.
-- [ ] `node scripts/check-pr.js` passes all gates.
+## 2. Semantic token groups
+
+| Group           | Tailwind examples                                                                | Purpose                         |
+| --------------- | -------------------------------------------------------------------------------- | ------------------------------- |
+| App surfaces    | `bg-background`, `bg-shell`, `bg-panel`, `bg-surface`                            | Page, shell, cards, overlays    |
+| Text            | `text-foreground`, `text-text-primary`, `text-text-secondary`, `text-text-muted` | Content hierarchy               |
+| Borders/focus   | `border-border`, `border-border-subtle`, `ring-ring`                             | Boundaries and keyboard focus   |
+| Financial state | `text-fin-profit`, `text-fin-loss`, `text-fin-warning`, `text-fin-info`          | Profit, loss, wait, information |
+| Agent data      | `text-data-agent-cio`, `bg-data-agent-risk`                                      | Data visualization identity     |
+
+Both light and dark values must satisfy contrast requirements. `data-theme` is the resolved theme mechanism for Light, Dark, and System.
+
+## 3. Typography and geometry
+
+- UI text: Plus Jakarta Sans with IBM Plex Sans Thai support
+- Financial/numeric data: JetBrains Mono and `tabular-nums`
+- Shared radii: `rounded-sm` 8px, `rounded-md` 12px, `rounded-lg` 16px
+- Borders: flat 1px semantic borders; avoid decorative glow, glassmorphism, and heavy shadows
+- Compact labels may match the established baseline but must not fall below the contracted readable threshold
+
+## 4. Component rules
+
+- Preserve public props, accessibility semantics, and `className` extension points.
+- Use shared primitives from `@/components/ui` when the primitive already exists.
+- Use `cn()` for class merging and `cva()` or a static map for finite variants.
+- Extract a new shared abstraction only after the same stable pattern has at least three consumers.
+- Keep domain-specific layouts with their owning feature; do not create wrappers only to make files look uniform.
+- Never nest interactive controls.
+
+Allowed runtime styling is limited to CSS custom properties carrying data-derived geometry:
+
+```jsx
+<div
+  className="w-[var(--progress)]"
+  style={cssVars({ "--progress": `${value}%` })}
+/>
+```
+
+Charts, treemaps, canvas/Pixi sizing, and progress indicators may use this pattern. Static values belong in Tailwind.
+
+## 5. Responsive and motion contract
+
+Required viewports:
+
+- Mobile: `390x844`
+- Tablet: `768x1024`
+- Laptop: `1024x768`
+- Desktop: `1440x900`
+
+The page must preserve topology, avoid horizontal page overflow and unintended text clipping, and keep critical geometry within `±2px` of the baseline contract. State-driven animation must support `motion-reduce`; purely decorative motion should be omitted.
+
+## 6. Approved global CSS
+
+Only these files may remain:
+
+```text
+src/index.css
+src/styles/tokens.css
+src/styles/base.css
+src/styles/animations.css
+```
+
+Page, layout, component, and utility selector files are legacy architecture and must not be restored.
+
+## 7. Required verification
+
+Before completing frontend work:
+
+```bash
+npm run format:check
+npm run lint
+npm run verify:architecture
+npm run verify:tailwind
+npm run typecheck
+npm run test:unit
+npm run build
+```
+
+Meaningful UI changes also require the relevant Playwright route/theme/layout contract. Screenshots are review artifacts, not pixel-diff blockers.
