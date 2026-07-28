@@ -34,6 +34,13 @@
 
 ## Durable Entries
 
+### 2026-07-28 - Hybrid Tailwind CSS & Monolithic CSS Coexistence Architecture
+
+- Keywords: `tailwind-coexistence`, `pages-css-restored`, `dark-terminal-ui`, `visual-fidelity`, `ui-handoff`
+- Decision: Restored full `develop` CSS architecture (`pages.css` 5,600+ lines, `App.css`, `utilities.css`, `components.css`) alongside Tailwind CSS directives (`@tailwind base; @tailwind components; @tailwind utilities;`). Guarantees 100% exact visual fidelity across all pages while retaining full Tailwind CSS utility capability for shared UI primitives in `@/components/ui`.
+- Action: Created [HANDOFF_UI_TAILWIND_ARCHITECTURE.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/HANDOFF_UI_TAILWIND_ARCHITECTURE.md), verified all 40 Vitest test suites (203 tests) and 48 Playwright E2E & visual audit tests.
+- Source: `docs/HANDOFF_UI_TAILWIND_ARCHITECTURE.md`
+
 ### 2026-07-27 - 100% Tailwind CSS Migration & Architecture Alignment
 
 - Keywords: `tailwind-migration`, `tailwindcss-v4-ready`, `cva-primitives`, `bundle-optimization`, `monolith-deprecation`
