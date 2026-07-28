@@ -71,7 +71,11 @@ const {
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "127.0.0.1";
-const apiRateLimiters = createApiRateLimiters();
+const apiRateLimiters = createApiRateLimiters(
+  isTestMode()
+    ? { ordinaryLimit: 10_000, quoteLimit: 10_000, aiLimit: 10_000 }
+    : {},
+);
 const wsTicketStore = new WsTicketStore();
 
 if (process.env.NODE_ENV === "production") {
