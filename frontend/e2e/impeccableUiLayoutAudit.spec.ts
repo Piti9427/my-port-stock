@@ -42,7 +42,7 @@ test.describe('Impeccable UI Responsiveness & Text Layout Audit', () => {
   const auditIssues: AuditIssue[] = [];
 
   test.afterAll(() => {
-    const reportDir = path.join(process.cwd(), '.impeccable', 'critique');
+    const reportDir = path.resolve(__dirname, '../../.impeccable/critique');
     if (!fs.existsSync(reportDir)) {
       fs.mkdirSync(reportDir, { recursive: true });
     }
@@ -178,7 +178,7 @@ test.describe('Impeccable UI Responsiveness & Text Layout Audit', () => {
           }
 
           // 4. Capture screenshot artifact for visual inspection
-          const screenshotDir = path.join(process.cwd(), 'artifacts', 'screenshots', 'ui-audit', vp.name);
+          const screenshotDir = path.resolve(__dirname, '../../artifacts/screenshots/ui-audit', vp.name);
           if (!fs.existsSync(screenshotDir)) {
             fs.mkdirSync(screenshotDir, { recursive: true });
           }
