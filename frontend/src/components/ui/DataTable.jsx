@@ -51,15 +51,15 @@ export function DataTable({ columns, data = [], onRowClick = null, emptyState = 
   }
 
   return (
-    <div className={cn('w-full overflow-x-auto border border-neutral-800 rounded-lg bg-neutral-900/60 backdrop-blur-sm', className)}>
+    <div className={cn('w-full overflow-x-auto border border-[#262626] rounded-xl bg-[#121212] shadow-sm', className)}>
       <table className="w-full text-left text-xs border-collapse">
-        <thead className="bg-neutral-900/90 border-b border-neutral-800 text-neutral-400 font-medium">
+        <thead className="bg-[#18181b] border-b border-[#262626] text-[#a1a1aa] font-medium">
           <tr>
             {columns.map((column) => (
-              <th key={column.key} className="p-3 font-semibold uppercase tracking-wider text-[0.7rem]" style={{ textAlign: column.align || 'left' }}>
+              <th key={column.key} className="p-3.5 font-semibold uppercase tracking-wider text-[0.68rem]" style={{ textAlign: column.align || 'left' }}>
                 {column.sortable ? (
                   <button
-                    className="inline-flex items-center gap-1 hover:text-neutral-100 transition-colors"
+                    className="inline-flex items-center gap-1 hover:text-[#ededed] transition-colors"
                     type="button"
                     onClick={() =>
                       setSort((current) => ({
@@ -77,12 +77,12 @@ export function DataTable({ columns, data = [], onRowClick = null, emptyState = 
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-800/60">
+        <tbody className="divide-y divide-[#262626]/60">
           {sortedData.map((row, rowIndex) => (
             <tr
               key={row.id || row.ticker || rowIndex}
               tabIndex={onRowClick ? 0 : undefined}
-              className={cn('transition-colors', onRowClick && 'cursor-pointer hover:bg-neutral-800/50 focus:bg-neutral-800/50 focus:outline-none')}
+              className={cn('transition-colors hover:bg-[#18181b]/80', onRowClick && 'cursor-pointer focus:bg-[#18181b] focus:outline-none')}
               onClick={() => activateRow(row)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
@@ -94,7 +94,7 @@ export function DataTable({ columns, data = [], onRowClick = null, emptyState = 
               {columns.map((column) => (
                 <td
                   key={column.key}
-                  className={cn('p-3 text-neutral-200', column.mono && 'font-mono tabular-nums')}
+                  className={cn('p-3.5 text-[#ededed]', column.mono && 'font-mono tabular-nums')}
                   style={{ textAlign: column.align || 'left' }}
                 >
                   {renderCellValue(column, row)}

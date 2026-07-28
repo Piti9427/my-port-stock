@@ -48,14 +48,14 @@ export function MetricCard({
   const validChangeType = /** @type {any} */ (normalizedChangeType);
 
   return (
-    <article className={cn('flex flex-col gap-3 min-w-0 p-4 border border-neutral-800 rounded-lg bg-neutral-900/60 backdrop-blur-sm', className)}>
+    <article className={cn('flex flex-col gap-3 min-w-0 p-4 border border-[#262626] hover:border-[#38383a] rounded-xl bg-[#121212] transition-all duration-200 shadow-sm', className)}>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-semibold text-neutral-400 leading-tight">{label}</span>
+        <span className="text-[0.72rem] font-semibold text-[#a1a1aa] uppercase tracking-wider leading-tight">{label}</span>
         {change && <span className={changeBadgeVariants({ type: validChangeType })}>{change}</span>}
       </div>
-      <div className={cn('metric-card-value text-[1.65rem] font-bold leading-none text-neutral-100 tabular-nums', mono && 'font-mono')}>{value}</div>
+      <div className={cn('metric-card-value text-[1.75rem] font-bold leading-none text-[#ededed] tracking-tight tabular-nums', mono && 'font-mono')}>{value}</div>
       {points && (
-        <svg className="w-full h-8 text-emerald-500" viewBox="0 0 100 32" aria-hidden="true">
+        <svg className="w-full h-8 text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.25)]" viewBox="0 0 100 32" aria-hidden="true">
           <polyline points={points} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
         </svg>
       )}
