@@ -55,6 +55,6 @@ describe('Dashboard decomposition contract', () => {
   test('Dashboard uses responsive grid layout for collapse', () => {
     const source = read('src/pages/DashboardPage.jsx');
 
-    expect(source).toContain('grid grid-cols-1 lg:grid-cols-[1fr_360px]');
+    expect(source).toContain('min-[901px]:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]');
   });
 });

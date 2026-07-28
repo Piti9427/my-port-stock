@@ -36,9 +36,9 @@ describe('Dashboard extracted components', () => {
     render(<PortfolioSummary holdings={holdings} source="Supabase holdings" stale />);
 
     expect(screen.getByRole('region', { name: /Portfolio summary/i })).toBeInTheDocument();
-    expect(screen.getByText('฿400')).toHaveClass('portfolio-summary-value');
-    expect(screen.getByText('-฿1')).toHaveClass('semantic-negative');
-    expect(screen.getByText('+฿20')).toHaveClass('semantic-positive');
+    expect(screen.getByText('฿400')).toHaveClass('font-mono');
+    expect(screen.getByText('-฿1')).toHaveClass('text-fin-loss');
+    expect(screen.getByText('+฿20')).toHaveClass('text-fin-profit');
     expect(screen.getByText('Supabase holdings')).toBeInTheDocument();
     expect(screen.getByText('Stale')).toBeInTheDocument();
   });

@@ -6,18 +6,18 @@ const root = resolve(__dirname, '..');
 const read = (file) => readFileSync(resolve(root, file), 'utf8');
 const exists = (file) => existsSync(resolve(root, file));
 
-const expectedStyleModules = ['tokens.css', 'base.css', 'layout.css', 'components.css', 'pages.css', 'animations.css'];
+const expectedStyleModules = ['tokens.css', 'base.css', 'animations.css'];
 
 describe('CSS architecture contract', () => {
   test('index.css is a modular entrypoint for planned style layers', () => {
     const indexCss = read('src/index.css');
 
-    for (const moduleName of ['tokens.css', 'base.css', 'layout.css', 'components.css', 'animations.css']) {
+    for (const moduleName of expectedStyleModules) {
       expect(exists(`src/styles/${moduleName}`)).toBe(true);
       expect(indexCss).toContain(`@import './styles/${moduleName}';`);
     }
 
-    expect(exists('src/styles/pages.css')).toBe(true);
+    expect(exists('src/styles/layout.css')).toBe(false);
   });
 
   test('base typography keeps design canon without Inter remnants', () => {

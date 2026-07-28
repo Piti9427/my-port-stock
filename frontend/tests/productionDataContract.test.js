@@ -104,19 +104,12 @@ test('App keeps Clerk auth by default but supports explicit dev UI auth bypass',
 test('Command Center has responsive layout contracts for small screens', () => {
   const commandCenter = read('src/pages/CommandCenterPage.jsx');
   const chatPanel = read('src/components/command-center/ChatPanel.jsx');
-  const css = readCssBundle();
 
-  expect(commandCenter).toContain('command-center-page command-workspace');
-  expect(commandCenter).toContain('command-workspace-header');
-  expect(commandCenter).toContain('command-progressive-grid');
-  expect(commandCenter).toContain('command-setup-column');
-  expect(commandCenter).toContain('command-results-column');
-  expect(chatPanel).toContain('command-chat-panel');
-  expect(css).toContain('@media (max-width: 900px)');
-  expect(css).toContain('.command-progressive-grid');
-  expect(css).toContain('.command-center-page.command-workspace');
-  expect(css).toContain('grid-template-columns: minmax(0, 1fr)');
-  expect(css).toContain('.command-chat-thread');
+  expect(commandCenter).toContain('max-[900px]:[grid-template-columns:minmax(0,_1fr)]');
+  expect(commandCenter).toContain('[grid-template-columns:minmax(280px,_340px)_minmax(0,_1fr)]');
+  expect(commandCenter).toContain('[align-content:start]');
+  expect(chatPanel).toContain('[overflow-y:auto]');
+  expect(chatPanel).toContain('max-[640px]');
 });
 
 test('Ticker drilldown route and entry points are wired through the product app', () => {
@@ -143,12 +136,12 @@ test('Command palette is wired as a global authenticated navigation surface', ()
 
   expect(app).toContain("from './components/CommandPalette'");
   expect(app).toContain('<CommandPalette');
-  expect(app).toContain('sidebar-cmd-hint');
-  expect(app).toContain('<kbd>⌘</kbd>');
-  expect(app).toContain('<kbd>K</kbd>');
+  expect(app).toContain('aria-label="Open Command Palette"');
+  expect(app).toMatch(/<kbd[^>]*>\s*⌘\s*<\/kbd>/);
+  expect(app).toMatch(/<kbd[^>]*>\s*K\s*<\/kbd>/);
   expect(keyboardShortcuts).toContain('Cmd+K');
-  expect(css).toContain('.command-palette-backdrop');
-  expect(css).toContain('.sidebar-cmd-hint');
+  expect(css).not.toContain('.command-palette-backdrop');
+  expect(css).not.toContain('.sidebar-cmd-hint');
 });
 
 test('fetchWithAuth sends auth headers and mutation options', async () => {

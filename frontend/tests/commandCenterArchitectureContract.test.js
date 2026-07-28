@@ -11,8 +11,9 @@ describe('Command Center production architecture', () => {
   it('keeps the page composition-focused and authenticated', () => {
     const source = read('src/pages/CommandCenterPage.jsx');
     const hook = read('src/hooks/useCommandCenter.js');
+    const compositionSource = source.replace(/className=(?:"[^"]*"|\{`[\s\S]*?`\})/g, 'className');
 
-    expect(Buffer.byteLength(source)).toBeLessThan(6000);
+    expect(Buffer.byteLength(compositionSource)).toBeLessThan(6000);
     expect(hook).toContain('useAuth');
     expect(hook).toContain('fetchWithAuth');
     expect(source).not.toContain("from 'pixi.js'");
@@ -38,10 +39,9 @@ describe('Command Center production architecture', () => {
 
   it('defines a responsive progressive-disclosure layout', () => {
     const source = read('src/pages/CommandCenterPage.jsx');
-    const css = read('src/styles/pages.css');
 
-    expect(source).toContain('command-progressive-grid');
-    expect(css).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*\.command-progressive-grid/);
+    expect(source).toContain('max-[900px]:[grid-template-columns:minmax(0,_1fr)]');
+    expect(source).toContain('[grid-template-columns:minmax(280px,_340px)_minmax(0,_1fr)]');
     expect(source).toContain('DecisionSnapshot');
   });
 });

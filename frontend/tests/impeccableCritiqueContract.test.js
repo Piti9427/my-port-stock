@@ -17,7 +17,7 @@ describe('impeccable critique remediation contract', () => {
     const analytics = read('src/pages/AnalyticsPage.jsx');
     const risk = read('src/pages/PortfolioRiskPage.jsx');
 
-    expect(watchlist).toContain('data-stamp');
+    expect(watchlist).toContain('DATA_STAMP');
     expect(watchlist).toContain('Your watchlist is empty');
     expect(watchlist).not.toContain('INITIAL_ALERTS');
     expect(analytics).toContain('Insufficient data');

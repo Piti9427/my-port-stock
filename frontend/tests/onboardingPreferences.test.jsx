@@ -71,8 +71,8 @@ describe('Onboarding and Preferences Provider Flow', () => {
     // Default choices: THB, beginner, light should be active
     const thbBtn = screen.getByRole('button', { name: /THB/ });
     const usdBtn = screen.getByRole('button', { name: /USD/ });
-    expect(thbBtn).toHaveClass('active');
-    expect(usdBtn).not.toHaveClass('active');
+    expect(thbBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(usdBtn).toHaveAttribute('aria-pressed', 'false');
 
     // Click USD and Advanced and Dark mode
     fireEvent.click(usdBtn);
