@@ -27,7 +27,7 @@
     "check:lint": "npm run lint --workspaces --if-present",
     "check:type": "npm run typecheck",
     "check:build": "npm run build --workspaces --if-present",
-    "check:unit": "npm run test:unit",
+    "check:unit": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" npm run test:unit",
     "check:coverage": "npm run test --workspace=frontend -- --run --coverage",
     "check:python": "python3 tools/market_oracle_test.py",
     "check:property": "node --test backend/tests/financialProperties.test.js && npm run test --workspace=frontend -- --run tests/formatProperties.test.js",

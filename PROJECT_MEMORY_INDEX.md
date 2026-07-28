@@ -34,6 +34,13 @@
 
 ## Durable Entries
 
+### 2026-07-27 - 100% Tailwind CSS Migration & Architecture Alignment
+
+- Keywords: `tailwind-migration`, `tailwindcss-v4-ready`, `cva-primitives`, `bundle-optimization`, `monolith-deprecation`
+- Decision: Successfully migrated MyPortStock frontend CSS from legacy monolithic styles to 100% Tailwind CSS utility classes and `cva()` primitives. Deprecated `App.css` and `utilities.css`, emptied `pages.css`, and achieved ~67% CSS bundle size reduction (150 kB -> 49.39 kB) while passing all 12 monorepo quality gates and 39 test suites (199 tests).
+- Action: Created [HANDOFF_TAILWIND_MIGRATION.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/HANDOFF_TAILWIND_MIGRATION.md), updated `tailwind_migration_task_breakdown.md` and `walkthrough.md`.
+- Source: `docs/HANDOFF_TAILWIND_MIGRATION.md`
+
 ### 2026-07-27 - Multi-Agent Tool Integration & Single Source of Truth Architecture
 
 - Keywords: `tool-integration-map`, `multi-agent-architecture`, `cursor-rules`, `thin-adapter`, `hub-and-spoke`
@@ -506,3 +513,19 @@
 - Action: Implemented TypeScript 5.9 full-repo checkJs, fail-closed property tests, deterministic Express/WebSocket providers, additive migration baseline and pgTAP, Gitleaks/dependency gates, six parallel CI gate jobs with an aggregate report, Dependabot, and bounded nightly load assurance.
 - Resolution: React Router `GHSA-qwww-vcr4-c8h2` was cleared by migrating the frontend from `react-router-dom` 7.18.1 to unified `react-router` 8.3.0 with React/ReactDOM 19.2.7 and Node >= 22.22. Deterministic E2E moved from collision-prone ports 4173/8180 to 43173/48180 and forces Vite dependency optimization on every run. `npm run check:pr` passes all 11 gates.
 - Source: `docs/plans/2026-07-26-enterprise-qa-security-pipeline-plan.md`, `docs/adr/0006-supabase-migrations-source-of-truth.md`
+
+### 2026-07-27 - Playwright Impeccable UI Responsiveness & Typography Audit
+
+- Keywords: `impeccable-ui-audit`, `playwright-responsiveness-4-viewports`, `sub-11px-typography-fix`, `aria-nested-interactive-fix`, `zero-text-clipping`
+- Decision: Performed a full automated UI responsiveness and text layout audit across all 11 routes and 4 viewports (Desktop 1440x900, Laptop 1024x768, Tablet 768x1024, Mobile 390x844) using Playwright, Axe-Core, and Impeccable Design Guidelines.
+- Action: Created `frontend/e2e/impeccableUiLayoutAudit.spec.ts`. Fixed sub-11px font sizes (<11px raised to 12px/11.5px) in `components.css` and `pages.css`, resolved nested-interactive ARIA violations in `MarketExplorerPage.jsx`, and added focusable keyboard access to scrollable table containers. All 48 Playwright test scenarios passed with 0 text clipping, 0 page overflow, and clean visual readability.
+- Source: `ui_impeccable_layout_audit_plan.md`, `walkthrough.md`, `.impeccable/critique/2026-07-27-ui-responsiveness-audit-report.md`, `frontend/e2e/impeccableUiLayoutAudit.spec.ts`
+
+### 2026-07-27 - Pragmatic Hybrid CSS Architecture Standard
+
+- Keywords: `hybrid-css-architecture`, `tailwind-shadcn-primitives`, `modern-vanilla-css-dashboards`, `container-queries-autofit-grid`
+- Decision: Adopted the Pragmatic Hybrid CSS Architecture Standard for MyPortStock. UI Primitives (`src/components/ui/*`) are built with shadcn/ui + Tailwind CSS v3.4 + Radix UI and `cn()`. Complex Multi-Column Financial Dashboards are built with Modern Vanilla CSS (`tokens.css`, `pages.css`), CSS Custom Properties, Container Queries, and Auto-Fit Grids.
+- Action: Updated `tailwind.config.js` theme color tokens, added `padding: 24px` to `.glass-panel` in `components.css`, replaced rigid 5-column grids with flex-wrap and auto-fit grids in `pages.css` (`.command-agent-tabs`, `.journal-filters`, `.analytics-filters`, `.journal-perf`, `.journal-header`, `.analytics-header`). Verified 48/48 Playwright E2E layout tests and `npm run check:frontend-standard` (0 errors).
+- Source: `hybrid_css_architecture_plan.md`, `walkthrough.md`, `frontend/tailwind.config.js`, `frontend/src/styles/components.css`, `frontend/src/styles/pages.css`
+
+

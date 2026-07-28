@@ -12,7 +12,7 @@
     "lint": "eslint . --ext js",
     "lint:fix": "npm run lint -- --fix",
     "typecheck": "tsc -p tsconfig.checkjs.json",
-    "test": "NODE_ENV=test MPS_TEST_MODE=1 MPS_TEST_SCENARIO=matrix CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k CLERK_SECRET_KEY=sk_test_123 node --check server.js && NODE_ENV=test MPS_TEST_MODE=1 MPS_TEST_SCENARIO=matrix CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k CLERK_SECRET_KEY=sk_test_123 node --test --test-concurrency=1 tests/*.test.js"
+    "test": "NODE_ENV=test MPS_TEST_MODE=1 MPS_TEST_SCENARIO=matrix CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k CLERK_SECRET_KEY=sk_test_123 node --check server.js && NODE_ENV=test MPS_TEST_MODE=1 MPS_TEST_SCENARIO=matrix CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k CLERK_SECRET_KEY=sk_test_123 node --test --test-concurrency=1 tests/api.test.js tests/dashboardRoutes.test.js tests/dbIntegration.test.js tests/decisionSnapshot.test.js tests/journalRoutes.test.js tests/marketOracle.test.js tests/modelFallback.test.js tests/portfolioRisk.test.js tests/priceAcceptanceGate.test.js tests/routesIntegration.test.js tests/schemaAuditing.test.js tests/serverLifecycle.test.js tests/sopBoundaryGates.test.js tests/supabaseAudit.test.js tests/todayRoutes.test.js tests/webSocketTickets.test.js"
   },
   "dependencies": {
     "@clerk/express": "^2.1.26",

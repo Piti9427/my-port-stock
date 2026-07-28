@@ -52,17 +52,10 @@ describe('Dashboard decomposition contract', () => {
     expect(scenarioPlanner).toContain('Drawer');
   });
 
-  test('Dashboard styles define stable operational grids and responsive collapse', () => {
-    const css = read('src/styles/pages.css');
+  test('Dashboard uses Tailwind grid layout for responsive collapse', () => {
+    const source = read('src/pages/DashboardPage.jsx');
 
-    expect(css).toContain('.dashboard-overview');
-    expect(css).toContain('.dashboard-primary-grid');
-    expect(css).toContain('.dashboard-secondary-grid');
-    expect(css).toContain('.portfolio-summary');
-    expect(css).toContain('.dashboard-holdings');
-    expect(css).toContain('.dashboard-watchlist');
-    expect(css).toContain('.dashboard-ai-quick');
-    expect(css).toMatch(/\.dashboard-primary-grid\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*2fr\)\s+minmax\(240px,\s*1fr\)/);
-    expect(css).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*\.dashboard-primary-grid[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+    expect(source).toContain('grid grid-cols-1 lg:grid-cols-3 gap-6');
+    expect(source).toContain('grid grid-cols-1 lg:grid-cols-2 gap-6');
   });
 });

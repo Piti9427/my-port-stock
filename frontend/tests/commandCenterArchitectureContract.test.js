@@ -4,11 +4,6 @@ import { describe, expect, it } from 'vitest';
 
 const root = resolve(__dirname, '..');
 const read = (file) => readFileSync(resolve(root, file), 'utf8');
-const readCssBundle = () => {
-  const entry = read('src/index.css');
-  const modules = Array.from(entry.matchAll(/@import\s+'\.\/styles\/([^']+)';/g), (match) => read(`src/styles/${match[1]}`));
-  return [entry, ...modules].join('\n');
-};
 
 const COMPONENTS = ['TickerInput', 'QuotePanel', 'AnalysisControls', 'AgentResults', 'DecisionSnapshot', 'TradeTicket', 'ChatPanel'];
 
@@ -42,10 +37,11 @@ describe('Command Center production architecture', () => {
   });
 
   it('defines a responsive progressive-disclosure layout', () => {
-    const css = readCssBundle();
+    const source = read('src/pages/CommandCenterPage.jsx');
+    const css = read('src/index.css');
 
-    expect(css).toMatch(/\.command-progressive-grid\s*\{[^}]*grid-template-columns:\s*minmax\(280px,\s*340px\)\s+minmax\(0,\s*1fr\)/s);
-    expect(css).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*\.command-progressive-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
-    expect(css).toContain('.command-decision-snapshot');
+    expect(source).toContain('command-progressive-grid grid grid-cols-1 lg:grid-cols-[320px_1fr]');
+    expect(css).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*\.command-progressive-grid/);
+    expect(source).toContain('DecisionSnapshot');
   });
 });

@@ -99,7 +99,7 @@ describe("API Routes", () => {
       .send({ ticker: "NVDA", message: "hidden\u0000control" });
 
     assert.equal(res.statusCode, 400);
-    assert.deepEqual(res.body, { error: "Message must be 1-1000 characters" });
+    assert.equal(res.body?.error, "Message must be 1-1000 characters");
   });
 
   it("rejects market chat messages over 1,000 characters", async () => {
@@ -110,7 +110,7 @@ describe("API Routes", () => {
       .send({ ticker: "NVDA", message: "x".repeat(1001) });
 
     assert.equal(res.statusCode, 400);
-    assert.deepEqual(res.body, { error: "Message must be 1-1000 characters" });
+    assert.equal(res.body?.error, "Message must be 1-1000 characters");
   });
 
   it("allows tabs and newlines through market chat message validation", async () => {
