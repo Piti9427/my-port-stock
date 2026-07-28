@@ -52,8 +52,8 @@ function ScenarioPlannerContent({ open, ticker, holding, onClose, onLogTrade }) 
 
   return (
     <Drawer open={open} onClose={onClose} title={`${ticker} Scenario Planner`} width="min(560px, 100vw)">
-      <div className="scenario-planner-form">
-        <div className="scenario-current-position">
+      <div className="[display:grid] [gap:var(--space-5)]">
+        <div className="[display:grid] [grid-template-columns:repeat(3,_minmax(0,_1fr))] [gap:var(--space-3)] [&_label]:[display:grid] [&_label]:[gap:var(--space-2)] [&_label]:[color:var(--text-secondary)] [&_label]:[font-size:0.75rem] [&_label]:[font-weight:600] [&_input]:[width:100%] [&_input]:[min-height:40px] [&_input]:[border:1px_solid_var(--border-subtle)] [&_input]:[border-radius:var(--radius-xs)] [&_input]:[outline:none] [&_input]:[background:var(--bg-panel-solid)] [&_input]:[color:var(--text-primary)] [&_input]:font-mono [&_input]:[padding:0_var(--space-3)] [&_input:focus]:[border-color:var(--brand-primary)] max-[640px]:[grid-template-columns:minmax(0,_1fr)]">
           <label>
             จำนวนหุ้นที่มี
             <input type="number" min="0" value={held} onChange={(event) => setHeld(Number(event.target.value))} />
@@ -68,15 +68,20 @@ function ScenarioPlannerContent({ open, ticker, holding, onClose, onLogTrade }) 
           </label>
         </div>
 
-        <div className="scenario-quick-fill" aria-label="Quick fill budget">
+        <div className="[display:grid] [grid-template-columns:repeat(3,_minmax(0,_1fr))] [gap:var(--space-2)]" aria-label="Quick fill budget">
           {[5000, 10000, 25000].map((amount) => (
-            <button key={amount} className="quick-fill-btn" type="button" onClick={() => setBudget(amount)}>
+            <button
+              key={amount}
+              className="[background:var(--bg-panel)] [border:1px_solid_var(--border-subtle)] [color:var(--text-secondary)] [border-radius:var(--radius-xs)] [padding:4px_8px] [font-size:0.75rem] [cursor:pointer] [transition:var(--transition)] [flex:1] hover:[background:var(--bg-panel-hover)] hover:[color:var(--text-primary)] hover:[border-color:var(--border-medium)]"
+              type="button"
+              onClick={() => setBudget(amount)}
+            >
               ฿{amount / 1000}k
             </button>
           ))}
         </div>
 
-        <div className="scenario-support-grid">
+        <div className="[display:grid] [grid-template-columns:repeat(3,_minmax(0,_1fr))] [gap:var(--space-3)] [&_label]:[display:grid] [&_label]:[gap:var(--space-2)] [&_label]:[color:var(--text-secondary)] [&_label]:[font-size:0.75rem] [&_label]:[font-weight:600] [&_input]:[width:100%] [&_input]:[min-height:40px] [&_input]:[border:1px_solid_var(--border-subtle)] [&_input]:[border-radius:var(--radius-xs)] [&_input]:[outline:none] [&_input]:[background:var(--bg-panel-solid)] [&_input]:[color:var(--text-primary)] [&_input]:font-mono [&_input]:[padding:0_var(--space-3)] [&_input:focus]:[border-color:var(--brand-primary)] max-[640px]:[grid-template-columns:minmax(0,_1fr)]">
           {Object.keys(supports).map((key, index) => (
             <label key={key}>
               แนวรับ {index + 1}
@@ -91,7 +96,7 @@ function ScenarioPlannerContent({ open, ticker, holding, onClose, onLogTrade }) 
           ))}
         </div>
 
-        <div className="scenario-risk-grid">
+        <div className="[display:grid] [grid-template-columns:repeat(3,_minmax(0,_1fr))] [gap:var(--space-3)] [grid-template-columns:repeat(2,_minmax(0,_1fr))] [&_label]:[display:grid] [&_label]:[gap:var(--space-2)] [&_label]:[color:var(--text-secondary)] [&_label]:[font-size:0.75rem] [&_label]:[font-weight:600] [&_input]:[width:100%] [&_input]:[min-height:40px] [&_input]:[border:1px_solid_var(--border-subtle)] [&_input]:[border-radius:var(--radius-xs)] [&_input]:[outline:none] [&_input]:[background:var(--bg-panel-solid)] [&_input]:[color:var(--text-primary)] [&_input]:font-mono [&_input]:[padding:0_var(--space-3)] [&_input:focus]:[border-color:var(--brand-primary)] max-[640px]:[grid-template-columns:minmax(0,_1fr)]">
           <label>
             จุดตัดขาดทุน
             <input type="number" min="0" step="0.01" value={stopLoss} onChange={(event) => setStopLoss(event.target.value)} />
@@ -103,7 +108,10 @@ function ScenarioPlannerContent({ open, ticker, holding, onClose, onLogTrade }) 
         </div>
 
         {hasErrors && (
-          <div className="validation-summary" role="alert">
+          <div
+            className="[background:var(--fin-loss-dim)] [border:1px_solid_rgba(var(--status-danger-rgb),_0.3)] [color:var(--fin-loss)] [padding:10px_12px] [border-radius:var(--radius-sm)] [font-size:0.8rem] [margin-bottom:12px] [display:flex] [flex-direction:column] [gap:4px]"
+            role="alert"
+          >
             {validation.supportOrderInvalid && <div>แนวรับต้องเรียงจาก S1 สูงสุดไป S3 ต่ำสุด</div>}
             {validation.targetStopInvalid && <div>ราคาเป้าหมายต้องสูงกว่าจุดตัดขาดทุน</div>}
             {validation.entryStopInvalid && <div>แนวรับต้องสูงกว่าจุดตัดขาดทุน</div>}
@@ -111,8 +119,8 @@ function ScenarioPlannerContent({ open, ticker, holding, onClose, onLogTrade }) 
         )}
 
         {rows.length > 0 ? (
-          <div className="scenario-table-wrap">
-            <table className="scenario-table">
+          <div className="[overflow-x:auto]">
+            <table className="w-full border-collapse text-[0.8rem] max-[640px]:min-w-[620px] [&_td]:border-b [&_td]:border-border-subtle [&_td]:px-2.5 [&_td]:py-2.5 [&_td]:align-middle [&_td]:font-mono [&_th]:border-b [&_th]:border-border-subtle [&_th]:px-2.5 [&_th]:py-2 [&_th]:text-left [&_th]:text-[0.67rem] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.07em] [&_th]:text-text-secondary [&_tr:hover_td]:bg-panel-hover">
               <thead>
                 <tr>
                   <th>ระดับ</th>
@@ -142,12 +150,14 @@ function ScenarioPlannerContent({ open, ticker, holding, onClose, onLogTrade }) 
             </table>
           </div>
         ) : (
-          <p className="scenario-planner-empty">กรอกแนวรับอย่างน้อยหนึ่งระดับเพื่อคำนวณแผน</p>
+          <p className="[margin:0] [padding:var(--space-5)] [border:1px_dashed_var(--border-subtle)] [color:var(--text-secondary)] [font-size:0.8rem] [text-align:center]">
+            กรอกแนวรับอย่างน้อยหนึ่งระดับเพื่อคำนวณแผน
+          </p>
         )}
 
         {onLogTrade && (
           <button
-            className="btn-analyze scenario-log-trade"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-transparent bg-brand px-5 py-3 font-sans text-sm font-bold tracking-wide text-text-inverse transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-hover disabled:text-text-secondary"
             type="button"
             disabled={hasErrors || rows.length === 0}
             onClick={() => onLogTrade({ ticker, rows })}

@@ -3,25 +3,25 @@ import { render, screen } from '@testing-library/react';
 import { StatusBadge } from '../StatusBadge';
 
 describe('StatusBadge Component (Tailwind & cva)', () => {
-  it('renders Buy badge with emerald profit classes', () => {
+  it('renders Buy badge with the semantic profit token', () => {
     render(<StatusBadge status="buy" />);
     const badge = screen.getByText('Buy');
     expect(badge).toBeDefined();
-    expect(badge.className).toContain('text-emerald-400');
+    expect(badge.className).toContain('text-fin-profit');
   });
 
-  it('renders Avoid badge with rose loss classes', () => {
+  it('renders Avoid badge with the semantic loss token', () => {
     render(<StatusBadge status="avoid" />);
     const badge = screen.getByText('Avoid');
     expect(badge).toBeDefined();
-    expect(badge.className).toContain('text-rose-400');
+    expect(badge.className).toContain('text-fin-loss');
   });
 
-  it('renders Wait badge with amber warning classes', () => {
+  it('renders Wait badge with the semantic warning token', () => {
     render(<StatusBadge status="wait" />);
     const badge = screen.getByText('Wait');
     expect(badge).toBeDefined();
-    expect(badge.className).toContain('text-amber-400');
+    expect(badge.className).toContain('text-fin-warning');
   });
 
   it('handles custom labels correctly', () => {

@@ -17,8 +17,8 @@ export function DataStamp({ source, timestamp = null, stale = false, className =
   const formattedTimestamp = formatTimestamp(timestamp);
 
   return (
-    <span className={cn('inline-flex items-center gap-1.5 text-[0.7rem] font-mono text-neutral-400', className)}>
-      <Clock size={12} className="shrink-0 text-neutral-500" aria-hidden="true" />
+    <span className={cn('inline-flex items-center gap-1.5 text-[0.7rem] font-mono text-text-secondary', className)}>
+      <Clock size={12} className="shrink-0 text-text-muted" aria-hidden="true" />
       <span>{source}</span>
       {formattedTimestamp && (
         <>
@@ -33,7 +33,7 @@ export function DataStamp({ source, timestamp = null, stale = false, className =
           <span aria-hidden="true" className="opacity-40">
             /
           </span>
-          <span className="text-rose-400 font-semibold px-1 bg-rose-500/10 rounded" aria-label="Stale data">
+          <span className="rounded bg-fin-loss-dim px-1 font-semibold text-fin-loss" aria-label="Stale data">
             Stale
           </span>
         </>

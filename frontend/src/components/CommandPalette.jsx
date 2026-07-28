@@ -5,6 +5,7 @@ import { BarChart2, BookOpen, Bot, Crosshair, LayoutDashboard, Search, Settings2
 import { useAuth } from '../auth/clerkAdapter';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useWatchlist } from '../hooks/useWatchlist';
+import { cn } from '../lib/utils';
 
 const PAGE_COMMANDS = [
   { id: 'page-dashboard', type: 'page', label: 'แดชบอร์ด', description: 'Overview', shortcut: 'g d', to: '/', icon: LayoutDashboard },
@@ -180,17 +181,17 @@ export default function CommandPalette({ open, onOpenChange }) {
   if (!open) return null;
 
   return (
-    <div className="command-palette-backdrop" onClick={close}>
+    <div className="fixed inset-0 z-[70] flex items-start justify-center bg-overlay px-4 pb-4 pt-24" onClick={close}>
       <div
         ref={dialogRef}
-        className="command-palette"
+        className="w-full max-w-[640px] overflow-hidden rounded-md border border-border bg-surface-elevated"
         role="dialog"
         aria-modal="true"
         aria-label="Command Palette"
         onClick={(event) => event.stopPropagation()}
         onKeyDown={handleDialogKeyDown}
       >
-        <div className="command-palette-search">
+        <div className="flex items-center gap-2 border-b border-border px-3.5 py-3 text-text-secondary">
           <Search size={16} aria-hidden="true" />
           <input
             ref={inputRef}
@@ -201,13 +202,16 @@ export default function CommandPalette({ open, onOpenChange }) {
             value={query}
             onChange={handleQueryChange}
             onKeyDown={handleInputKeyDown}
+            className="min-w-0 flex-1 border-0 bg-transparent text-foreground outline-none placeholder:text-text-secondary"
           />
-          <kbd>Esc</kbd>
+          <kbd className="min-w-[22px] rounded border border-border bg-surface-raised px-[5px] py-1 text-center font-mono text-[0.7rem] leading-none text-text-secondary">
+            Esc
+          </kbd>
         </div>
 
-        <div className="command-palette-list" role="listbox" aria-label="Command results">
+        <div className="max-h-[min(520px,60vh)] overflow-auto p-2" role="listbox" aria-label="Command results">
           {filteredCommands.length === 0 ? (
-            <div className="command-palette-empty">No matching command</div>
+            <div className="px-3 py-6 text-center text-text-secondary">No matching command</div>
           ) : (
             filteredCommands.map((command, index) => {
               const Icon = command.icon;
@@ -216,18 +220,23 @@ export default function CommandPalette({ open, onOpenChange }) {
                   key={command.id}
                   type="button"
                   data-to={command.to}
-                  className={`command-palette-item${index === activeIndex ? ' active' : ''}`}
+                  className={cn(
+                    'grid min-h-[54px] w-full grid-cols-[30px_minmax(0,1fr)_auto] items-center gap-3 rounded border border-transparent bg-transparent px-2.5 py-[9px] text-left text-text-secondary outline-none transition-colors hover:border-border hover:bg-surface hover:text-foreground focus-visible:border-border focus-visible:bg-surface focus-visible:text-foreground',
+                    index === activeIndex && 'border-border bg-surface text-foreground'
+                  )}
                   onClick={handleCommandClick}
                   role="option"
                   aria-selected={index === activeIndex}
                   aria-label={`${command.label} ${command.description || ''}`.trim()}
                 >
-                  <span className="command-palette-icon">{Icon ? <Icon size={16} aria-hidden="true" /> : command.ticker?.slice(0, 2)}</span>
-                  <span className="command-palette-copy">
-                    <span className="command-palette-label">{command.label}</span>
-                    <span className="command-palette-description">{command.description}</span>
+                  <span className="inline-flex size-[30px] items-center justify-center rounded border border-border font-mono text-xs text-fin-profit">
+                    {Icon ? <Icon size={16} aria-hidden="true" /> : command.ticker?.slice(0, 2)}
                   </span>
-                  <span className="command-palette-meta">{command.shortcut || command.type}</span>
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="font-semibold text-foreground">{command.label}</span>
+                    <span className="overflow-hidden text-ellipsis whitespace-nowrap text-[0.78rem] text-text-secondary">{command.description}</span>
+                  </span>
+                  <span className="font-mono text-xs uppercase text-text-secondary">{command.shortcut || command.type}</span>
                 </button>
               );
             })

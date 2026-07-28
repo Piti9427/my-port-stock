@@ -7,21 +7,21 @@ export function EmptyState({ icon = null, title, description = null, action = nu
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center p-8 text-center border border-dashed border-neutral-800 rounded-xl bg-neutral-900/40 text-neutral-400',
+        'flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface p-8 text-center text-text-secondary',
         className
       )}
       role="status"
     >
       {icon && (
-        <div className="mb-3 text-neutral-500" aria-hidden="true">
+        <div className="mb-3 text-text-muted" aria-hidden="true">
           {icon}
         </div>
       )}
-      <div className="text-sm font-semibold text-neutral-200">{title}</div>
-      {description && <div className="mt-1 text-xs text-neutral-400 max-w-sm">{description}</div>}
+      <div className="text-sm font-semibold text-foreground">{title}</div>
+      {description && <div className="mt-1 max-w-sm text-xs text-text-secondary">{description}</div>}
       {actionLabel && (
         <button
-          className="mt-4 px-3 py-1.5 text-xs font-semibold rounded-md border border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 hover:text-white transition-colors"
+          className="mt-4 rounded-md border border-border bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-border-hover hover:bg-surface-hover"
           type="button"
           onClick={actionHandler}
         >

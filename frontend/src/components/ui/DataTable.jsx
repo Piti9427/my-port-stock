@@ -12,11 +12,17 @@ function renderCellValue(column, row) {
   const value = column.render ? column.render(row) : row[column.key];
   if (column.semantic) {
     const numeric = Number(value);
-    const semanticClass = numeric > 0 ? 'text-emerald-400 font-semibold' : numeric < 0 ? 'text-rose-400 font-semibold' : 'text-neutral-400';
+    const semanticClass = numeric > 0 ? 'font-semibold text-fin-profit' : numeric < 0 ? 'font-semibold text-fin-loss' : 'text-text-secondary';
     return <span className={semanticClass}>{value}</span>;
   }
   return value ?? '';
 }
+
+const ALIGN_CLASSES = {
+  left: 'text-left',
+  center: 'text-center',
+  right: 'text-right',
+};
 
 export function DataTable({ columns, data = [], onRowClick = null, emptyState = null, loading = false, skeletonRows = 5, className = '' }) {
   const [sort, setSort] = useState(null);
@@ -51,15 +57,18 @@ export function DataTable({ columns, data = [], onRowClick = null, emptyState = 
   }
 
   return (
-    <div className={cn('w-full overflow-x-auto border border-[#262626] rounded-xl bg-[#121212] shadow-sm', className)}>
+    <div className={cn('w-full overflow-x-auto rounded-xl border border-border bg-surface', className)}>
       <table className="w-full text-left text-xs border-collapse">
-        <thead className="bg-[#18181b] border-b border-[#262626] text-[#a1a1aa] font-medium">
+        <thead className="border-b border-border bg-panel-solid font-medium text-text-secondary">
           <tr>
             {columns.map((column) => (
-              <th key={column.key} className="p-3.5 font-semibold uppercase tracking-wider text-[0.68rem]" style={{ textAlign: column.align || 'left' }}>
+              <th
+                key={column.key}
+                className={cn('p-3.5 font-semibold uppercase tracking-wider text-[0.68rem]', ALIGN_CLASSES[column.align] || ALIGN_CLASSES.left)}
+              >
                 {column.sortable ? (
                   <button
-                    className="inline-flex items-center gap-1 hover:text-[#ededed] transition-colors"
+                    className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
                     type="button"
                     onClick={() =>
                       setSort((current) => ({
@@ -77,12 +86,12 @@ export function DataTable({ columns, data = [], onRowClick = null, emptyState = 
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[#262626]/60">
+        <tbody className="divide-y divide-border">
           {sortedData.map((row, rowIndex) => (
             <tr
               key={row.id || row.ticker || rowIndex}
               tabIndex={onRowClick ? 0 : undefined}
-              className={cn('transition-colors hover:bg-[#18181b]/80', onRowClick && 'cursor-pointer focus:bg-[#18181b] focus:outline-none')}
+              className={cn('transition-colors hover:bg-surface-hover', onRowClick && 'cursor-pointer focus:bg-surface-hover focus:outline-none')}
               onClick={() => activateRow(row)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
@@ -94,8 +103,7 @@ export function DataTable({ columns, data = [], onRowClick = null, emptyState = 
               {columns.map((column) => (
                 <td
                   key={column.key}
-                  className={cn('p-3.5 text-[#ededed]', column.mono && 'font-mono tabular-nums')}
-                  style={{ textAlign: column.align || 'left' }}
+                  className={cn('p-3.5 text-foreground', column.mono && 'font-mono tabular-nums', ALIGN_CLASSES[column.align] || ALIGN_CLASSES.left)}
                 >
                   {renderCellValue(column, row)}
                 </td>

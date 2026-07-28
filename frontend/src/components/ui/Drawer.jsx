@@ -57,26 +57,30 @@ export function Drawer({ open, onClose, title, width = '480px', children, classN
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" tabIndex={-1} aria-hidden="true" onClick={onClose} />
+      <div className="fixed inset-0 bg-overlay transition-opacity" tabIndex={-1} aria-hidden="true" onClick={onClose} />
       <aside
         ref={drawerRef}
         className={cn(
-          'relative z-50 h-full bg-neutral-900 border-l border-neutral-800 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-200',
+          'relative z-50 flex h-full w-full max-w-full flex-col overflow-hidden border-l border-border bg-surface text-foreground animate-in slide-in-from-right duration-200 sm:w-[var(--drawer-width)]',
           className
         )}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        style={{ width }}
+        style={
+          /** @type {import('react').CSSProperties & Record<`--${string}`, string>} */ ({
+            '--drawer-width': width,
+          })
+        }
         onKeyDown={handleKeyDown}
       >
-        <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
-          <h2 id={titleId} className="text-base font-bold text-neutral-100">
+        <header className="flex items-center justify-between border-b border-border px-6 py-4">
+          <h2 id={titleId} className="text-base font-bold text-foreground">
             {title}
           </h2>
           <button
             ref={closeButtonRef}
-            className="p-1 text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800 rounded transition-colors"
+            className="rounded p-1 text-text-secondary transition-colors hover:bg-surface-hover hover:text-foreground"
             type="button"
             onClick={onClose}
             aria-label="Close drawer"

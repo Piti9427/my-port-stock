@@ -35,7 +35,7 @@ export function Tooltip({ content, children, className = '' }) {
       {open && (
         <span
           className={cn(
-            'absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-xs font-medium text-neutral-100 bg-neutral-900 border border-neutral-700 rounded shadow-lg whitespace-nowrap z-50 animate-in fade-in zoom-in-95 duration-100',
+            'absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded border border-border bg-surface px-2 py-1 text-xs font-medium text-foreground animate-in fade-in zoom-in-95 duration-100',
             className
           )}
           id={tooltipId}
