@@ -259,3 +259,21 @@
   justify-content: center;
   padding: 4px 0;
 }
+
+@media (max-width: 768px) {
+  .app-content {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+  .side-nav,
+  .side-nav.collapsed {
+    position: fixed;
+    bottom: 0;
+  }
+  .side-link,
+  .side-nav.collapsed .side-link {
+    min-height: 44px;
+  }
+  .ui-drawer {
+    width: 100% !important;
+  }
+}

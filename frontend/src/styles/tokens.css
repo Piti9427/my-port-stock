@@ -125,7 +125,6 @@
   }
 
   body {
-    @apply bg-background text-foreground;
     font-family:
       'Plus Jakarta Sans',
       -apple-system,

@@ -2,6 +2,16 @@
 @import './styles/base.css';
 @import './styles/layout.css';
 @import './styles/components.css';
-@import './styles/pages.css';
-@import './styles/utilities.css';
 @import './styles/animations.css';
+
+@media (max-width: 900px) {
+  .command-center-page.command-workspace .command-progressive-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.command-chat-thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}

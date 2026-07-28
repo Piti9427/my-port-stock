@@ -46,6 +46,20 @@ module.exports = {
           DEFAULT: 'var(--surface)',
           foreground: 'var(--foreground)',
         },
+        brand: {
+          DEFAULT: 'var(--brand-primary)',
+          dark: 'var(--brand-dark)',
+        },
+        panel: {
+          DEFAULT: 'var(--bg-panel)',
+          hover: 'var(--bg-panel-hover)',
+          solid: 'var(--bg-panel-solid)',
+        },
+        'border-subtle': 'var(--border-subtle)',
+        'border-medium': 'var(--border-medium)',
+        'fin-buy': 'var(--brand-primary)',
+        'fin-sell': 'var(--fin-danger)',
+        'fin-warning': 'var(--fin-warning)',
       },
       borderRadius: {
         lg: '16px',

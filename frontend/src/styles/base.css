@@ -1,6 +1,6 @@
 /* Base reset and document-level rules currently live in tokens.css with Tailwind layer order preserved. */
 
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--brand-primary-oklch);
+  outline: 2px solid var(--brand-primary);
   outline-offset: 2px;
 }
