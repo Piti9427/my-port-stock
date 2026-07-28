@@ -13,10 +13,11 @@ This is the canonical instruction entrypoint for the MyPortStock workspace.
 1. `CONTEXT.md` - canonical investment language and term boundaries.
 2. `INVESTMENT_CIO_PERSONA.md` - primary persona, decision framework, response rules, and engineering/database behavior.
 3. `ELITE_INVESTOR_SOP.md` - investment SOP, risk management, scoring gates, execution modes, and portfolio constraints.
-4. `PROJECT_MEMORY_INDEX.md` - compact keyword index for durable decisions and prior plans; open linked notes only when relevant.
-5. `stock_portfolio.md` - portfolio/watchlist snapshot; use as hypothesis only until refreshed with current market data.
-6. `trade_journal.md` - active-trade thesis log, post-mortem archive, and learning-loop evidence.
-7. `GEMINI.md` - runtime guardrails for data integrity and simulation consistency.
+4. `docs/DESIGN_SYSTEM_AND_REUSABILITY.md` - canonical System Design & 100% Reusable Component Specification for UI/Frontend work.
+5. `PROJECT_MEMORY_INDEX.md` - compact keyword index for durable decisions and prior plans; open linked notes only when relevant.
+6. `stock_portfolio.md` - portfolio/watchlist snapshot; use as hypothesis only until refreshed with current market data.
+7. `trade_journal.md` - active-trade thesis log, post-mortem archive, and learning-loop evidence.
+8. `GEMINI.md` - runtime guardrails for data integrity and simulation consistency.
 
 ## Mandatory Behavior
 
