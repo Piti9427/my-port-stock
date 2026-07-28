@@ -38,9 +38,9 @@ describe('Command Center production architecture', () => {
 
   it('defines a responsive progressive-disclosure layout', () => {
     const source = read('src/pages/CommandCenterPage.jsx');
-    const css = read('src/index.css');
+    const css = read('src/styles/pages.css');
 
-    expect(source).toContain('command-progressive-grid grid grid-cols-1 lg:grid-cols-[320px_1fr]');
+    expect(source).toContain('command-progressive-grid');
     expect(css).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*\.command-progressive-grid/);
     expect(source).toContain('DecisionSnapshot');
   });

@@ -5,8 +5,13 @@ import { useAuth } from '../auth/clerkAdapter';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { DEFAULT_SECTOR_LIMIT, buildPortfolioRisk } from '../components/risk/riskCalculations';
 import { Alert, AlertDescription } from '../components/ui/alert';
+import { Progress } from '../components/ui/progress';
 import { EmptyState } from '../components/ui/EmptyState';
-import { cn } from '@/lib/utils';
+
+function sectorDrilldownSubtitle(sector) {
+  if (sector.weight > sector.limit) return 'Highest breach risk';
+  return 'Highest current allocation';
+}
 
 function formatCurrency(value) {
   if (!Number.isFinite(Number(value))) return 'Unknown';
@@ -22,6 +27,12 @@ function missingStopCopy(count) {
   if (count === 0) return 'All positions have stop-loss data';
   if (count === 1) return '1 position missing stop-loss';
   return `${count} positions missing stop-loss`;
+}
+
+function riskBudgetTone(risk) {
+  if (risk.missingStopCount > 0 || risk.knownRisk > risk.riskBudget) return 'kpi-loss';
+  if (risk.riskBudgetPct >= 80) return 'kpi-warning';
+  return 'kpi-neutral';
 }
 
 export default function PortfolioRiskPage() {
@@ -43,170 +54,191 @@ export default function PortfolioRiskPage() {
 
   if (!loading && !unavailable && holdings.length === 0) {
     return (
-      <div className="flex-1 p-8 max-w-5xl mx-auto w-full">
+      <div className="risk-page">
         <EmptyState
           title="ยังไม่มีพอร์ตการลงทุน 📈"
           description="ระบบไม่สามารถวิเคราะห์และประเมินเพดานความเสี่ยงได้ เนื่องจากยังไม่มีหุ้นในพอร์ตโฟลิโอของคุณ เริ่มต้นโดยการเพิ่มหุ้นตัวแรกในระบบบันทึกเทรด"
-          action={{ label: 'ไปที่หน้าบันทึกเทรด', onClick: () => navigate('/journal') }}
+          action="บันทึกเทรดตัวแรก"
+          onAction={() => navigate('/journal')}
         />
       </div>
     );
   }
 
-  if (unavailable) {
-    return (
-      <div className="flex-1 p-8 max-w-5xl mx-auto w-full">
+  const sectorTreemapContent = (() => {
+    if (loading) {
+      return <EmptyState title="Loading portfolio risk..." />;
+    }
+    if (unavailable) {
+      return (
         <EmptyState
           title="Insufficient data"
-          description="เกิดข้อผิดพลาดในการดึงข้อมูลจากระบบฐานข้อมูล กรุณาลองใหม่อีกครั้ง"
-          action={{ label: 'ลองใหม่อีกครั้ง', onClick: refetch }}
+          description="Connect Supabase data or run analysis before this panel can calculate."
+          action="Retry"
+          onAction={refetch}
         />
+      );
+    }
+    if (risk.sectors.length === 0) {
+      return (
+        <EmptyState
+          title="เพิ่มหุ้นในพอร์ตเพื่อดูความเสี่ยง"
+          description="ยังไม่มี Supabase holdings สำหรับบัญชีนี้ จึงยังคำนวณ sector, stop-loss, และ risk budget ไม่ได้"
+        />
+      );
+    }
+    return (
+      <div className="sector-bars">
+        {risk.sectors.map((sector) => {
+          const pct = Math.min((sector.weight / sector.limit) * 100, 100);
+          const isOver = sector.weight > sector.limit;
+          const barColor = isOver ? 'var(--fin-loss)' : 'var(--fin-profit)';
+          const active = activeSector?.sector === sector.sector;
+
+          return (
+            <button
+              key={sector.sector}
+              type="button"
+              className={`sector-bar-row ${active ? 'sector-bar-active' : ''}`}
+              onClick={() => setSelectedSector(sector.sector)}
+              aria-pressed={active}
+              aria-label={`${sector.sector}: ${sector.weight.toFixed(1)} percent of portfolio, limit ${sector.limit} percent, ${sector.statusLabel}`}
+            >
+              <div className="sector-bar-name">{sector.sector}</div>
+              <div className="sector-bar-track">
+                <div className="sector-bar-fill" style={{ transform: `scaleX(${pct / 100})`, background: barColor }} />
+                <div className="sector-bar-limit-marker" style={{ left: '100%' }} />
+              </div>
+              <div className="sector-bar-meta">
+                <span style={{ color: barColor }} className="sector-weight-val">
+                  {sector.weight.toFixed(1)}%
+                </span>
+                <span className="sector-limit-val">/ เพดาน {sector.limit}%</span>
+                <span className="sector-risk-label sr-only">{sector.statusLabel}</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
     );
-  }
+  })();
 
   return (
-    <div className="flex-1 p-6 md:p-8 flex flex-col gap-6 max-w-7xl mx-auto w-full bg-neutral-950 text-neutral-100">
-      <header className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold text-neutral-100">Portfolio Risk Controls</h2>
-        <p className="text-xs text-neutral-400">Position sizing and risk budget parameters derived from portfolio data.</p>
-      </header>
-
-      {/* Risk Alert Banners */}
-      {risk.missingStopCount > 0 && (
-        <Alert variant="destructive" className="border-rose-500/30 bg-rose-500/10 text-rose-300">
-          <ShieldAlert className="h-4 w-4 text-rose-400" />
-          <AlertDescription className="text-xs font-medium">
-            ⚠️ Risk Warning: Found {risk.missingStopCount} position(s) missing stop-loss prices. Risk calculations may understate total portfolio
-            downside!
+    <div className="risk-page">
+      {risk.overLimit.length > 0 && (
+        <Alert variant="destructive" className="mb-4">
+          <ShieldAlert className="h-4 w-4" />
+          <AlertDescription>
+            คำเตือนสัดส่วนการลงทุน: <strong>{risk.overLimit.map((s) => s.sector).join(', ')}</strong> เกินเพดานที่ตั้งไว้
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Overview Metrics Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 border border-neutral-800 rounded-xl bg-neutral-900/60 backdrop-blur-sm flex flex-col justify-between">
-          <div className="text-xs font-semibold text-neutral-400">Total Portfolio Value</div>
-          <div className="text-2xl font-bold font-mono text-neutral-100 mt-2">{formatCurrency(risk.totalPortfolioValue)}</div>
-          <div className="text-[0.7rem] text-neutral-500 mt-1">{risk.positionCount} active positions</div>
+      <div className="risk-kpi-row">
+        <div className="glass-panel risk-kpi-card">
+          <div className="kpi-label">มูลค่าพอร์ต</div>
+          <div className="kpi-value kpi-neutral">{risk.totalValue > 0 ? formatCurrency(risk.totalValue) : '—'}</div>
+          <div className="kpi-sub">{holdings.length} สถานะจาก Supabase</div>
         </div>
-
-        <div className="p-5 border border-neutral-800 rounded-xl bg-neutral-900/60 backdrop-blur-sm flex flex-col justify-between">
-          <div className="text-xs font-semibold text-neutral-400">THB Risk Budget (Max {risk.maxRiskPct}%)</div>
-          <div className="text-2xl font-bold font-mono text-neutral-100 mt-2">{formatCurrency(risk.riskBudget)}</div>
-          <div className="text-[0.7rem] text-neutral-500 mt-1">Single Trade Limit: {formatCurrency(risk.maxRiskPerTrade)}</div>
+        <div className="glass-panel risk-kpi-card">
+          <div className="kpi-label">กลุ่มที่เกินเพดาน</div>
+          <div className={`kpi-value ${risk.overLimit.length > 0 ? 'kpi-loss' : 'kpi-neutral'}`}>{risk.overLimit.length}</div>
+          <div className="kpi-sub">เพดานเริ่มต้น {DEFAULT_SECTOR_LIMIT}% ต่อ sector</div>
         </div>
-
-        <div className="p-5 border border-neutral-800 rounded-xl bg-neutral-900/60 backdrop-blur-sm flex flex-col justify-between">
-          <div className="text-xs font-semibold text-neutral-400">Known Hard Stop Risk</div>
-          <div className={cn('text-2xl font-bold font-mono mt-2', risk.knownRisk > risk.riskBudget ? 'text-rose-400' : 'text-emerald-400')}>
-            {formatCurrency(risk.knownRisk)}
-          </div>
-          <div className="text-[0.7rem] text-neutral-500 mt-1">
-            งบประมาณ {formatCurrency(risk.riskBudget)} · {missingStopCopy(risk.missingStopCount)}
-          </div>
-        </div>
-
-        <div className="p-5 border border-neutral-800 rounded-xl bg-neutral-900/60 backdrop-blur-sm flex flex-col justify-between">
-          <div className="text-xs font-semibold text-neutral-400">Risk Budget Utilization</div>
-          <div className="text-2xl font-bold font-mono text-neutral-100 mt-2">{formatPercent(risk.riskBudgetPct)}</div>
-          <div
+        <div className="glass-panel risk-kpi-card risk-budget-card">
+          <div className="kpi-label">Risk Budget Used</div>
+          <div className={`kpi-value ${riskBudgetTone(risk)}`}>{formatCurrency(risk.knownRisk)}</div>
+          <Progress
+            value={Math.min(risk.riskBudgetPct, 100)}
+            className="my-3 h-1.5"
             role="progressbar"
             aria-label="Risk budget used"
             aria-valuemin={0}
-            aria-valuenow={risk.knownRisk}
+            aria-valuenow={Math.round(risk.knownRisk)}
             aria-valuemax={risk.riskBudget}
-            className="w-full h-1.5 mt-2 bg-neutral-800 rounded-full overflow-hidden"
-          >
-            <div className="h-full bg-emerald-500 transition-all" style={{ width: `${Math.min(100, (risk.knownRisk / risk.riskBudget) * 100)}%` }} />
+          />
+          <div className="kpi-sub">
+            งบประมาณ {formatCurrency(risk.riskBudget)} ({risk.riskBudgetPct.toFixed(0)}%) • {missingStopCopy(risk.missingStopCount)}
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Sector Concentration */}
-      <section className="p-6 border border-neutral-800 rounded-xl bg-neutral-900/60 backdrop-blur-sm flex flex-col gap-4">
-        <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
-          <span className="text-sm font-bold text-neutral-200">Sector Concentration Limits (Max {DEFAULT_SECTOR_LIMIT}%)</span>
+      <div className="glass-panel risk-treemap-panel">
+        <div className="panel-header">
+          <div>
+            <h2 className="panel-heading">การกระจายความเสี่ยงรายกลุ่ม</h2>
+            <p className="panel-subtext">คำนวณจาก holdings จริง ไม่มีข้อมูลจำลอง</p>
+          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {risk.sectors.map((sec) => {
-            const isBreached = sec.weight > sec.limit;
-            const isSelected = activeSector?.sector === sec.sector;
-            const statusLabel = isBreached ? 'Over limit' : 'Within limit';
-            const accessibleLabel = `${sec.sector}: ${sec.weight.toFixed(1)} percent of portfolio, limit ${sec.limit} percent, ${statusLabel}`;
-            return (
-              <button
-                key={sec.sector}
-                type="button"
-                aria-label={accessibleLabel}
-                aria-pressed={isSelected}
-                className={cn(
-                  'p-4 text-left border rounded-lg transition-all',
-                  isBreached
-                    ? 'border-rose-500/40 bg-rose-500/10 text-rose-200'
-                    : 'border-neutral-800 bg-neutral-900/40 hover:bg-neutral-800/60 text-neutral-300',
-                  isSelected && 'ring-2 ring-emerald-500'
-                )}
-                onClick={() => setSelectedSector(sec.sector)}
-              >
-                <div className="flex items-center justify-between text-xs font-semibold mb-1">
-                  <span>{sec.sector}</span>
-                  <span className="font-mono">{formatPercent(sec.weight)}</span>
-                </div>
-                <div className="text-[0.68rem] text-neutral-400 mt-1 flex justify-between">
-                  <span>Limit: {sec.limit}%</span>
-                  <span className={isBreached ? 'text-rose-400 font-bold' : 'text-emerald-400'}>{statusLabel}</span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </section>
 
-      {/* Sector Holdings Detail */}
-      {activeSector && (
-        <section
-          className="p-6 border border-neutral-800 rounded-xl bg-neutral-900/60 backdrop-blur-sm flex flex-col gap-4"
-          aria-label={`${activeSector.sector} holdings`}
-        >
-          <div className="text-sm font-bold text-neutral-200">{activeSector.sector} Holdings</div>
-          <div className="w-full overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead className="bg-neutral-900 border-b border-neutral-800 text-neutral-400">
-                <tr>
-                  <th className="p-3">Ticker</th>
-                  <th className="p-3">Value</th>
-                  <th className="p-3">Weight%</th>
-                  <th className="p-3">Stop Distance</th>
-                  <th className="p-3">THB Risk</th>
-                  <th className="p-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-800/60">
-                {activeSector.holdings.map((h) => (
-                  <tr key={h.ticker} className="hover:bg-neutral-800/40 transition-colors">
-                    <td className="p-3 font-bold text-neutral-100">{h.ticker}</td>
-                    <td className="p-3 font-mono text-neutral-200">{formatCurrency(h.value)}</td>
-                    <td className="p-3 font-mono text-neutral-300">{formatPercent(h.weight)}</td>
-                    <td className="p-3 font-mono text-neutral-300">{h.stopDistancePct != null ? `${h.stopDistancePct.toFixed(1)}%` : 'Unknown'}</td>
-                    <td className="p-3 font-mono text-neutral-300">{h.thbRisk != null ? formatCurrency(h.thbRisk) : 'Unknown'}</td>
-                    <td className="p-3">
-                      <span
-                        className={cn(
-                          'px-2 py-0.5 text-[0.7rem] font-bold rounded',
-                          h.status === 'Stop defined' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
-                        )}
-                      >
-                        {h.status}
-                      </span>
-                    </td>
+        {sectorTreemapContent}
+
+        {activeSector && (
+          <section className="risk-drilldown" aria-label={`${activeSector.sector} holdings`}>
+            <div className="panel-heading">Showing: {activeSector.sector}</div>
+            <div className="panel-subtext">{sectorDrilldownSubtitle(activeSector)}</div>
+            <div className="risk-table-wrap">
+              <table className="risk-holdings-table">
+                <thead>
+                  <tr>
+                    <th>Ticker</th>
+                    <th>Value</th>
+                    <th>Weight%</th>
+                    <th>Stop Distance</th>
+                    <th>THB Risk</th>
+                    <th>P/L THB</th>
+                    <th>Age</th>
+                    <th>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
+                </thead>
+                <tbody>
+                  {activeSector.holdings.map((holding) => (
+                    <tr
+                      key={holding.id || holding.ticker}
+                      className={`${holding.thbRisk === null ? 'risk-row-missing' : ''} ${holding.time_stop_hit ? 'time-stop-breached' : ''}`}
+                    >
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {holding.ticker}
+                          {holding.time_stop_hit && (
+                            <span
+                              style={{
+                                fontSize: '0.65rem',
+                                background: '#3f1a1a',
+                                color: 'var(--fin-loss)',
+                                padding: '2px 4px',
+                                borderRadius: '4px',
+                                border: '1px solid #7f1d1d',
+                                fontFamily: 'monospace',
+                              }}
+                              title="Time Stop limit exceeded. Recycling of capital recommended."
+                            >
+                              ⏰ Time Stop
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td>{formatCurrency(holding.value)}</td>
+                      <td>{formatPercent(holding.weight)}</td>
+                      <td>{holding.stopDistancePct === null ? 'Unknown' : formatPercent(holding.stopDistancePct)}</td>
+                      <td>{holding.thbRisk === null ? 'Unknown' : formatCurrency(holding.thbRisk)}</td>
+                      <td className={holding.pl_thb >= 0 ? 'semantic-positive' : 'semantic-negative'}>
+                        {holding.pl_thb !== undefined
+                          ? `${holding.pl_thb >= 0 ? '+' : ''}${Number(holding.pl_thb).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                          : '—'}
+                      </td>
+                      <td style={{ color: holding.time_stop_hit ? 'var(--fin-loss)' : 'inherit' }}>
+                        {holding.age_days !== undefined ? `${holding.age_days} วัน` : '—'}
+                      </td>
+                      <td>{holding.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+      </div>
     </div>
   );
 }

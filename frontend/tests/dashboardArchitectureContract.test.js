@@ -52,10 +52,10 @@ describe('Dashboard decomposition contract', () => {
     expect(scenarioPlanner).toContain('Drawer');
   });
 
-  test('Dashboard uses Tailwind grid layout for responsive collapse', () => {
+  test('Dashboard uses responsive grid layout for collapse', () => {
     const source = read('src/pages/DashboardPage.jsx');
 
-    expect(source).toContain('grid grid-cols-1 lg:grid-cols-3 gap-6');
-    expect(source).toContain('grid grid-cols-1 lg:grid-cols-2 gap-6');
+    expect(source).toContain('dashboard-primary-grid');
+    expect(source).toContain('dashboard-secondary-grid');
   });
 });

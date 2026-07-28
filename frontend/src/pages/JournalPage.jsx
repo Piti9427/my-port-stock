@@ -1,16 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Clock, Plus } from 'lucide-react';
 import { useSearchParams } from 'react-router';
 import { useAuth } from '../auth/clerkAdapter';
-import { useJournal } from '../hooks/useJournal';
-import { usePortfolio } from '../hooks/usePortfolio';
-import { useWatchlist } from '../hooks/useWatchlist';
 import { fetchWithAuth } from '../lib/api';
 import { EmptyState } from '../components/ui/EmptyState.jsx';
 import { JournalFilters } from '../components/journal/JournalFilters.jsx';
 import { JournalTradeTable } from '../components/journal/JournalTradeTable.jsx';
 import { TradeLogDrawer } from '../components/journal/TradeLogDrawer.jsx';
-import { DataStamp } from '../components/ui/DataStamp.jsx';
 
 function normalizeTicker(value) {
   return String(value || '')
@@ -62,167 +58,195 @@ function parseFilters(searchParams) {
 }
 
 function parseSort(searchParams) {
-  return {
-    key: searchParams.get('sort_key') || 'date',
-    direction: searchParams.get('sort_dir') === 'asc' ? 'asc' : 'desc',
-  };
-}
-
-function matchesFilters(trade, filters) {
-  const tickerOk = filters.ticker === 'ALL' || normalizeTicker(trade.ticker) === filters.ticker;
-  const modeOk = filters.mode === 'ALL' || trade.mode === filters.mode;
-  const isClosed = trade.status === 'CLOSED' || trade.status === 'closed' || Boolean(trade.closed_at);
-  const statusOk = filters.status === 'ALL' || (filters.status === 'OPEN' ? !isClosed : isClosed);
-  const time = dateValue(trade);
-  const startOk = !filters.start || time >= new Date(filters.start).getTime();
-  const endOk = !filters.end || time <= new Date(`${filters.end}T23:59:59`).getTime();
-  return tickerOk && modeOk && statusOk && startOk && endOk;
+  const direction = searchParams.get('dir') === 'asc' ? 'asc' : 'desc';
+  return { key: searchParams.get('sort') || 'date', direction };
 }
 
 export default function JournalPage() {
   const { getToken } = useAuth();
-  const journal = useJournal({ getToken });
-  const portfolio = usePortfolio({ getToken });
-  const watchlist = useWatchlist({ getToken });
-
+  const getTokenRef = useRef(getToken);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [trades, setTrades] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [expandedTradeId, setExpandedTradeId] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const filters = parseFilters(searchParams);
   const sort = parseSort(searchParams);
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [expandedTradeId, setExpandedTradeId] = useState(null);
-  const autoOpenedRef = useRef(false);
+  useEffect(() => {
+    getTokenRef.current = getToken;
+  }, [getToken]);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    const [journalResult, holdingsResult, watchlistResult] = await Promise.allSettled([
+      fetchWithAuth('/api/journal', getTokenRef.current),
+      fetchWithAuth('/api/holdings', getTokenRef.current),
+      fetchWithAuth('/api/watchlists', getTokenRef.current),
+    ]);
+
+    if (journalResult.status === 'rejected') {
+      setTrades([]);
+      setSuggestions([]);
+      setError(journalResult.reason?.message || 'Supabase journal data unavailable');
+      setLoading(false);
+      return;
+    }
+
+    const journalTrades = Array.isArray(journalResult.value?.trades) ? journalResult.value.trades : [];
+    const holdingTickers =
+      holdingsResult.status === 'fulfilled' && Array.isArray(holdingsResult.value) ? holdingsResult.value.map((row) => row.ticker) : [];
+    const watchlistTickers =
+      watchlistResult.status === 'fulfilled' && Array.isArray(watchlistResult.value) ? watchlistResult.value.map((row) => row.ticker) : [];
+
+    setTrades(journalTrades);
+    setSuggestions(uniqueSorted([...holdingTickers, ...watchlistTickers, ...journalTrades.map((trade) => trade.ticker)]));
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    const rawAction = searchParams.get('action');
+    // Initial route load intentionally owns the async loading/error state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadData();
+  }, [loadData]);
 
-    if (rawAction === 'new' && !autoOpenedRef.current) {
-      autoOpenedRef.current = true;
-      setIsDrawerOpen(true);
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName) || event.target.isContentEditable) {
+        return;
+      }
+      if (event.key.toLowerCase() === 'c' && !drawerOpen) {
+        event.preventDefault();
+        setDrawerOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [drawerOpen]);
 
-      setSearchParams((current) => {
-        const next = new URLSearchParams(current);
-        next.delete('action');
-        return next;
-      });
-    }
-  }, [searchParams, setSearchParams]);
+  const tickerOptions = useMemo(() => uniqueSorted(trades.map((trade) => normalizeTicker(trade.ticker))), [trades]);
+  const modeOptions = useMemo(() => uniqueSorted(trades.map((trade) => trade.mode)), [trades]);
 
-  const filteredTrades = useMemo(
-    () => journal.trades.filter((trade) => matchesFilters(trade, filters)).sort((left, right) => compareTrades(left, right, sort)),
-    [filters, journal.trades, sort]
-  );
+  const filteredTrades = useMemo(() => {
+    return trades
+      .filter((trade) => {
+        const tickerOk = filters.ticker === 'ALL' || normalizeTicker(trade.ticker) === filters.ticker;
+        const modeOk = filters.mode === 'ALL' || trade.mode === filters.mode;
+        const statusOk = filters.status === 'ALL' || String(trade.status || 'OPEN').toUpperCase() === filters.status;
+        const tradeDate = dateValue(trade);
+        const startMs = filters.start ? new Date(filters.start).getTime() : NaN;
+        const endMs = filters.end ? new Date(`${filters.end}T23:59:59`).getTime() : NaN;
+        const startOk = !filters.start || Number.isNaN(startMs) || tradeDate >= startMs;
+        const endOk = !filters.end || Number.isNaN(endMs) || tradeDate <= endMs;
+        return tickerOk && modeOk && statusOk && startOk && endOk;
+      })
+      .sort((left, right) => compareTrades(left, right, sort));
+  }, [filters.end, filters.mode, filters.start, filters.status, filters.ticker, sort, trades]);
 
-  const tickerOptions = useMemo(() => uniqueSorted(journal.trades.map((trade) => normalizeTicker(trade.ticker))), [journal.trades]);
-  const modeOptions = useMemo(() => uniqueSorted(journal.trades.map((trade) => trade.mode)), [journal.trades]);
-  const suggestions = useMemo(
-    () => uniqueSorted([...portfolio.holdings.map((h) => h.ticker), ...watchlist.items.map((w) => w.ticker)]),
-    [portfolio.holdings, watchlist.items]
-  );
-
-  const updateSearch = (updater) => {
+  const setParam = (key, value, defaultValue = 'ALL') => {
     setSearchParams((current) => {
       const next = new URLSearchParams(current);
-      updater(next);
+      if (!value || value === defaultValue) next.delete(key);
+      else next.set(key, value);
       return next;
     });
   };
 
-  const handleFilterChange = (key, value) => {
-    updateSearch((next) => {
-      if (!value || value === 'ALL') next.delete(key);
-      else next.set(key, value);
+  const setFilter = (key, value) => {
+    setParam(key, value, key === 'start' || key === 'end' ? '' : 'ALL');
+  };
+
+  const setSort = (key) => {
+    const updated = nextSort(sort, key);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set('sort', updated.key);
+      next.set('dir', updated.direction);
+      return next;
     });
   };
 
-  const handleResetFilters = () => {
-    updateSearch((next) => {
+  const resetFilters = () => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
       ['ticker', 'mode', 'status', 'start', 'end'].forEach((key) => next.delete(key));
+      return next;
     });
   };
 
-  const handleToggleSort = (key) => {
-    const next = nextSort(sort, key);
-    updateSearch((params) => {
-      params.set('sort_key', next.key);
-      params.set('sort_dir', next.direction);
-    });
-  };
-
-  const handleNewLog = () => {
-    setIsDrawerOpen(true);
-  };
-
-  const handleSaveSuccess = async () => {
-    setIsDrawerOpen(false);
-    await journal.refetch();
-  };
-
-  const emptyCopy = journal.trades.length === 0 ? 'บันทึกเทรดครั้งแรกเพื่อเริ่มติดตาม' : 'ไม่มีรายการเทรดที่ตรงกับเงื่อนไข filter ที่เลือกไว้';
+  const emptyDescription = trades.length === 0 ? 'บันทึกเทรดครั้งแรกเพื่อเริ่มติดตาม' : 'ไม่มี trade ที่ตรงกับ filter นี้';
 
   return (
-    <div className="flex-1 p-6 md:p-8 flex flex-col gap-6 max-w-7xl mx-auto w-full bg-neutral-950 text-neutral-100">
-      <header className="p-6 border border-neutral-800 rounded-xl bg-neutral-900/60 backdrop-blur-sm flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h2 className="text-xl font-bold text-neutral-100">Trade Journal & Audit Log</h2>
-          <p className="text-xs text-neutral-400 mt-1">Audit log of open decisions and historical trade executions.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <DataStamp source={journal.meta?.source || 'Supabase trade journal'} timestamp={journal.meta?.as_of} stale={journal.isStale} />
-          <button
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-500 text-neutral-950 hover:bg-emerald-400 transition-colors"
-            type="button"
-            onClick={handleNewLog}
-          >
-            <Plus size={14} aria-hidden="true" />
+    <div className="journal-page">
+      <header className="glass-panel journal-header">
+        <div className="journal-header-top">
+          <div>
+            <h2>บันทึกการเทรดและวิเคราะห์หลังจบเกม</h2>
+            <p>ทบทวน thesis, execution, risk/reward และ post-mortem จาก Supabase journal</p>
+          </div>
+          <button className="btn-analyze journal-log-button" type="button" onClick={() => setDrawerOpen(true)}>
+            <Plus size={16} aria-hidden="true" />
             Log trade
           </button>
         </div>
+        <JournalFilters filters={filters} modeOptions={modeOptions} tickerOptions={tickerOptions} onFilterChange={setFilter} onReset={resetFilters} />
       </header>
 
-      <section className="p-6 border border-neutral-800 rounded-xl bg-neutral-900/60 backdrop-blur-sm flex flex-col gap-4">
-        <JournalFilters
-          filters={filters}
-          modeOptions={modeOptions}
-          tickerOptions={tickerOptions}
-          onFilterChange={handleFilterChange}
-          onReset={handleResetFilters}
-        />
-
-        {journal.error ? (
-          <EmptyState
-            title="Unable to load trade journal"
-            description={journal.error.message || 'Connecting to Supabase trade journal failed.'}
-            action={{ label: 'Retry', onClick: journal.refetch }}
-          />
-        ) : filteredTrades.length === 0 && !journal.loading ? (
-          <EmptyState
-            title={journal.trades.length === 0 ? 'ยังไม่มีรายการเทรด' : 'No entries found'}
-            description={emptyCopy}
-            action={{ label: journal.trades.length === 0 ? 'บันทึกเทรดครั้งแรก' : 'Log trade', onClick: handleNewLog }}
-          />
+      <section className="glass-panel journal-trades" aria-labelledby="journal-trades-title">
+        <div className="panel-header">
+          <span id="journal-trades-title" className="panel-title">
+            ประวัติคำสั่งซื้อขาย
+          </span>
+          <span className="data-stamp">
+            <Clock size={10} aria-hidden="true" />
+            <span>Supabase journal data</span>
+          </span>
+        </div>
+        {error ? (
+          <EmptyState title="Insufficient data" description={error} action={{ label: 'Retry', onClick: loadData }} />
         ) : (
           <JournalTradeTable
-            trades={filteredTrades}
-            sort={sort}
-            loading={journal.loading}
-            onSortChange={handleToggleSort}
-            onExpandTrade={(item) => {
-              const id = typeof item === 'object' && item !== null ? item.id : item;
-              setExpandedTradeId((curr) => (curr === id ? null : id));
-            }}
+            emptyAction={trades.length === 0 ? { label: 'บันทึกเทรดครั้งแรก', onClick: () => setDrawerOpen(true) } : undefined}
+            emptyDescription={emptyDescription}
             expandedTradeId={expandedTradeId}
-            emptyDescription={emptyCopy}
-            emptyAction={undefined}
+            loading={loading}
+            onExpandTrade={(trade) => setExpandedTradeId((current) => (current === trade.id ? null : trade.id))}
+            onSortChange={setSort}
+            sort={sort}
+            trades={filteredTrades}
           />
         )}
       </section>
 
+      <aside className="glass-panel journal-perf" aria-labelledby="journal-loop-title">
+        <div id="journal-loop-title" className="panel-title">
+          Decision loop
+        </div>
+        <div className="journal-loop-summary">
+          <div>
+            <span>Total</span>
+            <strong>{trades.length}</strong>
+          </div>
+          <div>
+            <span>Filtered</span>
+            <strong>{filteredTrades.length}</strong>
+          </div>
+          <div>
+            <span>Closed</span>
+            <strong>{trades.filter((trade) => String(trade.status).toUpperCase() === 'CLOSED').length}</strong>
+          </div>
+        </div>
+        <p>Closed rows should carry thesis and post-mortem notes so Analytics can learn from realized outcomes.</p>
+      </aside>
+
       <TradeLogDrawer
-        open={isDrawerOpen}
         getToken={getToken}
-        onClose={() => setIsDrawerOpen(false)}
-        onSaved={handleSaveSuccess}
+        onClose={() => setDrawerOpen(false)}
+        onSaved={loadData}
+        open={drawerOpen}
         suggestions={suggestions}
         submitTrade={fetchWithAuth}
       />

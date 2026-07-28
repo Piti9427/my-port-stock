@@ -47,23 +47,19 @@ export default function DashboardPage() {
   const preferredTicker = normalizedTicker(location.state?.ticker || portfolio.holdings[0]?.ticker || watchlist.items[0]?.ticker);
 
   return (
-    <div className="flex-1 p-6 md:p-8 flex flex-col gap-6 max-w-7xl mx-auto w-full bg-neutral-950 text-neutral-100">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <PortfolioSummary
-            holdings={portfolio.holdings}
-            source={portfolio.meta.source || 'Supabase holdings'}
-            timestamp={portfolio.meta.as_of}
-            stale={portfolio.isStale}
-          />
-        </div>
-        <div>
-          <QuickActions
-            onAnalyze={() => openAnalysis(preferredTicker)}
-            onLogTrade={() => navigate('/journal')}
-            onAddWatchlist={() => navigate('/market')}
-          />
-        </div>
+    <div className="dashboard-page dashboard-overview">
+      <div className="dashboard-primary-grid">
+        <PortfolioSummary
+          holdings={portfolio.holdings}
+          source={portfolio.meta.source || 'Supabase holdings'}
+          timestamp={portfolio.meta.as_of}
+          stale={portfolio.isStale}
+        />
+        <QuickActions
+          onAnalyze={() => openAnalysis(preferredTicker)}
+          onLogTrade={() => navigate('/journal')}
+          onAddWatchlist={() => navigate('/market')}
+        />
       </div>
 
       <HoldingsTable
@@ -76,7 +72,7 @@ export default function DashboardPage() {
         onFirstRunAction={() => navigate('/journal')}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="dashboard-secondary-grid">
         <WatchlistPanel
           items={watchlist.items}
           loading={watchlist.loading}
