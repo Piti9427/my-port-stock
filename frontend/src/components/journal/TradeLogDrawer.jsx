@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { useMemo, useState } from 'react';
 import { Drawer } from '../ui/Drawer.jsx';
+import { cn } from '../../lib/utils.js';
 import { formatCurrency, toNumber } from './journalFormatters.js';
 
 const MODES = ['Quick Trade', 'Swing Trade', 'Long-Term/Core', 'Existing Position / Exit Review'];
@@ -93,17 +94,21 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
 
   return (
     <Drawer open={open} onClose={onClose} title="Log trade" width="520px">
-      <div className="journal-trade-drawer">
+      <div className="grid gap-4 [&_input]:min-h-10 [&_input]:w-full [&_input]:rounded-sm [&_input]:border [&_input]:border-border-subtle [&_input]:bg-panel [&_input]:px-3 [&_input]:py-2 [&_input]:text-sm [&_input]:text-foreground [&_label]:grid [&_label]:gap-2 [&_label]:text-xs [&_label]:font-bold [&_label]:text-text-secondary [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-sm [&_select]:border [&_select]:border-border-subtle [&_select]:bg-panel [&_select]:px-3 [&_select]:py-2 [&_select]:text-sm [&_select]:text-foreground [&_textarea]:min-h-24 [&_textarea]:w-full [&_textarea]:resize-y [&_textarea]:rounded-sm [&_textarea]:border [&_textarea]:border-border-subtle [&_textarea]:bg-panel [&_textarea]:px-3 [&_textarea]:py-2 [&_textarea]:text-sm [&_textarea]:text-foreground">
         <datalist id="journal-ticker-suggestions">
           {suggestions.map((ticker) => (
             <option key={ticker} value={ticker} />
           ))}
         </datalist>
-        <div className="journal-drawer-type" role="radiogroup" aria-label="Trade type">
+        <div
+          className="inline-grid auto-cols-fr grid-flow-col overflow-hidden rounded-sm border border-border-subtle bg-panel-solid [&_button]:min-h-10 [&_button]:border-r [&_button]:border-border-subtle [&_button]:px-3 [&_button]:text-xs [&_button]:font-bold [&_button]:text-text-secondary [&_button:last-child]:border-r-0"
+          role="radiogroup"
+          aria-label="Trade type"
+        >
           {['BUY', 'SELL', 'ADJUST'].map((value) => (
             <button
               key={value}
-              className={form.type === value ? 'active' : ''}
+              className={cn(form.type === value && 'bg-brand-dim text-brand')}
               type="button"
               role="radio"
               aria-checked={form.type === value}
@@ -113,19 +118,25 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
+        <div className="mb-3 flex flex-col gap-1">
           <label htmlFor="journal-ticker-input">Ticker</label>
           <input
             id="journal-ticker-input"
+            className="w-full rounded-sm border border-border bg-panel-solid text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand"
             list="journal-ticker-suggestions"
             value={form.ticker}
             onChange={(event) => update('ticker', event.target.value.toUpperCase())}
           />
         </div>
-        <div className="journal-drawer-grid">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div className="[display:grid] [gap:var(--space-4)] [grid-template-columns:repeat(2,_minmax(0,_1fr))] max-[560px]:[grid-template-columns:minmax(0,_1fr)]">
+          <div className="flex flex-col gap-1">
             <label htmlFor="journal-mode-select">Trade Mode</label>
-            <select id="journal-mode-select" value={form.mode} onChange={(event) => update('mode', event.target.value)}>
+            <select
+              id="journal-mode-select"
+              className="w-full rounded-sm border border-border bg-panel-solid text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand"
+              value={form.mode}
+              onChange={(event) => update('mode', event.target.value)}
+            >
               {MODES.map((mode) => (
                 <option key={mode} value={mode}>
                   {mode}
@@ -133,18 +144,18 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
               ))}
             </select>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="flex flex-col gap-1">
             <label htmlFor="journal-status-select">Status</label>
             <select id="journal-status-select" value={form.status} onChange={(event) => update('status', event.target.value)}>
               <option value="OPEN">Active</option>
               <option value="CLOSED">Closed</option>
             </select>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="flex flex-col gap-1">
             <label htmlFor="journal-entry-input">Entry Price</label>
             <input id="journal-entry-input" inputMode="decimal" value={form.entry} onChange={(event) => update('entry', event.target.value)} />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="flex flex-col gap-1">
             <label htmlFor="journal-stoploss-input">Stop Loss</label>
             <input
               id="journal-stoploss-input"
@@ -153,29 +164,34 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
               onChange={(event) => update('stopLoss', event.target.value)}
             />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="flex flex-col gap-1">
             <label htmlFor="journal-target-input">Target</label>
             <input id="journal-target-input" inputMode="decimal" value={form.target} onChange={(event) => update('target', event.target.value)} />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="flex flex-col gap-1">
             <label htmlFor="journal-capital-input">Capital Allocated</label>
             <input id="journal-capital-input" inputMode="decimal" value={form.capital} onChange={(event) => update('capital', event.target.value)} />
           </div>
         </div>
-        <div className="journal-quick-fill" aria-label="Capital quick fill">
+        <div className="[display:flex] [flex-wrap:wrap] [gap:var(--space-2)]" aria-label="Capital quick fill">
           {[5000, 10000, 25000].map((amount) => (
-            <button key={amount} className="btn-secondary" type="button" onClick={() => update('capital', String(amount))}>
+            <button
+              key={amount}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-border-subtle bg-transparent px-5 py-2.5 font-sans text-sm font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:text-text-muted"
+              type="button"
+              onClick={() => update('capital', String(amount))}
+            >
               {formatCurrency(amount)}
             </button>
           ))}
         </div>
-        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div className="mt-3 flex flex-col gap-1">
           <label htmlFor="journal-bias-select">Cognitive Bias Tag</label>
           <select
             id="journal-bias-select"
             value={form.cognitiveBias}
             onChange={(event) => update('cognitiveBias', event.target.value)}
-            className="mode-select"
+            className="min-h-10 w-full rounded-sm border border-border bg-panel-solid px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand"
           >
             {['None', 'FOMO', 'Loss Aversion', 'Anchoring', 'Herd Behavior'].map((bias) => (
               <option key={bias} value={bias}>
@@ -184,26 +200,37 @@ export function TradeLogDrawer({ getToken, onClose, onSaved, open, suggestions =
             ))}
           </select>
         </div>
-        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div className="mt-3 flex flex-col gap-1">
           <label htmlFor="journal-thesis-input">Thesis</label>
           <textarea id="journal-thesis-input" value={form.thesis} onChange={(event) => update('thesis', event.target.value)} />
         </div>
-        <div className="journal-risk-summary font-mono">
+        <div className="[display:flex] [align-items:center] [justify-content:space-between] [gap:var(--space-3)] [border:1px_solid_var(--border-subtle)] [padding:var(--space-3)] [color:var(--text-primary)] font-mono [font-size:0.78rem] font-mono">
           <span>R/R {calculation.rr ? calculation.rr.toFixed(2) : '—'}</span>
           <span>Risk {formatCurrency(calculation.risk)}</span>
           <span>Size {calculation.shares ? calculation.shares.toFixed(2) : '—'} sh</span>
         </div>
         {calculation.warn && (
-          <div className="journal-risk-warning" role="alert">
+          <div
+            className="text-balance [border:1px_solid_rgba(var(--status-warning-rgb),_0.38)] [color:var(--fin-warning)] [padding:var(--space-3)] [font-size:0.78rem] [line-height:1.45] [color:var(--fin-loss)] [font-size:0.76rem] [line-height:1.45] max-[640px]:[align-items:flex-start] max-[640px]:[flex-direction:column] max-[640px]:[gap:10px] [display:flex] [align-items:center] [gap:10px] [padding:12px_16px] [background:var(--fin-loss-dim)] [border:1px_solid_rgba(var(--status-danger-rgb),_0.3)] [border-radius:var(--radius-sm)] [font-size:0.85rem] [color:var(--text-primary)] [animation:fadeInDown_0.3s_ease] [&_strong]:[color:var(--fin-loss)]"
+            role="alert"
+          >
             SOP warning: risk exceeds 2% capital or R/R is below 1:2.
           </div>
         )}
         {error && (
-          <div className="command-inline-error" role="alert">
+          <div
+            className="text-balance [border:1px_solid_rgba(var(--status-warning-rgb),_0.38)] [color:var(--fin-warning)] [padding:var(--space-3)] [font-size:0.78rem] [line-height:1.45] [color:var(--fin-loss)] [font-size:0.76rem] [line-height:1.45] max-[640px]:[align-items:flex-start] max-[640px]:[flex-direction:column] max-[640px]:[gap:10px] [display:flex] [align-items:center] [gap:10px] [padding:12px_16px] [background:var(--fin-loss-dim)] [border:1px_solid_rgba(var(--status-danger-rgb),_0.3)] [border-radius:var(--radius-sm)] [font-size:0.85rem] [color:var(--text-primary)] [animation:fadeInDown_0.3s_ease] [&_strong]:[color:var(--fin-loss)]"
+            role="alert"
+          >
             {error}
           </div>
         )}
-        <button className="btn-analyze" type="button" onClick={save} disabled={saving}>
+        <button
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-transparent bg-brand px-5 py-3 font-sans text-sm font-bold tracking-wide text-text-inverse transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-hover disabled:text-text-secondary"
+          type="button"
+          onClick={save}
+          disabled={saving}
+        >
           {saving ? 'Saving...' : 'Save trade'}
         </button>
       </div>

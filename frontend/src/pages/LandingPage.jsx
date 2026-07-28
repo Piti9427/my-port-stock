@@ -3,65 +3,63 @@ import { Bot, Crosshair, ShieldAlert, ArrowRight } from 'lucide-react';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen w-full flex flex-col relative overflow-hidden bg-[var(--bg-void)] text-[var(--text-primary)] font-sans selection:bg-emerald-500/30">
+    <div className="relative flex min-h-screen w-full flex-col overflow-hidden bg-background font-sans text-foreground selection:bg-brand-dim">
       {/* Background Decor */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-      <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-[var(--brand-primary)] opacity-10 dark:opacity-20 blur-[100px]"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(var(--text-primary-rgb),0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(var(--text-primary-rgb),0.03)_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-brand opacity-10 blur-[100px]" />
 
       {/* Header */}
-      <header className="h-16 flex items-center justify-between px-6 md:px-12 border-b border-[var(--border-subtle)] relative z-10 bg-[var(--bg-shell)]/70 backdrop-blur-md">
+      <header className="relative z-10 flex h-16 items-center justify-between border-b border-border bg-shell px-6 md:px-12">
         <div className="flex items-center gap-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-[var(--brand-primary)]"></div>
-          <span className="font-semibold tracking-tight text-[var(--text-primary)] text-lg">MyPortStock</span>
+          <div className="size-2.5 rounded-full bg-brand" />
+          <span className="text-lg font-semibold tracking-tight text-foreground">MyPortStock</span>
         </div>
         <SignInButton mode="modal">
-          <button className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200">
-            Sign In
-          </button>
+          <button className="text-sm font-medium text-text-secondary transition-colors duration-200 hover:text-foreground">Sign In</button>
         </SignInButton>
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 flex flex-col items-center justify-center relative z-10 px-6 text-center">
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 text-center">
         <div className="max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[var(--brand-primary)]/30 bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] text-xs font-semibold tracking-widest uppercase mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] animate-pulse"></span>
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-brand bg-brand-dim px-3 py-1 text-xs font-semibold uppercase tracking-widest text-brand">
+            <span className="size-1.5 animate-pulse rounded-full bg-brand motion-reduce:animate-none" />
             AI-Powered Quantitative Trading
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[var(--text-primary)] mb-6 leading-[1.1]">
+          <h1 className="mb-6 text-5xl font-bold leading-[1.1] tracking-tight text-foreground md:text-7xl">
             Quantitative Precision <br className="hidden md:block" /> for Your Portfolio.
           </h1>
 
-          <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-text-secondary md:text-xl">
             A personal AI trading assistant providing real-time quantitative screening, risk management, and decision snapshots based on strict
             algorithmic rules.
           </p>
 
           <SignInButton mode="modal">
-            <button className="group relative inline-flex items-center gap-2 bg-[var(--text-primary)] text-[var(--text-inverse)] px-8 py-4 rounded-lg font-semibold text-lg hover:opacity-90 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
+            <button className="group relative inline-flex items-center gap-2 rounded-lg bg-foreground px-8 py-4 text-lg font-semibold text-text-inverse transition-all duration-300 hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] motion-reduce:transform-none">
               Enter Terminal
-              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              <ArrowRight size={20} className="transition-transform group-hover:translate-x-1 motion-reduce:transform-none" />
             </button>
           </SignInButton>
 
           {/* Features */}
-          <div className="mt-20 flex flex-wrap justify-center gap-8 md:gap-16 border-t border-[var(--border-subtle)] pt-10">
-            <div className="flex items-center gap-3 text-[var(--text-secondary)]">
-              <div className="p-2 rounded-md bg-[var(--bg-panel-solid)] border border-[var(--border-subtle)]">
-                <Bot size={20} className="text-[var(--text-primary)]" />
+          <div className="mt-20 flex flex-wrap justify-center gap-8 border-t border-border pt-10 md:gap-16">
+            <div className="flex items-center gap-3 text-text-secondary">
+              <div className="rounded-md border border-border bg-panel-solid p-2">
+                <Bot size={20} className="text-foreground" />
               </div>
               <span className="font-medium text-sm">Multi-Agent Analysis</span>
             </div>
-            <div className="flex items-center gap-3 text-[var(--text-secondary)]">
-              <div className="p-2 rounded-md bg-[var(--bg-panel-solid)] border border-[var(--border-subtle)]">
-                <ShieldAlert size={20} className="text-[var(--text-primary)]" />
+            <div className="flex items-center gap-3 text-text-secondary">
+              <div className="rounded-md border border-border bg-panel-solid p-2">
+                <ShieldAlert size={20} className="text-foreground" />
               </div>
               <span className="font-medium text-sm">Strict Risk Control</span>
             </div>
-            <div className="flex items-center gap-3 text-[var(--text-secondary)]">
-              <div className="p-2 rounded-md bg-[var(--bg-panel-solid)] border border-[var(--border-subtle)]">
-                <Crosshair size={20} className="text-[var(--text-primary)]" />
+            <div className="flex items-center gap-3 text-text-secondary">
+              <div className="rounded-md border border-border bg-panel-solid p-2">
+                <Crosshair size={20} className="text-foreground" />
               </div>
               <span className="font-medium text-sm">Market Signals</span>
             </div>

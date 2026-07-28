@@ -132,61 +132,62 @@ export default function TickerDetailPage() {
 
   if (!symbol) {
     return (
-      <div className="ticker-detail-page">
+      <div className="[flex:1_1_auto] [min-height:0] [overflow-y:auto] [display:grid] [grid-template-rows:auto] [align-content:start] [gap:var(--space-4)] [width:min(100%,_1180px)] [margin:0_auto] [padding:var(--space-6)] max-[760px]:[width:calc(100%_-_(var(--space-4)_*_2))] max-[760px]:[max-width:100%] max-[760px]:[padding:var(--space-4)_0] max-[768px]:![overflow-y:visible] max-[768px]:![height:auto] max-[768px]:![min-height:0]">
         <EmptyState title="Invalid ticker" description="Use a valid ticker symbol to open drilldown." />
       </div>
     );
   }
 
   return (
-    <div className="ticker-detail-page">
-      <header className="ticker-detail-header glass-panel">
-        <div className="ticker-detail-header-top">
-          <Link className="ticker-detail-back" to="/">
+    <div className="[flex:1_1_auto] [min-height:0] [overflow-y:auto] [display:grid] [grid-template-rows:auto] [align-content:start] [gap:var(--space-4)] [width:min(100%,_1180px)] [margin:0_auto] [padding:var(--space-6)] max-[760px]:[width:calc(100%_-_(var(--space-4)_*_2))] max-[760px]:[max-width:100%] max-[760px]:[padding:var(--space-4)_0] max-[768px]:![overflow-y:visible] max-[768px]:![height:auto] max-[768px]:![min-height:0]">
+      <header className="[display:grid] [gap:var(--space-4)] [padding:var(--space-5)] max-[760px]:[min-width:0] rounded-lg border border-border bg-panel shadow-none">
+        <div className="[display:flex] [align-items:center] [gap:var(--space-3)] [justify-content:space-between] max-[760px]:[align-items:flex-start] max-[760px]:[flex-wrap:wrap]">
+          <Link
+            className="[color:var(--brand-primary)] [text-decoration:none] [display:inline-flex] [align-items:center] [gap:var(--space-1)] [font-size:0.82rem] [font-weight:700] hover:[color:var(--fin-profit)] hover:[outline:none] focus-visible:[color:var(--fin-profit)] focus-visible:[outline:none] max-[768px]:[min-height:44px]"
+            to="/"
+          >
             <ArrowLeft size={14} aria-hidden="true" />
             Dashboard
           </Link>
           <DataStamp source="Display-only quote" timestamp={quotePayload.quote_timestamp || packetPayload.quote_timestamp} />
         </div>
-        <div className="ticker-detail-title-row">
+        <div className="[display:flex] [align-items:center] [gap:var(--space-3)] [justify-content:space-between] [&_h2]:[color:var(--text-primary)] [&_h2]:font-mono [&_h2]:[font-size:clamp(2rem,_4vw,_3.5rem)] [&_h2]:[line-height:1] max-[760px]:[align-items:flex-start] max-[760px]:[flex-direction:column]">
           <div>
             <h2>${symbol}</h2>
-            <div className="ticker-detail-subtitle">{holding?.name || 'Ticker drilldown'}</div>
+            <div className="[color:var(--text-secondary)] [font-size:0.84rem]">{holding?.name || 'Ticker drilldown'}</div>
           </div>
           <StatusBadge status={gateStatus === 'Pass' ? 'buy' : 'wait'} label={`Gate: ${gateStatus}`} />
         </div>
-        <div className="ticker-detail-price-row">
-          <span className="ticker-detail-price font-mono">{formatCurrency(quotePayload.last_price || packetPayload.last_price, symbol)}</span>
-          <span className="ticker-detail-copy">Display-only quote, not execution-ready unless the price gate passes.</span>
+        <div className="[display:flex] [align-items:center] [gap:var(--space-3)] max-[760px]:[align-items:flex-start] max-[760px]:[flex-direction:column]">
+          <span className="[color:var(--text-primary)] font-mono [font-size:1.35rem] [font-weight:700] font-mono">
+            {formatCurrency(quotePayload.last_price || packetPayload.last_price, symbol)}
+          </span>
+          <span className="[color:var(--text-secondary)] [font-size:0.84rem]">
+            Display-only quote, not execution-ready unless the price gate passes.
+          </span>
         </div>
       </header>
 
       {!loading && earningsProximityWarning && (
-        <div
-          className="earnings-proximity-banner"
-          style={{
-            background: '#271c0c',
-            color: '#fb923c',
-            padding: '12px',
-            borderRadius: '4px',
-            marginTop: '16px',
-            border: '1px solid #7c2d12',
-            fontFamily: 'monospace',
-            fontSize: '0.85rem',
-          }}
-        >
+        <div className="text-balance [border:1px_solid_rgba(var(--status-warning-rgb),_0.38)] [color:var(--fin-warning)] [padding:var(--space-3)] [font-size:0.78rem] [line-height:1.45] [color:var(--fin-loss)] [font-size:0.76rem] [line-height:1.45] max-[640px]:[align-items:flex-start] max-[640px]:[flex-direction:column] max-[640px]:[gap:10px] [display:flex] [align-items:center] [gap:10px] [padding:12px_16px] [background:var(--fin-loss-dim)] [border:1px_solid_rgba(var(--status-danger-rgb),_0.3)] [border-radius:var(--radius-sm)] [font-size:0.85rem] [color:var(--text-primary)] [animation:fadeInDown_0.3s_ease] [&_strong]:[color:var(--fin-loss)] mt-4 rounded border border-fin-warning bg-fin-warning-dim p-3 font-mono text-sm text-fin-warning">
           {earningsProximityWarning}
         </div>
       )}
 
       {loading && (
-        <section className="glass-panel ticker-detail-state" aria-live="polite">
+        <section
+          className="rounded-lg border border-border bg-panel shadow-none [padding:var(--space-4)] [display:flex] [flex-direction:column] [gap:var(--space-2)] [min-height:120px] [justify-content:center] max-[760px]:[min-width:0]"
+          aria-live="polite"
+        >
           Loading ticker detail...
         </section>
       )}
 
       {!loading && requestError && (
-        <section className="glass-panel ticker-detail-state" role="alert">
+        <section
+          className="rounded-lg border border-border bg-panel shadow-none [padding:var(--space-4)] [display:flex] [flex-direction:column] [gap:var(--space-2)] [min-height:120px] [justify-content:center] max-[760px]:[min-width:0]"
+          role="alert"
+        >
           <EmptyState
             title="Ticker detail unavailable"
             description={requestError.message || 'Authenticated ticker context could not be loaded.'}
@@ -203,15 +204,18 @@ export default function TickerDetailPage() {
       )}
 
       {!loading && insufficient && (
-        <section className="glass-panel ticker-detail-state" role="status">
+        <section
+          className="rounded-lg border border-border bg-panel shadow-none [padding:var(--space-4)] [display:flex] [flex-direction:column] [gap:var(--space-2)] [min-height:120px] [justify-content:center] max-[760px]:[min-width:0]"
+          role="status"
+        >
           <StatusBadge status="wait" label="Wait" />
-          <div className="ticker-detail-state-title">INSUFFICIENT_DATA</div>
+          <div className="[color:var(--text-primary)] font-mono [font-weight:700]">INSUFFICIENT_DATA</div>
           <p>{quotePayload.error_details || packetPayload.error_details || journalPayload.error_details || 'Runtime context unavailable.'}</p>
         </section>
       )}
 
       {!loading && (
-        <section className="ticker-detail-grid">
+        <section className="[display:grid] [grid-template-columns:repeat(3,_minmax(0,_1fr))] [gap:var(--space-4)] max-[760px]:[min-width:0] max-[760px]:[grid-template-columns:minmax(0,_1fr)]">
           <MetricCard
             label="Last Price"
             value={formatCurrency(quotePayload.last_price || packetPayload.last_price, symbol)}
@@ -224,7 +228,7 @@ export default function TickerDetailPage() {
       )}
 
       {!loading && (
-        <section className="ticker-detail-grid" style={{ marginTop: 'var(--space-4)' }}>
+        <section className="mt-4 grid grid-cols-3 gap-4 max-[760px]:min-w-0 max-[760px]:grid-cols-1">
           <MetricCard
             label="Piotroski F-Score"
             value={piotroski !== null && piotroski !== undefined ? `${piotroski}/9` : '—'}
@@ -244,7 +248,7 @@ export default function TickerDetailPage() {
       )}
 
       {!loading && (avwap !== null || analysis?.adaptive_drilldown?.calculated_trailing_stop) && (
-        <section className="ticker-detail-grid" style={{ marginTop: 'var(--space-4)' }}>
+        <section className="mt-4 grid grid-cols-3 gap-4 max-[760px]:min-w-0 max-[760px]:grid-cols-1">
           {avwap !== null && (
             <MetricCard label="Anchored VWAP" value={formatCurrency(avwap, symbol)} dataStamp={`Anchored from earnings ${earningsDate || ''}`} mono />
           )}
@@ -262,43 +266,70 @@ export default function TickerDetailPage() {
       )}
 
       {!loading && (
-        <section className="glass-panel ticker-detail-context">
-          <div className="panel-header">
-            <span className="panel-title">Authenticated Runtime Context</span>
-            <span className="data-stamp">
+        <section className="rounded-lg border border-border bg-panel shadow-none [padding:var(--space-4)] max-[760px]:[min-width:0]">
+          <div className="flex items-center justify-between gap-3 border-b border-border-subtle px-6 py-4 max-[640px]:flex-col max-[640px]:items-start">
+            <span className="[font-size:0.85rem] [font-weight:600] [letter-spacing:0.06em] [text-transform:uppercase] [color:var(--text-secondary)]">
+              Authenticated Runtime Context
+            </span>
+            <span className="font-mono [font-size:0.75rem] [color:var(--text-secondary)] [display:flex] [align-items:center] [gap:4px]">
               <Clock size={10} aria-hidden="true" />
               <span>{contextSource === 'supabase' ? 'Supabase per-user context' : 'Supabase context unavailable'}</span>
             </span>
           </div>
-          <div className="ticker-detail-context-grid">
+          <div className="[display:grid] [grid-template-columns:repeat(3,_minmax(0,_1fr))] [gap:var(--space-4)] [margin-top:var(--space-3)] max-[760px]:[grid-template-columns:minmax(0,_1fr)]">
             <div>
-              <div className="ticker-detail-label">Shares</div>
-              <div className="ticker-detail-value font-mono">{formatNumber(holding?.shares)}</div>
+              <div className="[color:var(--text-secondary)] [font-size:0.84rem]">Shares</div>
+              <div
+                className="[margin-top:var(--space-1)] [color:var(--text-primary)] font-mono [font-size:1rem] [font-weight:700] font-mono"
+                aria-label={`Shares ${formatNumber(holding?.shares)}`}
+              >
+                {formatNumber(holding?.shares)}
+              </div>
             </div>
             <div>
-              <div className="ticker-detail-label">Average Cost</div>
-              <div className="ticker-detail-value font-mono">{formatCurrency(holding?.avg_cost, symbol)}</div>
+              <div className="[color:var(--text-secondary)] [font-size:0.84rem]">Average Cost</div>
+              <div className="[margin-top:var(--space-1)] [color:var(--text-primary)] font-mono [font-size:1rem] [font-weight:700] font-mono">
+                {formatCurrency(holding?.avg_cost, symbol)}
+              </div>
             </div>
             <div>
-              <div className="ticker-detail-label">Source</div>
-              <div className="ticker-detail-value">{contextSource || 'unavailable'}</div>
+              <div className="[color:var(--text-secondary)] [font-size:0.84rem]">Source</div>
+              <div className="[margin-top:var(--space-1)] [color:var(--text-primary)] font-mono [font-size:1rem] [font-weight:700]">
+                {contextSource || 'unavailable'}
+              </div>
             </div>
           </div>
-          {packetPayload.historical_context_warning && <p className="ticker-detail-warning">{packetPayload.historical_context_warning}</p>}
+          {packetPayload.historical_context_warning && (
+            <p className="[color:var(--text-secondary)] [font-size:0.84rem] [margin-top:var(--space-3)] [padding:10px_12px] [border:1px_solid_rgba(var(--status-warning-rgb),_0.24)] [border-radius:var(--radius-sm)] [background:var(--fin-warning-dim)] [color:var(--fin-warning)]">
+              {packetPayload.historical_context_warning}
+            </p>
+          )}
         </section>
       )}
 
       {!loading && (
-        <section className="glass-panel ticker-detail-actions">
-          <button className="btn-analyze" type="button" onClick={runAnalysis} disabled={analyzing}>
+        <section className="rounded-lg border border-border bg-panel shadow-none [display:flex] [align-items:center] [gap:var(--space-3)] [padding:var(--space-4)] [flex-wrap:wrap] max-[760px]:[min-width:0]">
+          <button
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-transparent bg-brand px-5 py-3 font-sans text-sm font-bold tracking-wide text-text-inverse transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-hover disabled:text-text-secondary"
+            type="button"
+            onClick={runAnalysis}
+            disabled={analyzing}
+          >
             <Brain size={16} aria-hidden="true" />
             {analyzing ? 'กำลังวิเคราะห์...' : 'วิเคราะห์ Setup'}
           </button>
-          <Link className="btn-secondary ticker-detail-link-button" to={`/journal?ticker=${encodeURIComponent(symbol)}`}>
+          <Link
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-border-subtle bg-transparent px-5 py-2.5 font-sans text-sm font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:text-text-muted"
+            to={`/journal?ticker=${encodeURIComponent(symbol)}`}
+          >
             <BookOpen size={15} aria-hidden="true" />
             บันทึกเทรด
           </Link>
-          <button className="btn-secondary" type="button" onClick={() => setPlannerOpen(true)}>
+          <button
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-border-subtle bg-transparent px-5 py-2.5 font-sans text-sm font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:text-text-muted"
+            type="button"
+            onClick={() => setPlannerOpen(true)}
+          >
             <Target size={15} aria-hidden="true" />
             เปิด Scenario Planner
           </button>
@@ -306,14 +337,20 @@ export default function TickerDetailPage() {
       )}
 
       {analysisError && (
-        <section className="glass-panel ticker-detail-state" role="alert">
+        <section
+          className="rounded-lg border border-border bg-panel shadow-none [padding:var(--space-4)] [display:flex] [flex-direction:column] [gap:var(--space-2)] [min-height:120px] [justify-content:center] max-[760px]:[min-width:0]"
+          role="alert"
+        >
           {analysisError}
         </section>
       )}
 
       {analysis && (
-        <section className="glass-panel ticker-detail-state" role="status">
-          <div className="ticker-detail-state-title">Latest Analysis</div>
+        <section
+          className="rounded-lg border border-border bg-panel shadow-none [padding:var(--space-4)] [display:flex] [flex-direction:column] [gap:var(--space-2)] [min-height:120px] [justify-content:center] max-[760px]:[min-width:0]"
+          role="status"
+        >
+          <div className="[color:var(--text-primary)] font-mono [font-weight:700]">Latest Analysis</div>
           <StatusBadge
             status={analysis.decision_snapshot?.verdict || analysis.status || 'wait'}
             label={analysis.decision_snapshot?.verdict || analysis.status || 'Wait'}
@@ -322,9 +359,11 @@ export default function TickerDetailPage() {
       )}
 
       {!loading && (
-        <section className="glass-panel ticker-detail-history">
-          <div className="panel-header">
-            <span className="panel-title">Trade History</span>
+        <section className="rounded-lg border border-border bg-panel shadow-none [padding:var(--space-4)] max-[760px]:[min-width:0]">
+          <div className="flex items-center justify-between gap-3 border-b border-border-subtle px-6 py-4 max-[640px]:flex-col max-[640px]:items-start">
+            <span className="[font-size:0.85rem] [font-weight:600] [letter-spacing:0.06em] [text-transform:uppercase] [color:var(--text-secondary)]">
+              Trade History
+            </span>
             <DataStamp source="Supabase journal filtered by ticker" />
           </div>
           <DataTable
@@ -344,9 +383,11 @@ export default function TickerDetailPage() {
       )}
 
       {!loading && sources.length > 0 && (
-        <section className="glass-panel ticker-detail-sources">
-          <div className="panel-header">
-            <span className="panel-title">Price Sources</span>
+        <section className="rounded-lg border border-border bg-panel shadow-none [padding:var(--space-4)] [&_ul]:[display:grid] [&_ul]:[gap:var(--space-2)] [&_ul]:[margin-top:var(--space-3)] [&_ul]:[padding-left:var(--space-4)] [&_ul]:[color:var(--text-secondary)] [&_ul]:[font-size:0.84rem] max-[760px]:[min-width:0]">
+          <div className="flex items-center justify-between gap-3 border-b border-border-subtle px-6 py-4 max-[640px]:flex-col max-[640px]:items-start">
+            <span className="[font-size:0.85rem] [font-weight:600] [letter-spacing:0.06em] [text-transform:uppercase] [color:var(--text-secondary)]">
+              Price Sources
+            </span>
             <DataStamp source={quotePayload.market_session || packetPayload.market_session || 'Unknown session'} />
           </div>
           <ul>

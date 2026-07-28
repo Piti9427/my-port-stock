@@ -180,14 +180,18 @@ export default function JournalPage() {
   const emptyDescription = trades.length === 0 ? 'บันทึกเทรดครั้งแรกเพื่อเริ่มติดตาม' : 'ไม่มี trade ที่ตรงกับ filter นี้';
 
   return (
-    <div className="journal-page">
-      <header className="glass-panel journal-header">
-        <div className="journal-header-top">
+    <div className="[flex:1_1_auto] [min-height:0] [overflow-y:auto] [padding:24px_28px] [display:grid] [grid-template-columns:minmax(0,_1fr)_320px] [grid-template-rows:auto_1fr] [gap:20px] [grid-template-areas:'header_header'_'trades_perf'] max-[1100px]:[grid-template-columns:1fr] max-[1100px]:[grid-template-areas:'header'_'perf'_'trades'] max-[560px]:[padding:var(--space-4)] max-[768px]:![overflow-y:visible] max-[768px]:![height:auto] max-[768px]:![min-height:0]">
+      <header className="rounded-lg border border-border bg-panel shadow-none [grid-area:header] [display:grid] [gap:var(--space-5)] [&_h2]:[margin:0_0_var(--space-1)] [&_h2]:[color:var(--text-primary)] [&_h2]:[font-size:1.2rem] [&_p]:[margin:0] [&_p]:[color:var(--text-secondary)] [&_p]:[font-size:0.84rem] [&_p]:[line-height:1.55]">
+        <div className="[display:flex] [align-items:flex-start] [justify-content:space-between] [gap:var(--space-4)] max-[1100px]:[flex-direction:column]">
           <div>
             <h2>บันทึกการเทรดและวิเคราะห์หลังจบเกม</h2>
             <p>ทบทวน thesis, execution, risk/reward และ post-mortem จาก Supabase journal</p>
           </div>
-          <button className="btn-analyze journal-log-button" type="button" onClick={() => setDrawerOpen(true)}>
+          <button
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-transparent bg-brand px-5 py-3 font-sans text-sm font-bold tracking-wide text-text-inverse transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-hover disabled:text-text-secondary"
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+          >
             <Plus size={16} aria-hidden="true" />
             Log trade
           </button>
@@ -195,12 +199,18 @@ export default function JournalPage() {
         <JournalFilters filters={filters} modeOptions={modeOptions} tickerOptions={tickerOptions} onFilterChange={setFilter} onReset={resetFilters} />
       </header>
 
-      <section className="glass-panel journal-trades" aria-labelledby="journal-trades-title">
-        <div className="panel-header">
-          <span id="journal-trades-title" className="panel-title">
+      <section
+        className="rounded-lg border border-border bg-panel shadow-none [grid-area:trades] [display:flex] [flex-direction:column] [overflow:hidden]"
+        aria-labelledby="journal-trades-title"
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-border-subtle px-6 py-4 max-[640px]:flex-col max-[640px]:items-start">
+          <span
+            id="journal-trades-title"
+            className="[font-size:0.85rem] [font-weight:600] [letter-spacing:0.06em] [text-transform:uppercase] [color:var(--text-secondary)]"
+          >
             ประวัติคำสั่งซื้อขาย
           </span>
-          <span className="data-stamp">
+          <span className="font-mono [font-size:0.75rem] [color:var(--text-secondary)] [display:flex] [align-items:center] [gap:4px]">
             <Clock size={10} aria-hidden="true" />
             <span>Supabase journal data</span>
           </span>
@@ -221,11 +231,17 @@ export default function JournalPage() {
         )}
       </section>
 
-      <aside className="glass-panel journal-perf" aria-labelledby="journal-loop-title">
-        <div id="journal-loop-title" className="panel-title">
+      <aside
+        className="rounded-lg border border-border bg-panel shadow-none [&_p]:[margin:0] [&_p]:[color:var(--text-secondary)] [&_p]:[font-size:0.84rem] [&_p]:[line-height:1.55] [grid-area:perf] [display:flex] [flex-direction:column] [gap:16px]"
+        aria-labelledby="journal-loop-title"
+      >
+        <div
+          id="journal-loop-title"
+          className="[font-size:0.85rem] [font-weight:600] [letter-spacing:0.06em] [text-transform:uppercase] [color:var(--text-secondary)]"
+        >
           Decision loop
         </div>
-        <div className="journal-loop-summary">
+        <div className="[&_div]:[display:flex] [&_div]:[align-items:center] [&_div]:[justify-content:space-between] [&_div]:[gap:var(--space-3)] [&_span]:[color:var(--text-secondary)] [&_span]:[font-size:0.72rem] [&_span]:[text-transform:uppercase] [&_strong]:[margin:0] [&_strong]:[color:var(--text-primary)] [&_strong]:font-mono [display:grid] [gap:var(--space-3)]">
           <div>
             <span>Total</span>
             <strong>{trades.length}</strong>

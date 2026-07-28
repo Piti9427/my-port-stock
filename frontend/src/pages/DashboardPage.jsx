@@ -47,8 +47,8 @@ export default function DashboardPage() {
   const preferredTicker = normalizedTicker(location.state?.ticker || portfolio.holdings[0]?.ticker || watchlist.items[0]?.ticker);
 
   return (
-    <div className="p-6 md:p-8 max-w-[1400px] mx-auto flex flex-col gap-6 animate-fadeIn">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
+    <div className="mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col gap-4 overflow-y-auto p-4 animate-fadeIn sm:gap-6 sm:p-6">
+      <div className="grid grid-cols-1 items-stretch gap-6 min-[901px]:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]">
         <PortfolioSummary
           holdings={portfolio.holdings}
           source={portfolio.meta.source || 'Supabase holdings'}
@@ -72,7 +72,7 @@ export default function DashboardPage() {
         onFirstRunAction={() => navigate('/journal')}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
+      <div className="grid grid-cols-1 items-start gap-6 min-[901px]:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]">
         <WatchlistPanel
           items={watchlist.items}
           loading={watchlist.loading}

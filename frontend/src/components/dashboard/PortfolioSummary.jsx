@@ -1,4 +1,5 @@
 import { DataStamp } from '../ui/DataStamp.jsx';
+import { cn } from '../../lib/utils.js';
 
 function numberValue(value) {
   const numeric = Number(value);
@@ -50,38 +51,56 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
   const isDrawdownBreached = drawdownPct >= 15;
 
   return (
-    <section className="relative p-6 border border-[#262626] hover:border-[#38383a] rounded-2xl bg-[#121212] flex flex-col gap-6 transition-all duration-200 shadow-sm" role="region" aria-label="Portfolio summary">
+    <section
+      className="relative grid min-w-0 overflow-hidden rounded-xl border border-border bg-surface text-foreground md:grid-cols-[minmax(220px,1.2fr)_minmax(0,1.8fr)]"
+      role="region"
+      aria-label="Portfolio summary"
+    >
       {isDrawdownBreached && (
-        <div className="px-4 py-2.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-400 font-semibold text-xs animate-pulse">
+        <div className="col-span-full m-4 mb-0 flex items-center gap-2 rounded-lg border border-fin-loss bg-fin-loss-dim px-3 py-2.5 font-mono text-xs font-semibold text-fin-loss">
           <span>🛑 DRAWDOWN LIMIT HIT — New buys suspended ({drawdownPct.toFixed(1)}% / 15%)</span>
         </div>
       )}
-      <div className="flex flex-col gap-1">
-        <span className="text-[0.72rem] font-semibold text-[#a1a1aa] uppercase tracking-wider">มูลค่ารวมพอร์ต</span>
-        <strong className="portfolio-summary-value text-[2.2rem] font-bold font-mono text-[#ededed] leading-none tracking-tight tabular-nums">{formatMoney(metrics.totalValue)}</strong>
+      <div className="flex flex-col justify-center gap-2 border-b border-border p-6 md:border-b-0 md:border-r">
+        <span className="text-[0.72rem] font-semibold uppercase tracking-wider text-text-secondary">มูลค่ารวมพอร์ต</span>
+        <strong className="[color:var(--text-primary)] font-mono [font-size:2rem] [line-height:1.1] font-mono text-[2.2rem] font-bold leading-none tracking-tight text-foreground tabular-nums">
+          {formatMoney(metrics.totalValue)}
+        </strong>
         <DataStamp source={source} timestamp={timestamp} stale={stale} />
       </div>
-      <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-5 border-t border-[#262626]">
-        <div>
-          <dt className="text-[0.72rem] font-medium text-[#a1a1aa] mb-1">กำไร/ขาดทุนรายวัน</dt>
-          <dd className={`text-base font-semibold font-mono tabular-nums flex items-center gap-1.5 ${metrics.dayPl >= 0 ? 'semantic-positive text-emerald-400' : 'semantic-negative text-rose-400'}`}>
+      <dl className="grid gap-px bg-border [grid-template-columns:repeat(auto-fit,minmax(130px,1fr))]">
+        <div className="flex min-w-0 flex-col justify-center gap-2 bg-surface p-5">
+          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">กำไร/ขาดทุนรายวัน</dt>
+          <dd
+            className={cn(
+              'flex items-center gap-1.5 font-mono text-base font-semibold tabular-nums',
+              metrics.dayPl >= 0 ? 'text-fin-profit' : 'text-fin-loss'
+            )}
+          >
             {formatMoney(metrics.dayPl, { signed: true })}
             <span className="text-xs">{dayPlPct == null ? '—' : `${dayPlPct >= 0 ? '+' : ''}${dayPlPct.toFixed(2)}%`}</span>
           </dd>
         </div>
-        <div>
-          <dt className="text-[0.72rem] font-medium text-[#a1a1aa] mb-1">กำไร/ขาดทุนรวม</dt>
-          <dd className={`text-base font-semibold font-mono tabular-nums ${totalPl >= 0 ? 'semantic-positive text-emerald-400' : 'semantic-negative text-rose-400'}`}>{formatMoney(totalPl, { signed: true })}</dd>
+        <div className="flex min-w-0 flex-col justify-center gap-2 bg-surface p-5">
+          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">กำไร/ขาดทุนรวม</dt>
+          <dd className={cn('font-mono text-base font-semibold tabular-nums', totalPl >= 0 ? 'text-fin-profit' : 'text-fin-loss')}>
+            {formatMoney(totalPl, { signed: true })}
+          </dd>
         </div>
-        <div>
-          <dt className="text-[0.72rem] font-medium text-[#a1a1aa] mb-1">Portfolio Beta</dt>
-          <dd className={`text-base font-semibold font-mono tabular-nums ${portfolioBeta > 1.2 ? 'text-rose-400' : portfolioBeta < 0.8 ? 'text-blue-400' : 'text-emerald-400'}`}>
+        <div className="flex min-w-0 flex-col justify-center gap-2 bg-surface p-5">
+          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">Portfolio Beta</dt>
+          <dd
+            className={cn(
+              'font-mono text-base font-semibold tabular-nums',
+              portfolioBeta > 1.2 ? 'text-fin-loss' : portfolioBeta < 0.8 ? 'text-fin-info' : 'text-fin-profit'
+            )}
+          >
             {portfolioBeta.toFixed(2)}
           </dd>
         </div>
-        <div>
-          <dt className="text-[0.72rem] font-medium text-[#a1a1aa] mb-1">จำนวนสถานะ</dt>
-          <dd className="text-base font-semibold font-mono tabular-nums text-[#ededed]">{holdings.length}</dd>
+        <div className="flex min-w-0 flex-col justify-center gap-2 bg-surface p-5">
+          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">จำนวนสถานะ</dt>
+          <dd className="font-mono text-base font-semibold text-foreground tabular-nums">{holdings.length}</dd>
         </div>
       </dl>
     </section>

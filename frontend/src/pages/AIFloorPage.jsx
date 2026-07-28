@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as PIXI from 'pixi.js';
 import { useAgentEvents } from '../hooks/useAgentEvents';
+import { cn, cssVars } from '../lib/utils';
 
 // Agent configuration
 const AGENT_CONFIG = {
@@ -48,6 +49,10 @@ const AGENT_CONFIG = {
   },
 };
 
+function themeColor(token) {
+  return getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+}
+
 function AIFloorCanvas() {
   const containerRef = useRef(null);
   const appRef = useRef(null);
@@ -63,7 +68,7 @@ function AIFloorCanvas() {
       await app.init({
         width: 640,
         height: 480,
-        backgroundColor: 0x0f172a,
+        backgroundColor: themeColor('--bg-panel-solid'),
         resolution: globalThis.devicePixelRatio || 1,
         autoDensity: true,
       });
@@ -117,7 +122,7 @@ function AIFloorCanvas() {
           // Create placeholder circle
           const graphics = new PIXI.Graphics();
           graphics.circle(0, 0, 16);
-          graphics.fill(id === 'cio' ? 0x3b82f6 : 0x10b981);
+          graphics.fill(themeColor(id === 'cio' ? '--data-agent-cio' : '--data-agent-fundamental'));
           graphics.x = config.x;
           graphics.y = config.y;
           app.stage.addChild(graphics);
@@ -187,13 +192,7 @@ function AIFloorCanvas() {
   return (
     <div
       ref={containerRef}
-      className="trading-floor-canvas"
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100%',
-      }}
+      className="flex aspect-[4/3] h-full min-h-[260px] w-full items-center justify-center max-[900px]:min-h-[220px] max-[640px]:min-h-[190px] [&_canvas]:block [&_canvas]:aspect-[4/3] [&_canvas]:!h-auto [&_canvas]:max-h-full [&_canvas]:max-w-full [&_canvas]:!w-full"
     />
   );
 }
@@ -221,36 +220,20 @@ export default function AIFloorPage() {
   const targetTicker = agentStates['cio']?.ticker || '...';
 
   return (
-    <div
-      className="ai-floor-page"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        position: 'relative',
-      }}
-    >
-      <div className="glass-panel" style={{ marginBottom: '16px', zIndex: 10 }}>
-        <h2 style={{ fontSize: '1.25rem', marginBottom: '4px' }}>AI Trading Floor</h2>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Real-time view of agent activity and analysis processes.</p>
+    <div className="relative flex h-full min-h-0 flex-auto flex-col overflow-hidden">
+      <div className="z-10 mb-4 rounded-lg border border-border bg-panel p-5 shadow-none">
+        <h2 className="mb-1 text-xl">AI Trading Floor</h2>
+        <p className="text-sm text-text-secondary">Real-time view of agent activity and analysis processes.</p>
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', flex: 1, minHeight: 0 }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div className="flex min-h-0 flex-1 gap-4 max-[900px]:flex-col">
+        <div className="flex min-w-0 flex-1 flex-col">
           {/* Canvas Layer */}
-          <div
-            className="trading-floor-canvas-wrap glass-panel"
-            style={{
-              flex: 1,
-              padding: 0,
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          >
+          <div className="relative flex-1 overflow-hidden rounded-lg border border-border bg-panel p-0 shadow-none">
             <AIFloorCanvas />
 
             {/* DOM Overlay for Speech Bubbles */}
-            <div className="agent-overlay">
+            <div className="[position:absolute] [inset:0] [pointer-events:none]">
               {Object.entries(agentStates).map(([id, info]) => {
                 if (!info.message || info.state === 'IDLE' || info.state === 'EXITED') return null;
 
@@ -262,11 +245,11 @@ export default function AIFloorPage() {
                 return (
                   <div
                     key={id}
-                    className="speech-bubble"
-                    style={{
-                      left: `${leftPct}%`,
-                      top: `calc(${topPct}% - 60px)`,
-                    }}
+                    className="pointer-events-none absolute left-[var(--agent-left)] top-[var(--agent-top)] z-10 max-w-[200px] -translate-x-1/2 translate-y-2.5 rounded-md border border-border-subtle bg-panel px-3 py-2 text-xs leading-[1.4] text-foreground transition-all after:absolute after:-bottom-1.5 after:left-1/2 after:-translate-x-1/2 after:border-x-[6px] after:border-t-[6px] after:border-x-transparent after:border-t-border-subtle max-[640px]:max-w-[150px]"
+                    style={cssVars({
+                      '--agent-left': `${leftPct}%`,
+                      '--agent-top': `calc(${topPct}% - 60px)`,
+                    })}
                   >
                     {info.message}
                   </div>
@@ -276,42 +259,53 @@ export default function AIFloorPage() {
 
             {/* Verdict Overlay */}
             {analysisResult && (
-              <div className="verdict-overlay">
-                <div className={`glass-card verdict-card ${analysisResult.verdict?.toLowerCase().includes('buy') ? 'buy' : 'warn'}`}>
-                  <div className="verdict-ticker">{analysisResult.ticker || targetTicker}</div>
-                  <div className="verdict-verdict-label">ผลการวิเคราะห์สรุป</div>
-                  <div className="verdict-verdict-value">{analysisResult.verdict || 'วิเคราะห์เสร็จสิ้น'}</div>
+              <div className="[position:absolute] [top:20px] [right:20px] [z-index:20] [width:280px] [animation:fadeInDown_0.4s_var(--ease-out-quart)]">
+                <div
+                  className={cn(
+                    'animate-[fadeIn_0.4s_ease] rounded-md border bg-panel-solid px-5 py-[18px] shadow-none',
+                    analysisResult.verdict?.toLowerCase().includes('buy')
+                      ? 'border-fin-profit bg-fin-profit-dim'
+                      : 'border-fin-warning bg-fin-warning-dim'
+                  )}
+                >
+                  <div className="[font-size:1.1rem] [font-weight:700] [letter-spacing:0.5px] [margin-bottom:4px]">
+                    {analysisResult.ticker || targetTicker}
+                  </div>
+                  <div className="[font-size:0.7rem] [text-transform:uppercase] [letter-spacing:0.08em] [color:var(--text-secondary)] [margin-bottom:4px]">
+                    ผลการวิเคราะห์สรุป
+                  </div>
+                  <div className="[font-size:1rem] [font-weight:600] [margin-bottom:12px]">{analysisResult.verdict || 'วิเคราะห์เสร็จสิ้น'}</div>
                 </div>
               </div>
             )}
           </div>
 
           {/* Agent Status Bar */}
-          <div className="agent-status-bar" style={{ marginTop: '16px' }}>
-            <div className="status-bar-label">สถานะการทำงานของ Agent</div>
+          <div className="relative z-20 mt-4 flex items-center gap-6 border-t border-border-subtle bg-panel px-6 py-3 max-[640px]:flex-wrap">
+            <div className="[font-size:0.72rem] [font-weight:600] [text-transform:uppercase] [letter-spacing:0.08em] [color:var(--text-secondary)] [white-space:nowrap]">
+              สถานะการทำงานของ Agent
+            </div>
 
-            {!connected && <div style={{ color: 'var(--fin-warning)', fontSize: '0.8rem' }}>⚠️ ขาดการเชื่อมต่อกับ Event Bus</div>}
+            {!connected && <div className="text-[0.8rem] text-fin-warning">⚠️ ขาดการเชื่อมต่อกับ Event Bus</div>}
 
             {connected && (
               <>
-                <div className="status-agents">
+                <div className="[display:flex] [gap:16px] [flex:1]">
                   {Object.entries(AGENT_CONFIG).map(([id, cfg]) => {
                     const state = agentStates[id]?.state || 'IDLE';
-                    let indicatorClass = 'idle';
-                    if (state === 'PRESENTING' || state === 'DONE') indicatorClass = 'presenting';
-                    else if (state !== 'IDLE' && state !== 'EXITED') indicatorClass = 'active';
+                    const isActive = state !== 'IDLE' && state !== 'EXITED';
 
                     return (
-                      <div key={id} className="status-agent-item">
-                        <div className={`config-status-dot ${indicatorClass}`} />
-                        <span className={`status-agent-name ${indicatorClass === 'idle' ? '' : 'active'}`}>{cfg.name}</span>
+                      <div key={id} className="[display:flex] [align-items:center] [gap:6px]">
+                        <div className={cn('size-2 shrink-0 rounded-full bg-text-muted transition-colors', isActive && 'bg-fin-profit')} />
+                        <span className={cn('whitespace-nowrap text-xs text-text-secondary', isActive && 'text-foreground')}>{cfg.name}</span>
                       </div>
                     );
                   })}
                 </div>
 
                 {activeCount > 0 && (
-                  <div className="status-progress">
+                  <div className="[font-size:0.78rem] [color:var(--brand-primary)] [font-weight:500] [white-space:nowrap]">
                     กำลังวิเคราะห์ {targetTicker}... ทำงานอยู่ {activeCount}/6
                   </div>
                 )}
@@ -321,33 +315,16 @@ export default function AIFloorPage() {
         </div>
 
         {/* Activity Log Overlay */}
-        <div className="glass-panel" style={{ width: '300px', display: 'flex', flexDirection: 'column' }}>
-          <h3
-            style={{
-              fontSize: '1rem',
-              marginBottom: '12px',
-              paddingBottom: '8px',
-              borderBottom: '1px solid rgba(var(--text-inverse-rgb),0.1)',
-            }}
-          >
-            Activity Log
-          </h3>
-          <div
-            style={{
-              flex: 1,
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-            }}
-          >
+        <div className="flex w-[300px] flex-col rounded-lg border border-border bg-panel p-4 shadow-none max-[900px]:w-full">
+          <h3 className="mb-3 border-b border-border-subtle pb-2 text-base">Activity Log</h3>
+          <div className="flex flex-1 flex-col gap-2 overflow-y-auto" tabIndex={0} role="log" aria-label="Agent activity">
             {logs.map((log) => (
-              <div key={`${log.time}-${log.msg}`} style={{ fontSize: '0.85rem' }}>
-                <span style={{ color: 'var(--text-secondary)', marginRight: '8px' }}>[{log.time}]</span>
+              <div key={`${log.time}-${log.msg}`} className="text-[0.85rem]">
+                <span className="mr-2 text-text-secondary">[{log.time}]</span>
                 <span>{log.msg}</span>
               </div>
             ))}
-            {logs.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Waiting for activity...</div>}
+            {logs.length === 0 && <div className="text-[0.85rem] text-text-secondary">Waiting for activity...</div>}
           </div>
         </div>
       </div>

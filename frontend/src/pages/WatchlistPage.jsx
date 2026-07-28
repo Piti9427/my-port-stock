@@ -5,32 +5,28 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '../auth/clerkAdapter';
 import { fetchWithAuth } from '../lib/api';
 import { EmptyState } from '../components/ui/EmptyState';
+import { cn } from '../lib/utils';
 
 const SIGNAL_META = {
   'buy-zone': {
     label: 'Buy Zone',
-    color: 'var(--fin-profit)',
-    bg: 'var(--fin-profit-dim)',
+    className: 'bg-fin-profit-dim text-fin-profit',
   },
   accumulate: {
     label: 'Accumulate',
-    color: 'var(--fin-profit)',
-    bg: 'var(--fin-profit-dim)',
+    className: 'bg-fin-profit-dim text-fin-profit',
   },
   wait: {
     label: 'Wait',
-    color: 'var(--fin-warning)',
-    bg: 'var(--fin-warning-dim)',
+    className: 'bg-fin-warning-dim text-fin-warning',
   },
   monitor: {
     label: 'Monitor',
-    color: 'var(--text-secondary)',
-    bg: 'rgba(var(--muted-rgb),0.1)',
+    className: 'bg-surface-hover text-text-secondary',
   },
   avoid: {
     label: 'Avoid',
-    color: 'var(--fin-loss)',
-    bg: 'var(--fin-loss-dim)',
+    className: 'bg-fin-loss-dim text-fin-loss',
   },
 };
 
@@ -44,8 +40,11 @@ function UndoToast({ ticker, message, onUndo, onDismiss }) {
   }, [onDismiss]);
 
   return (
-    <output className="undo-toast" aria-live="polite">
-      <span className="undo-toast-msg">
+    <output
+      className="fixed bottom-6 right-6 z-[90] flex max-w-sm items-center gap-3 rounded-md border border-border bg-panel px-4 py-3 text-sm text-foreground"
+      aria-live="polite"
+    >
+      <span className="flex min-w-0 flex-1 items-center gap-2">
         <Trash2 size={13} aria-hidden="true" />
         {message || (
           <>
@@ -53,11 +52,19 @@ function UndoToast({ ticker, message, onUndo, onDismiss }) {
           </>
         )}
       </span>
-      <button className="undo-toast-btn" onClick={onUndo} aria-label={`Undo removal of ${ticker}`}>
+      <button
+        className="inline-flex min-h-8 items-center gap-1 rounded-sm border border-brand px-2 text-xs font-semibold text-brand"
+        onClick={onUndo}
+        aria-label={`Undo removal of ${ticker}`}
+      >
         <RotateCcw size={12} aria-hidden="true" />
         Undo
       </button>
-      <button className="undo-toast-close" onClick={onDismiss} aria-label="Dismiss notification">
+      <button
+        className="grid size-8 place-items-center rounded-sm text-text-secondary hover:bg-surface-hover"
+        onClick={onDismiss}
+        aria-label="Dismiss notification"
+      >
         <Minus size={11} aria-hidden="true" />
       </button>
     </output>
@@ -256,14 +263,7 @@ export default function WatchlistPage() {
     if (loading) {
       return (
         <tr>
-          <td
-            colSpan={8}
-            style={{
-              textAlign: 'center',
-              padding: '40px 0',
-              color: 'var(--text-muted)',
-            }}
-          >
+          <td colSpan={8} className="py-10 text-center text-text-muted">
             Loading watchlists...
           </td>
         </tr>
@@ -272,7 +272,7 @@ export default function WatchlistPage() {
     if (error) {
       return (
         <tr>
-          <td colSpan={8} style={{ padding: 0 }}>
+          <td colSpan={8} className="p-0">
             <EmptyState
               title="Insufficient data"
               description="Connect Supabase data or run analysis before this panel can calculate."
@@ -286,9 +286,9 @@ export default function WatchlistPage() {
     if (filtered.length === 0) {
       return (
         <tr>
-          <td colSpan={8} style={{ padding: 0 }}>
+          <td colSpan={8} className="p-0">
             <EmptyState
-              icon={<BellOff size={24} style={{ opacity: 0.4 }} />}
+              icon={<BellOff size={24} className="opacity-40" />}
               title="No tickers match this filter"
               action="Show all"
               onAction={() => setSignalFilter('All')}
@@ -303,7 +303,7 @@ export default function WatchlistPage() {
       return (
         <tr
           key={s.ticker}
-          className="watchlist-row"
+          className="cursor-pointer transition-colors hover:bg-surface-hover"
           tabIndex={0}
           onClick={() => navigate(`/ticker/${s.ticker}`)}
           onKeyDown={(event) => {
@@ -314,27 +314,28 @@ export default function WatchlistPage() {
           }}
         >
           <td>
-            <div className="ticker-cell">
+            <div className="[display:flex] [align-items:center] [gap:10px]">
               <div
-                className="ticker-icon"
-                style={{
-                  background: 'rgba(var(--accent-rgb),0.15)',
-                  color: 'var(--brand-primary)',
-                }}
+                className="flex size-8 items-center justify-center rounded-sm bg-brand-dim text-[0.65rem] font-bold tracking-wide text-brand"
                 aria-hidden="true"
               >
                 {s.ticker.slice(0, 2)}
               </div>
               <div>
-                <div className="ticker-symbol">{s.ticker}</div>
-                <div className="ticker-name">{s.sector}</div>
+                <div className="[font-size:0.95rem] [font-weight:600]">{s.ticker}</div>
+                <div className="[font-size:0.73rem] [color:var(--text-secondary)] [margin-top:1px]">{s.sector}</div>
               </div>
             </div>
           </td>
-          <td className="price-mono">{s.last > 0 ? `$${s.last.toFixed(2)}` : '—'}</td>
+          <td className="font-mono [font-size:0.92rem]">{s.last > 0 ? `$${s.last.toFixed(2)}` : '—'}</td>
           <td>
             {s.last > 0 ? (
-              <span className={`change-pill ${isUp ? 'up' : 'down'}`}>
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-sm px-2 py-1 font-mono text-[0.78rem] font-semibold',
+                  isUp ? 'bg-fin-profit-dim text-fin-profit' : 'bg-fin-loss-dim text-fin-loss'
+                )}
+              >
                 {isUp ? <TrendingUp size={11} aria-hidden="true" /> : <TrendingDown size={11} aria-hidden="true" />}
                 <span aria-label={`${isUp ? 'up' : 'down'} ${Math.abs(s.changePct).toFixed(2)} percent`}>
                   {isUp ? '+' : ''}
@@ -342,80 +343,33 @@ export default function WatchlistPage() {
                 </span>
               </span>
             ) : (
-              <span className="price-mono" style={{ color: 'var(--text-muted)' }}>
-                —
-              </span>
+              <span className="font-mono text-[0.92rem] text-text-muted">—</span>
             )}
           </td>
-          <td
-            className="price-mono"
-            style={{
-              color: 'var(--text-secondary)',
-              fontSize: '0.82rem',
-            }}
-          >
-            {s.volume}
-          </td>
+          <td className="font-mono text-[0.82rem] text-text-secondary">{s.volume}</td>
           <td>
-            <span
-              className="panel-badge"
-              style={{
-                background: sig.bg,
-                color: sig.color,
-                fontWeight: 600,
-              }}
-            >
-              {sig.label}
-            </span>
+            <span className={cn('rounded-sm px-2 py-1 text-[0.7rem] font-semibold', sig.className)}>{sig.label}</span>
           </td>
-          <td
-            style={{
-              color: 'var(--text-secondary)',
-              fontSize: '0.8rem',
-              maxWidth: '200px',
-            }}
-          >
-            {s.setup}
-          </td>
+          <td className="max-w-[200px] text-[0.8rem] text-text-secondary">{s.setup}</td>
           <td>
             {s.alertPrice > 0 ? (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
+              <div className="flex items-center gap-1.5">
                 {s.alertType === 'above' ? (
-                  <TrendingUp size={12} aria-hidden="true" style={{ color: 'var(--fin-profit)' }} />
+                  <TrendingUp size={12} aria-hidden="true" className="text-fin-profit" />
                 ) : (
-                  <TrendingDown size={12} aria-hidden="true" style={{ color: 'var(--fin-loss)' }} />
+                  <TrendingDown size={12} aria-hidden="true" className="text-fin-loss" />
                 )}
-                <span
-                  className="price-mono"
-                  style={{
-                    fontSize: '0.8rem',
-                    color: 'var(--text-secondary)',
-                  }}
-                  aria-label={`Alert ${s.alertType} $${s.alertPrice.toFixed(2)}`}
-                >
+                <span className="font-mono text-[0.8rem] text-text-secondary" aria-label={`Alert ${s.alertType} $${s.alertPrice.toFixed(2)}`}>
                   ${s.alertPrice.toFixed(2)}
                 </span>
               </div>
             ) : (
-              <span
-                style={{
-                  color: 'var(--text-muted)',
-                  fontSize: '0.78rem',
-                }}
-              >
-                —
-              </span>
+              <span className="text-[0.78rem] text-text-muted">—</span>
             )}
           </td>
-          <td style={{ textAlign: 'right' }}>
+          <td className="text-right">
             <button
-              className="btn-icon"
+              className="ml-auto grid size-8 place-items-center rounded-sm border border-border-subtle bg-surface text-text-secondary transition-colors hover:bg-surface-hover hover:text-fin-loss active:scale-95"
               onClick={(event) => {
                 event.stopPropagation();
                 removeFromWatchlist(s.ticker);
@@ -432,43 +386,32 @@ export default function WatchlistPage() {
   }
 
   return (
-    <div className="watchlist-page">
+    <div className="grid min-h-0 flex-auto grid-cols-[minmax(0,1fr)_300px] items-start gap-4 overflow-y-auto px-7 py-6 max-[1000px]:grid-cols-1 max-[640px]:px-4">
       {/* Left: Watchlist Table */}
-      <div className="watchlist-main">
-        <div className="glass-panel watchlist-full-panel">
-          <div className="panel-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
+      <div className="[min-width:0]">
+        <div className="rounded-lg border border-border bg-panel shadow-none [display:flex] [flex-direction:column]">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle px-6 py-4 max-[640px]:flex-col max-[640px]:items-start">
             <div>
-              <h2 className="panel-heading">Watchlist &amp; Scanners</h2>
-              <p className="panel-subtext">
+              <h2 className="mb-0.5 text-[0.95rem] font-semibold text-foreground">Watchlist &amp; Scanners</h2>
+              <p className="text-pretty [margin:0] [padding:var(--space-3)] [border:1px_solid_rgba(var(--status-warning-rgb),_0.36)] [color:var(--fin-warning)] [font-size:0.76rem] text-xs text-text-secondary">
                 {watchlist.length} tickers tracked · AI signals refreshed on analysis
-                <span className="data-stamp">
+                <span className="font-mono [font-size:0.75rem] [color:var(--text-secondary)] [display:flex] [align-items:center] [gap:4px]">
                   <Clock size={10} aria-hidden="true" />
                   <span>{DATA_STAMP}</span>
                 </span>
               </p>
             </div>
-            <div
-              style={{
-                display: 'flex',
-                gap: '8px',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-              }}
-            >
-              <div style={{ display: 'flex', gap: '6px' }}>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex gap-1.5">
                 {signals.map((s) => (
                   <button
                     key={s}
-                    className="filter-chip"
+                    className={cn(
+                      'whitespace-nowrap rounded-sm border border-border bg-transparent px-3 py-[5px] text-xs tracking-[0.05em] text-text-secondary transition-colors hover:border-border-medium hover:text-foreground data-[active=true]:border-brand data-[active=true]:bg-brand-dim data-[active=true]:text-brand',
+                      signalFilter === s && s !== 'All' && SIGNAL_META[s]?.className
+                    )}
                     data-active={signalFilter === s}
                     onClick={() => setSignalFilter(s)}
-                    style={
-                      s === 'All'
-                        ? {}
-                        : {
-                            color: signalFilter === s ? SIGNAL_META[s]?.color : undefined,
-                          }
-                    }
                     aria-pressed={signalFilter === s}
                   >
                     {s === 'All' ? 'All' : SIGNAL_META[s]?.label}
@@ -476,12 +419,7 @@ export default function WatchlistPage() {
                 ))}
               </div>
               <button
-                className="btn-analyze"
-                style={{
-                  width: 'auto',
-                  padding: '8px 16px',
-                  fontSize: '0.85rem',
-                }}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-transparent bg-brand px-4 py-2 font-sans text-[0.85rem] font-bold tracking-wide text-text-inverse transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-hover disabled:text-text-secondary"
                 onClick={() => setShowAddModal(true)}
                 aria-label="Add ticker to watchlist"
               >
@@ -491,7 +429,7 @@ export default function WatchlistPage() {
             </div>
           </div>
 
-          <div className="watchlist-table">
+          <div className="flex-1 overflow-y-auto max-[640px]:overflow-x-auto [&_table]:w-full [&_table]:border-collapse [&_td]:border-b [&_td]:border-border-subtle [&_td]:px-6 [&_td]:py-3.5 [&_td:last-child]:pr-6 [&_td:last-child]:text-right [&_th]:sticky [&_th]:top-0 [&_th]:border-b [&_th]:border-border-medium [&_th]:bg-panel-solid [&_th]:px-6 [&_th]:py-2.5 [&_th]:text-left [&_th]:text-[0.7rem] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.08em] [&_th]:text-text-secondary [&_th:last-child]:pr-6 [&_th:last-child]:text-right max-[640px]:[&_table]:min-w-[620px]">
             <table>
               <thead>
                 <tr>
@@ -513,7 +451,7 @@ export default function WatchlistPage() {
             {/* Watchlist fully empty state */}
             {watchlist.length === 0 && (
               <EmptyState
-                icon={<BellOff size={32} style={{ opacity: 0.3 }} />}
+                icon={<BellOff size={32} className="opacity-30" />}
                 title="Your watchlist is empty"
                 description="Add tickers to track signals, alerts, and setups."
                 action="Add first ticker"
@@ -525,39 +463,53 @@ export default function WatchlistPage() {
       </div>
 
       {/* Right: Alert Feed */}
-      <div className="watchlist-right">
-        <div className="glass-panel watchlist-alerts-panel">
-          <div className="panel-header">
+      <div className="[display:flex] [flex-direction:column] [gap:16px] max-[1000px]:[flex-direction:row] max-[1000px]:[flex-wrap:wrap]">
+        <div className="rounded-lg border border-border bg-panel shadow-none [display:flex] [flex-direction:column] max-[1000px]:[flex:1] max-[1000px]:[min-width:280px]">
+          <div className="flex items-center justify-between gap-3 border-b border-border-subtle px-6 py-4 max-[640px]:flex-col max-[640px]:items-start">
             <div>
-              <h3 className="panel-heading">Alert Feed</h3>
-              <p className="panel-subtext">AI &amp; price trigger notifications</p>
+              <h3 className="mb-0.5 text-[0.95rem] font-semibold text-foreground">Alert Feed</h3>
+              <p className="text-pretty [margin:0] [padding:var(--space-3)] [border:1px_solid_rgba(var(--status-warning-rgb),_0.36)] [color:var(--fin-warning)] [font-size:0.76rem] text-xs text-text-secondary">
+                AI &amp; price trigger notifications
+              </p>
             </div>
             {alerts.length > 0 && (
-              <span className="panel-badge" aria-label={`${alerts.length} active alerts`}>
+              <span
+                className="[font-size:0.7rem] [padding:3px_8px] [border-radius:var(--radius-xs)] [background:var(--fin-profit-dim)] [color:var(--fin-profit)] [font-weight:600]"
+                aria-label={`${alerts.length} active alerts`}
+              >
                 {alerts.length}
               </span>
             )}
           </div>
           {alerts.length === 0 ? (
-            <EmptyState icon={<BellOff size={24} style={{ opacity: 0.3 }} />} title="No active alerts" />
+            <EmptyState icon={<BellOff size={24} className="opacity-30" />} title="No active alerts" />
           ) : (
-            <ul className="alerts-list">
+            <ul className="[padding:8px_16px_12px] [display:flex] [flex-direction:column] [gap:8px]">
               {alerts.map((al) => (
-                <li key={al.id} className={`alert-item alert-${al.severity}`}>
-                  <div className="alert-header">
-                    <span className="alert-ticker">{al.ticker}</span>
-                    <span className="alert-type">{al.type}</span>
-                    <span className="alert-time price-mono">{al.time}</span>
+                <li
+                  key={al.id}
+                  className={cn(
+                    'animate-[fadeInUp_0.3s_ease] rounded-sm border border-border-subtle bg-surface px-3.5 py-3 transition-colors',
+                    al.severity === 'profit' ? 'border-fin-profit bg-fin-profit-dim' : 'border-fin-warning bg-fin-warning-dim'
+                  )}
+                >
+                  <div className="[display:flex] [align-items:center] [gap:8px] [margin-bottom:6px]">
+                    <span className="[font-weight:700] [font-size:0.82rem]">{al.ticker}</span>
+                    <span className="[font-size:0.7rem] [padding:2px_7px] [border-radius:10px] [background:rgba(var(--text-inverse-rgb),_0.06)] [color:var(--text-secondary)]">
+                      {al.type}
+                    </span>
+                    <span className="[font-size:0.72rem] [color:var(--text-secondary)] [margin-left:auto] font-mono [font-size:0.92rem]">
+                      {al.time}
+                    </span>
                     <button
-                      className="btn-icon"
-                      style={{ width: 24, height: 24 }}
+                      className="ml-auto grid size-6 shrink-0 place-items-center rounded-sm border border-border-subtle bg-surface text-text-secondary transition-colors hover:bg-surface-hover hover:text-fin-loss active:scale-95"
                       onClick={() => dismissAlert(al.id)}
                       aria-label={`Dismiss alert for ${al.ticker}`}
                     >
                       <Minus size={11} aria-hidden="true" />
                     </button>
                   </div>
-                  <p className="alert-msg">{al.msg}</p>
+                  <p className="[font-size:0.78rem] [line-height:1.5] [color:var(--text-secondary)]">{al.msg}</p>
                 </li>
               ))}
             </ul>
@@ -565,26 +517,34 @@ export default function WatchlistPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="glass-panel watchlist-quick-stats">
-          <div className="panel-header">
-            <span className="panel-heading">Watchlist Summary</span>
+        <div className="rounded-lg border border-border bg-panel shadow-none [padding:4px_0]">
+          <div className="flex items-center justify-between gap-3 border-b border-border-subtle px-6 py-4 max-[640px]:flex-col max-[640px]:items-start">
+            <span className="mb-0.5 text-[0.95rem] font-semibold text-foreground">Watchlist Summary</span>
           </div>
-          <div className="quick-stat-grid">
-            <div className="quick-stat-item">
-              <div className="kpi-label">Buy Zone / Accumulate</div>
-              <div className="kpi-value kpi-profit">{watchlist.filter((s) => ['buy-zone', 'accumulate'].includes(s.aiSignal)).length}</div>
+          <div className="[display:grid] [grid-template-columns:1fr_1fr] [gap:1px] [background:var(--border-subtle)] [border-radius:0_0_var(--radius-lg)_var(--radius-lg)] [overflow:hidden]">
+            <div className="[padding:14px_16px] [background:var(--bg-panel)]">
+              <div className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-text-secondary">Buy Zone / Accumulate</div>
+              <div className="mb-1 font-mono text-[1.4rem] font-semibold leading-[1.15] text-fin-profit">
+                {watchlist.filter((s) => ['buy-zone', 'accumulate'].includes(s.aiSignal)).length}
+              </div>
             </div>
-            <div className="quick-stat-item">
-              <div className="kpi-label">Wait / Monitor</div>
-              <div className="kpi-value kpi-warning">{watchlist.filter((s) => ['wait', 'monitor'].includes(s.aiSignal)).length}</div>
+            <div className="[padding:14px_16px] [background:var(--bg-panel)]">
+              <div className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-text-secondary">Wait / Monitor</div>
+              <div className="mb-1 font-mono text-[1.4rem] font-semibold leading-[1.15] text-fin-warning">
+                {watchlist.filter((s) => ['wait', 'monitor'].includes(s.aiSignal)).length}
+              </div>
             </div>
-            <div className="quick-stat-item">
-              <div className="kpi-label">Up Today</div>
-              <div className="kpi-value kpi-profit">{watchlist.filter((s) => s.changePct > 0).length}</div>
+            <div className="[padding:14px_16px] [background:var(--bg-panel)]">
+              <div className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-text-secondary">Up Today</div>
+              <div className="mb-1 font-mono text-[1.4rem] font-semibold leading-[1.15] text-fin-profit">
+                {watchlist.filter((s) => s.changePct > 0).length}
+              </div>
             </div>
-            <div className="quick-stat-item">
-              <div className="kpi-label">Down Today</div>
-              <div className="kpi-value kpi-loss">{watchlist.filter((s) => s.changePct < 0).length}</div>
+            <div className="[padding:14px_16px] [background:var(--bg-panel)]">
+              <div className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-text-secondary">Down Today</div>
+              <div className="mb-1 font-mono text-[1.4rem] font-semibold leading-[1.15] text-fin-loss">
+                {watchlist.filter((s) => s.changePct < 0).length}
+              </div>
             </div>
           </div>
         </div>
@@ -593,31 +553,38 @@ export default function WatchlistPage() {
       {/* Add Ticker Modal */}
       {showAddModal && (
         <>
-          <button type="button" className="scenario-backdrop" aria-label="Close add ticker dialog" onClick={closeAddModal} />
-          <dialog open className="add-ticker-modal" aria-modal="true" aria-label="Add ticker to watchlist">
-            <div className="drawer-header">
+          <button
+            type="button"
+            className="[position:fixed] [inset:0] [z-index:40] [background:rgba(var(--black-rgb),_0.72)] [animation:fadeIn_0.2s_ease]"
+            aria-label="Close add ticker dialog"
+            onClick={closeAddModal}
+          />
+          <dialog
+            open
+            className="[position:fixed] [top:50%] [left:50%] [transform:translate(-50%,_-50%)] [z-index:60] [width:380px] [background:var(--bg-panel)] [border:1px_solid_var(--border-medium)] [border-radius:var(--radius-md)] [padding:24px] [animation:fadeInDown_0.25s_cubic-bezier(0.4,_0,_0.2,_1)]"
+            aria-modal="true"
+            aria-label="Add ticker to watchlist"
+          >
+            <div className="[padding:20px_24px] [border-bottom:1px_solid_var(--border-subtle)] [display:flex] [align-items:center] [justify-content:space-between] [flex-shrink:0] max-[640px]:[padding-left:16px] max-[640px]:[padding-right:16px]">
               <div>
-                <div className="drawer-title">Add to Watchlist</div>
-                <div className="drawer-subtitle">Enter a ticker symbol to track</div>
+                <div className="[font-size:1rem] [font-weight:600]">Add to Watchlist</div>
+                <div className="[font-size:0.78rem] [color:var(--text-secondary)] [margin-top:2px]">Enter a ticker symbol to track</div>
               </div>
-              <button className="btn-icon" onClick={closeAddModal} aria-label="Close dialog">
+              <button
+                className="grid size-8 shrink-0 place-items-center rounded-sm border border-border-subtle bg-surface text-text-secondary transition-colors hover:bg-surface-hover hover:text-foreground active:scale-95"
+                onClick={closeAddModal}
+                aria-label="Close dialog"
+              >
                 <Minus size={14} aria-hidden="true" />
               </button>
             </div>
-            <div
-              style={{
-                padding: '20px 24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-              }}
-            >
+            <div className="flex flex-col gap-2.5 px-6 py-5">
               <label htmlFor="ticker-add-input" className="sr-only">
                 Ticker symbol
               </label>
               <input
                 id="ticker-add-input"
-                className="form-input"
+                className="mb-3 w-full rounded-md border border-border-subtle bg-panel-solid px-4 py-3 font-mono text-base font-medium uppercase tracking-wide text-foreground outline-none transition-colors placeholder:normal-case placeholder:tracking-normal placeholder:text-text-secondary focus:border-brand focus:ring-2 focus:ring-brand"
                 placeholder="e.g. MSFT"
                 value={newTicker}
                 onChange={(e) => {
@@ -630,11 +597,18 @@ export default function WatchlistPage() {
                 aria-invalid={!!addError}
               />
               {addError && (
-                <p id="ticker-add-error" className="input-error" role="alert">
+                <p
+                  id="ticker-add-error"
+                  className="[font-size:0.8rem] [color:var(--fin-loss)] [margin-top:4px] [animation:fadeIn_0.2s_ease-out]"
+                  role="alert"
+                >
                   {addError}
                 </p>
               )}
-              <button className="btn-analyze" onClick={handleAddTicker}>
+              <button
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-transparent bg-brand px-5 py-3 font-sans text-sm font-bold tracking-wide text-text-inverse transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-hover disabled:text-text-secondary"
+                onClick={handleAddTicker}
+              >
                 Add {newTicker || 'ticker'}
               </button>
             </div>

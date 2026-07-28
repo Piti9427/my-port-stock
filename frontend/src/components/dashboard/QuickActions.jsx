@@ -2,19 +2,36 @@ import { BookOpen, Plus, Search } from 'lucide-react';
 
 export function QuickActions({ onAnalyze, onLogTrade, onAddWatchlist }) {
   return (
-    <section className="p-6 border border-[#262626] hover:border-[#38383a] rounded-2xl bg-[#121212] flex flex-col gap-4 transition-all duration-200 shadow-sm" aria-labelledby="dashboard-quick-actions-title">
-      <h2 id="dashboard-quick-actions-title" className="text-[0.72rem] font-semibold uppercase tracking-wider text-[#a1a1aa]">Quick Actions</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <button type="button" onClick={onAnalyze} className="flex items-center justify-center gap-2 p-3 border border-[#262626] hover:border-[#38383a] rounded-xl bg-[#18181b] hover:bg-[#202024] text-xs font-semibold text-[#ededed] transition-all duration-200 active:scale-[0.98]">
-          <Search size={16} aria-hidden="true" className="text-emerald-400" />
+    <section
+      className="min-w-0 overflow-hidden rounded-xl border border-border bg-surface p-5 text-foreground"
+      aria-labelledby="dashboard-quick-actions-title"
+    >
+      <h2 id="dashboard-quick-actions-title" className="m-0 text-[0.95rem] font-semibold text-foreground">
+        Quick Actions
+      </h2>
+      <div className="mt-4 grid gap-2">
+        <button
+          type="button"
+          onClick={onAnalyze}
+          className="flex min-h-[42px] items-center gap-2 rounded-lg border border-border bg-panel-solid px-3 text-left text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:text-foreground"
+        >
+          <Search size={16} aria-hidden="true" className="text-fin-profit" />
           วิเคราะห์หุ้น
         </button>
-        <button type="button" onClick={onLogTrade} className="flex items-center justify-center gap-2 p-3 border border-[#262626] hover:border-[#38383a] rounded-xl bg-[#18181b] hover:bg-[#202024] text-xs font-semibold text-[#ededed] transition-all duration-200 active:scale-[0.98]">
-          <BookOpen size={16} aria-hidden="true" className="text-blue-400" />
+        <button
+          type="button"
+          onClick={onLogTrade}
+          className="flex min-h-[42px] items-center gap-2 rounded-lg border border-border bg-panel-solid px-3 text-left text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:text-foreground"
+        >
+          <BookOpen size={16} aria-hidden="true" className="text-fin-info" />
           บันทึกเทรด
         </button>
-        <button type="button" onClick={onAddWatchlist} className="flex items-center justify-center gap-2 p-3 border border-[#262626] hover:border-[#38383a] rounded-xl bg-[#18181b] hover:bg-[#202024] text-xs font-semibold text-[#ededed] transition-all duration-200 active:scale-[0.98]">
-          <Plus size={16} aria-hidden="true" className="text-amber-400" />
+        <button
+          type="button"
+          onClick={onAddWatchlist}
+          className="flex min-h-[42px] items-center gap-2 rounded-lg border border-border bg-panel-solid px-3 text-left text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:text-foreground"
+        >
+          <Plus size={16} aria-hidden="true" className="text-fin-warning" />
           เพิ่ม Watchlist
         </button>
       </div>
