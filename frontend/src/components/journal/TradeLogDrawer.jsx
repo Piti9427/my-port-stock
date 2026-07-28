@@ -217,5 +217,5 @@ TradeLogDrawer.propTypes = {
   onSaved: PropTypes.func,
   open: PropTypes.bool,
   suggestions: PropTypes.arrayOf(PropTypes.string),
-  submitTrade: PropTypes.func.isRequired,
+  submitTrade: PropTypes.func,
 };

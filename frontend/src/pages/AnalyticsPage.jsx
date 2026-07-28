@@ -101,12 +101,12 @@ export default function AnalyticsPage() {
   const emptyCopy = sortedClosedTrades.length === 0 ? 'ต้องมี trade ที่ปิดแล้วอย่างน้อย 1 รายการ' : 'ไม่มี trade ที่ตรงกับ filter นี้';
 
   return (
-    <div className="analytics-page">
-      <header className="glass-panel analytics-header">
-        <div className="analytics-header-top">
+    <div className="flex-1 p-6 md:p-8 flex flex-col gap-6 max-w-7xl mx-auto w-full bg-neutral-950 text-neutral-100">
+      <header className="p-6 border border-neutral-800 rounded-xl bg-neutral-900/60 backdrop-blur-sm flex flex-col gap-4">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h2>Performance Analytics</h2>
-            <p>Review closed-trade outcomes from Supabase journal data.</p>
+            <h2 className="text-xl font-bold text-neutral-100">Performance Analytics</h2>
+            <p className="text-xs text-neutral-400 mt-1">Review closed-trade outcomes from Supabase journal data.</p>
           </div>
           <DataStamp source={meta.source || 'Supabase journal data'} timestamp={meta.as_of} stale={isStale} />
         </div>
@@ -124,15 +124,15 @@ export default function AnalyticsPage() {
       ) : error ? (
         <EmptyState
           title="Insufficient data"
-          description={error.message || 'Connect Supabase data before this panel can calculate.'}
+          description="Connecting to journal analytics failed. Check backend endpoint or retry."
           action={{ label: 'Retry', onClick: refetch }}
         />
       ) : filteredClosedTrades.length === 0 ? (
-        <div className="analytics-empty-stack">
-          <div className="glass-panel" style={{ padding: '32px var(--space-6)' }}>
+        <div className="flex flex-col gap-4">
+          <div className="p-8 border border-neutral-800 rounded-xl bg-neutral-900/40">
             <EmptyState title="Insufficient data" description={emptyCopy} />
           </div>
-          <div style={{ display: 'none' }} aria-hidden="true">
+          <div className="hidden" aria-hidden="true">
             <EquityCurve trades={[]} />
           </div>
         </div>
@@ -141,40 +141,29 @@ export default function AnalyticsPage() {
           <AnalyticsMetricCards stats={stats} />
           <EquityCurve trades={filteredClosedTrades} />
 
-          <section
-            className="glass-panel analytics-biases"
-            style={{ marginTop: 'var(--space-4)', marginBottom: 'var(--space-4)' }}
-            aria-labelledby="analytics-biases-title"
-          >
-            <div className="panel-header">
-              <span id="analytics-biases-title" className="panel-heading">
+          <section className="p-6 border border-neutral-800 rounded-xl bg-neutral-900/60 backdrop-blur-sm" aria-labelledby="analytics-biases-title">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-neutral-800">
+              <span id="analytics-biases-title" className="text-sm font-bold text-neutral-200">
                 🧠 Cognitive Bias Analysis
               </span>
             </div>
-            <div className="watchlist-table">
-              <table>
-                <thead>
+            <div className="w-full overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-neutral-900 border-b border-neutral-800 text-neutral-400">
                   <tr>
-                    <th>Bias Tag</th>
-                    <th>Trade Count</th>
-                    <th>Win Ratio</th>
-                    <th>Net Return</th>
+                    <th className="p-3">Bias Tag</th>
+                    <th className="p-3">Trade Count</th>
+                    <th className="p-3">Win Ratio</th>
+                    <th className="p-3">Net Return</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-neutral-800/60">
                   {biasStats.map((stat) => (
-                    <tr key={stat.bias} className="watchlist-row">
-                      <td
-                        style={{ fontWeight: 'bold', color: stat.bias === 'None / Not tagged' ? 'var(--color-bias-none)' : 'var(--color-bias-tag)' }}
-                      >
-                        {stat.bias}
-                      </td>
-                      <td>{stat.count} trades</td>
-                      <td>{stat.count > 0 ? ((stat.winCount / stat.count) * 100).toFixed(0) : 0}%</td>
-                      <td
-                        className={stat.profit >= 0 ? 'kpi-profit price-mono' : 'kpi-loss price-mono'}
-                        style={{ color: stat.profit >= 0 ? 'var(--fin-profit)' : 'var(--fin-loss)' }}
-                      >
+                    <tr key={stat.bias} className="hover:bg-neutral-800/40 transition-colors">
+                      <td className={`p-3 font-bold ${stat.bias === 'None / Not tagged' ? 'text-neutral-500' : 'text-orange-400'}`}>{stat.bias}</td>
+                      <td className="p-3 text-neutral-300">{stat.count} trades</td>
+                      <td className="p-3 font-mono text-neutral-300">{stat.count > 0 ? ((stat.winCount / stat.count) * 100).toFixed(0) : 0}%</td>
+                      <td className={`p-3 font-mono font-semibold tabular-nums ${stat.profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                         {formatMoney(stat.profit, { sign: true })} Net
                       </td>
                     </tr>
@@ -184,29 +173,29 @@ export default function AnalyticsPage() {
             </div>
           </section>
 
-          <section className="glass-panel analytics-history" aria-labelledby="analytics-history-title">
-            <div className="panel-header">
-              <span id="analytics-history-title" className="panel-heading">
+          <section className="p-6 border border-neutral-800 rounded-xl bg-neutral-900/60 backdrop-blur-sm" aria-labelledby="analytics-history-title">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-neutral-800">
+              <span id="analytics-history-title" className="text-sm font-bold text-neutral-200">
                 Closed trade history
               </span>
             </div>
-            <div className="watchlist-table analytics-history-table">
-              <table>
-                <thead>
+            <div className="w-full overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-neutral-900 border-b border-neutral-800 text-neutral-400">
                   <tr>
-                    <th>Ticker</th>
-                    <th>Mode</th>
-                    <th>Date</th>
-                    <th>P/L</th>
+                    <th className="p-3">Ticker</th>
+                    <th className="p-3">Mode</th>
+                    <th className="p-3">Date</th>
+                    <th className="p-3">P/L</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-neutral-800/60">
                   {filteredClosedTrades.map((trade) => (
-                    <tr key={trade.id || `${trade.ticker}-${tradeTime(trade)}`} className="watchlist-row">
-                      <td>{trade.ticker}</td>
-                      <td>{trade.mode || '—'}</td>
-                      <td>{formatDate(trade.date || trade.closed_at || trade.created_at)}</td>
-                      <td className={Number(trade.profit) >= 0 ? 'kpi-profit price-mono' : 'kpi-loss price-mono'}>
+                    <tr key={trade.id || `${trade.ticker}-${tradeTime(trade)}`} className="hover:bg-neutral-800/40 transition-colors">
+                      <td className="p-3 font-bold text-neutral-100">{trade.ticker}</td>
+                      <td className="p-3 text-neutral-400">{trade.mode || '—'}</td>
+                      <td className="p-3 text-neutral-400">{formatDate(trade.date || trade.closed_at || trade.created_at)}</td>
+                      <td className={`p-3 font-mono font-semibold tabular-nums ${Number(trade.profit) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                         {formatMoney(trade.profit, { sign: true })}
                       </td>
                     </tr>

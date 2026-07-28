@@ -44,7 +44,7 @@ export default function ConfigPage() {
   };
 
   return (
-    <div className="config-page">
+    <div className="flex-1 min-h-0 overflow-y-auto grid grid-cols-1 md:grid-cols-[280px_1fr] bg-neutral-950 text-neutral-100">
       <ConfigSidebar
         sections={SECTIONS}
         activeSection={activeSection.id}
@@ -52,7 +52,7 @@ export default function ConfigPage() {
         onSelect={setActiveSectionId}
         onReset={handleReset}
       />
-      <section className="config-content">
+      <section className="p-6 md:p-12 max-w-4xl w-full">
         <ConfigSectionContent
           section={activeSection}
           config={config}
