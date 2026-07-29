@@ -36,6 +36,13 @@
 
 ## Durable Entries
 
+### 2026-07-29 - Runtime TH/EN Language Contract
+
+- Keywords: `i18n-runtime`, `language-preference`, `english-ui`, `ai-response-language`, `supabase-migration`
+- Decision: `user_preferences.language` is the per-user source for active `th`/`en` UI, document/date locale, onboarding, and AI response language; missing keys must not leak Thai into English.
+- Action: Wired active production surfaces, AI request/prompt propagation, catalog/API/schema regressions, and the canonical Supabase migration.
+- Source: `docs/HANDOFF.md`, `frontend/src/i18n/translations.js`, `supabase/migrations/20260729170500_add_user_language.sql`
+
 ### 2026-07-28 - Engineering and Investment Agent Domain Boundary
 
 - Keywords: `agent-domain-boundary`, `engineering-change-contract`, `check-pr`, `context7`
