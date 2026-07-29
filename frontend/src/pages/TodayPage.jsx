@@ -5,6 +5,7 @@ import { TrendingUp, Clock, ArrowRight, ChevronDown, ChevronUp, ShieldAlert, Hel
 import { useAuth } from '../auth/clerkAdapter';
 import { useToday } from '../hooks/useToday';
 import { EmptyState } from '../components/ui/EmptyState';
+import { useTranslation } from '../i18n/useTranslation';
 import { cn, cssVars } from '../lib/utils';
 
 // Helper for formatting large THB numbers
@@ -27,6 +28,7 @@ function getDismissalKey(item) {
 export default function TodayPage() {
   const navigate = useNavigate();
   const { getToken } = useAuth();
+  const { t } = useTranslation();
   const { queue, pulse, loading, status, refetch } = useToday({ getToken });
   const [expandedCardId, setExpandedCardId] = useState(null);
   const [activeMobileIndex, setActiveMobileIndex] = useState(0);
@@ -236,42 +238,34 @@ export default function TodayPage() {
   return (
     <div className="[flex:1_1_auto] [min-height:0] [overflow-y:auto] [padding:24px_28px] [display:flex] [flex-direction:column] [gap:24px]">
       <div className="[color:var(--text-secondary)] [font-size:0.85rem] [line-height:1.5] [margin-top:-8px] [margin-bottom:8px] [max-width:75ch]">
-        ตรวจสอบสัญญาณพอร์ตโฟลิโอและการกระทำตามระบบประเมินความเสี่ยงรายวัน
+        {t('today.subtitle')}
       </div>
 
       {isBrandNew ? (
         <EmptyState
-          title="ยินดีต้อนรับสู่ระบบประเมินความเสี่ยงพอร์ตโฟลิโอ 📈"
-          description="ยังไม่มีหุ้นหรือประวัติคำสั่งซื้อขายในพอร์ตของคุณในขณะนี้ เริ่มต้นโดยการเพิ่มหุ้นตัวแรกผ่านเมนูบันทึกการเทรดเพื่อคำนวณและแสดงผลสัญญาณความเสี่ยงรายวัน"
-          action="บันทึกเทรดตัวแรก"
+          title={t('today.empty_portfolio_title')}
+          description={t('today.empty_portfolio_description')}
+          action={t('today.empty_portfolio_action')}
           onAction={() => navigate('/journal')}
         />
       ) : loading ? (
         <div className="[flex:1] [display:flex] [align-items:center] [justify-content:center] [min-height:300px]">
-          <EmptyState title="กำลังโหลดข้อมูลสัญญาณ..." description="ระบบกำลังตรวจสอบสถานะความเสี่ยงของพอร์ตและอัปเดตราคาตลาดปัจจุบัน" />
+          <EmptyState title={t('today.loading_title')} description={t('today.loading_description')} />
         </div>
       ) : unavailable ? (
         <div className="[flex:1] [display:flex] [align-items:center] [justify-content:center] [min-height:300px]">
-          <EmptyState
-            title="ไม่สามารถโหลดข้อมูลสัญญาณได้"
-            description="ไม่พบคอนฟิกระบบ Supabase หรือข้อมูลราคาตลาดขัดข้อง โปรดตรวจสอบคอนฟิกและลองใหม่อีกครั้ง"
-            action="Refetch Data"
-            onAction={refetch}
-          />
+          <EmptyState title={t('today.error_title')} description={t('today.error_description')} action="Refetch Data" onAction={refetch} />
         </div>
       ) : activeQueue.length === 0 ? (
         <div className="grid grid-cols-[minmax(0,1fr)_360px] items-start gap-8 max-[768px]:grid-cols-1 max-[768px]:gap-6">
           <div className="[display:flex] [flex-direction:column] [gap:16px]">
             {queue.length > 0 ? (
-              <EmptyState
-                title="เคลียร์คิวสัญญาณเรียบร้อยแล้ว 🎯"
-                description="สัญญาณที่มีทั้งหมดได้รับการ Dismiss หรือตรวจสอบชั่วคราวแล้ว ระบบจะแสดงสัญญาณอีกครั้งตามเงื่อนไขความเสี่ยงใหม่"
-              />
+              <EmptyState title={t('today.cleared_title')} description={t('today.cleared_description')} />
             ) : (
               <EmptyState
-                title="พอร์ตโฟลิโอเป็นปกติ ไม่มีสัญญาณเตือนภัยวันนี้ 🎉"
-                description="พอร์ตการลงทุนปัจจุบันมีความสอดคล้องกับมาตรฐานความเสี่ยงและกฎ SOP ทุกข้อเรียบร้อย"
-                action="วิเคราะห์หุ้นเพิ่ม"
+                title={t('today.healthy_title')}
+                description={t('today.healthy_description')}
+                action={t('today.healthy_action')}
                 onAction={() => navigate('/command-center')}
               />
             )}
@@ -353,7 +347,7 @@ export default function TodayPage() {
                       <button
                         type="button"
                         className="[background:transparent] [border:none] [color:var(--text-secondary)] [cursor:pointer] [padding:6px] [border-radius:6px]"
-                        aria-label={isExpanded ? `ย่อรายละเอียด ${item.title}` : `ขยายรายละเอียด ${item.title}`}
+                        aria-label={t(isExpanded ? 'today.collapse_details' : 'today.expand_details', { title: item.title })}
                         aria-expanded={isExpanded}
                       >
                         {isExpanded ? <ChevronUp className="[width:18px] [height:18px]" /> : <ChevronDown className="[width:18px] [height:18px]" />}
@@ -401,9 +395,7 @@ export default function TodayPage() {
               return (
                 <div className="max-[768px]:[display:flex] max-[768px]:[flex-direction:column] max-[768px]:[gap:16px]">
                   <div className="max-[768px]:[font-size:0.8rem] max-[768px]:[font-weight:600] max-[768px]:[color:var(--text-secondary)] max-[768px]:[text-align:center]">
-                    <span>
-                      สัญญาณเตือน {activeMobileIndex + 1} จาก {activeQueue.length}
-                    </span>
+                    <span>{t('today.alert_position', { current: activeMobileIndex + 1, total: activeQueue.length })}</span>
                   </div>
 
                   <motion.div
@@ -486,14 +478,14 @@ export default function TodayPage() {
                       disabled={activeMobileIndex === 0}
                       onClick={() => setActiveMobileIndex((prev) => prev - 1)}
                     >
-                      ย้อนกลับ / Prev
+                      {t('today.previous')}
                     </button>
                     <button
                       className="flex-1 cursor-pointer rounded-md border-0 bg-brand p-2.5 text-center text-[0.85rem] font-semibold text-text-inverse hover:bg-brand-dark disabled:cursor-not-allowed disabled:bg-surface-hover disabled:text-text-muted"
                       disabled={activeMobileIndex === activeQueue.length - 1}
                       onClick={() => setActiveMobileIndex((prev) => prev + 1)}
                     >
-                      ถัดไป / Next
+                      {t('today.next')}
                     </button>
                   </div>
                 </div>

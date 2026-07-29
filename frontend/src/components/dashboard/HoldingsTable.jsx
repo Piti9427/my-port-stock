@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { formatCurrency } from '../../lib/format.js';
 import { DataTable } from '../ui/DataTable.jsx';
 import { EmptyState } from '../ui/EmptyState.jsx';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 function numberValue(value) {
   const numeric = Number(value);
@@ -26,6 +27,7 @@ export function HoldingsTable({
   onRetry = null,
   onFirstRunAction = null,
 }) {
+  const { t } = useTranslation();
   const rows = useMemo(() => {
     const totalValue = holdings.reduce((sum, holding) => sum + numberValue(holding.shares) * numberValue(holding.price), 0);
 
@@ -88,18 +90,18 @@ export function HoldingsTable({
           <button
             className="min-h-[30px] rounded-lg border border-border bg-panel-solid px-[9px] py-1 text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:text-foreground"
             type="button"
-            aria-label={`วางแผน ${row.ticker}`}
+            aria-label={t('dashboard.plan_ticker', { ticker: row.ticker })}
             onClick={(event) => {
               event.stopPropagation();
               onPlan?.(row.ticker);
             }}
           >
-            วางแผน
+            {t('dashboard.plan')}
           </button>
         ),
       },
     ],
-    [onPlan]
+    [onPlan, t]
   );
 
   if (['INSUFFICIENT_DATA', 'UNAUTHORIZED', 'ERROR'].includes(status)) {
@@ -136,9 +138,9 @@ export function HoldingsTable({
         skeletonRows={5}
         onRowClick={onOpenTicker ? (row) => onOpenTicker(row.ticker) : undefined}
         emptyState={{
-          title: 'เริ่มต้นโดยเพิ่มหุ้นในพอร์ต',
-          description: 'No portfolio data yet. บันทึก trade แรกเพื่อให้ Supabase holdings สร้างสถานะจริง',
-          action: onFirstRunAction ? { label: 'บันทึกเทรดครั้งแรก', onClick: onFirstRunAction } : undefined,
+          title: t('dashboard.empty_holdings_title'),
+          description: t('dashboard.empty_holdings_description'),
+          action: onFirstRunAction ? { label: t('dashboard.empty_holdings_action'), onClick: onFirstRunAction } : undefined,
         }}
       />
     </section>

@@ -15,6 +15,8 @@
     --foreground: #ededed;
     --surface: #171717;
     --surface-hover: #1f1f1f;
+    --surface-raised: #1f1f1f;
+    --surface-elevated: #171717;
     --border: #262626;
     --border-hover: #333333;
 
@@ -173,6 +175,8 @@
   --foreground: #09090b;
   --surface: #ffffff;
   --surface-hover: #f4f4f5;
+  --surface-raised: #f4f4f5;
+  --surface-elevated: #ffffff;
   --border: #e4e4e7;
   --border-hover: #d4d4d8;
 

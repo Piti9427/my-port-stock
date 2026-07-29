@@ -13,9 +13,9 @@ export function formatCurrency(value, currency = 'THB') {
   }).format(numeric);
 }
 
-export function formatDate(value) {
+export function formatDate(value, locale = 'th-TH') {
   if (!value || Number.isNaN(Date.parse(value))) return '—';
-  return new Date(value).toLocaleDateString('th-TH', {
+  return new Date(value).toLocaleDateString(locale, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

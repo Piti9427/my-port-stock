@@ -1,6 +1,8 @@
 import { BookOpen, Plus, Search } from 'lucide-react';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 export function QuickActions({ onAnalyze, onLogTrade, onAddWatchlist }) {
+  const { t } = useTranslation();
   return (
     <section
       className="min-w-0 overflow-hidden rounded-xl border border-border bg-surface p-5 text-foreground"
@@ -16,7 +18,7 @@ export function QuickActions({ onAnalyze, onLogTrade, onAddWatchlist }) {
           className="flex min-h-[42px] items-center gap-2 rounded-lg border border-border bg-panel-solid px-3 text-left text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:text-foreground"
         >
           <Search size={16} aria-hidden="true" className="text-fin-profit" />
-          วิเคราะห์หุ้น
+          {t('dashboard.analyze')}
         </button>
         <button
           type="button"
@@ -24,7 +26,7 @@ export function QuickActions({ onAnalyze, onLogTrade, onAddWatchlist }) {
           className="flex min-h-[42px] items-center gap-2 rounded-lg border border-border bg-panel-solid px-3 text-left text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:text-foreground"
         >
           <BookOpen size={16} aria-hidden="true" className="text-fin-info" />
-          บันทึกเทรด
+          {t('dashboard.log_trade')}
         </button>
         <button
           type="button"
@@ -32,7 +34,7 @@ export function QuickActions({ onAnalyze, onLogTrade, onAddWatchlist }) {
           className="flex min-h-[42px] items-center gap-2 rounded-lg border border-border bg-panel-solid px-3 text-left text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:text-foreground"
         >
           <Plus size={16} aria-hidden="true" className="text-fin-warning" />
-          เพิ่ม Watchlist
+          {t('dashboard.add_watchlist')}
         </button>
       </div>
     </section>

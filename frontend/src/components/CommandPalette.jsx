@@ -1,28 +1,45 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router';
 import { BarChart2, BookOpen, Bot, Crosshair, LayoutDashboard, Search, Settings2, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../auth/clerkAdapter';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useWatchlist } from '../hooks/useWatchlist';
+import { useTranslation } from '../i18n/useTranslation.js';
 import { cn } from '../lib/utils';
 
 const PAGE_COMMANDS = [
-  { id: 'page-dashboard', type: 'page', label: 'แดชบอร์ด', description: 'Overview', shortcut: 'g d', to: '/', icon: LayoutDashboard },
-  { id: 'page-risk', type: 'page', label: 'ความเสี่ยง', description: 'Portfolio risk', shortcut: 'g r', to: '/risk', icon: ShieldAlert },
-  { id: 'page-command', type: 'page', label: 'วิเคราะห์หุ้น', description: 'Command Center', shortcut: 'g a', to: '/command-center', icon: Bot },
-  { id: 'page-market', type: 'page', label: 'สำรวจตลาด', description: 'Market Explorer', shortcut: 'g m', to: '/market', icon: Crosshair },
-  { id: 'page-journal', type: 'page', label: 'บันทึกเทรด', description: 'Trade Journal', shortcut: 'g j', to: '/journal', icon: BookOpen },
+  { id: 'page-dashboard', type: 'page', labelKey: 'nav.dashboard', description: 'Overview', shortcut: 'g d', to: '/', icon: LayoutDashboard },
+  { id: 'page-risk', type: 'page', labelKey: 'nav.risk', description: 'Portfolio risk', shortcut: 'g r', to: '/risk', icon: ShieldAlert },
+  {
+    id: 'page-command',
+    type: 'page',
+    labelKey: 'nav.command_center',
+    description: 'Command Center',
+    shortcut: 'g a',
+    to: '/command-center',
+    icon: Bot,
+  },
+  {
+    id: 'page-market',
+    type: 'page',
+    labelKey: 'nav.market_explorer',
+    description: 'Market Explorer',
+    shortcut: 'g m',
+    to: '/market',
+    icon: Crosshair,
+  },
+  { id: 'page-journal', type: 'page', labelKey: 'nav.journal', description: 'Trade Journal', shortcut: 'g j', to: '/journal', icon: BookOpen },
   {
     id: 'page-analytics',
     type: 'page',
-    label: 'สถิติผลงาน',
+    labelKey: 'nav.analytics',
     description: 'Performance analytics',
     shortcut: 'g v',
     to: '/analytics',
     icon: BarChart2,
   },
-  { id: 'page-config', type: 'page', label: 'ตั้งค่าระบบ', description: 'Config', shortcut: 'g c', to: '/config', icon: Settings2 },
+  { id: 'page-config', type: 'page', labelKey: 'nav.config', description: 'Config', shortcut: 'g c', to: '/config', icon: Settings2 },
 ];
 
 function normalizeTicker(value) {
@@ -70,6 +87,7 @@ function commandMatches(command, query) {
 }
 
 export default function CommandPalette({ open, onOpenChange }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const dialogRef = useRef(null);
@@ -80,15 +98,13 @@ export default function CommandPalette({ open, onOpenChange }) {
   const portfolio = usePortfolio({ getToken });
   const watchlist = useWatchlist({ getToken });
 
-  const commands = useMemo(() => {
-    const tickerCommands = buildTickerCommands({
-      holdings: portfolio.holdings,
-      watchlist: watchlist.items,
-    });
-    return [...PAGE_COMMANDS, ...tickerCommands];
-  }, [portfolio.holdings, watchlist.items]);
-
-  const filteredCommands = useMemo(() => commands.filter((command) => commandMatches(command, query)).slice(0, 12), [commands, query]);
+  const pageCommands = PAGE_COMMANDS.map((command) => ({ ...command, label: t(command.labelKey) }));
+  const tickerCommands = buildTickerCommands({
+    holdings: portfolio.holdings,
+    watchlist: watchlist.items,
+  });
+  const commands = [...pageCommands, ...tickerCommands];
+  const filteredCommands = commands.filter((command) => commandMatches(command, query)).slice(0, 12);
 
   useEffect(() => {
     const handleKeyDown = (event) => {

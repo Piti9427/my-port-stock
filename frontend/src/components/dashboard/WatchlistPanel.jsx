@@ -2,6 +2,7 @@ import { formatCurrency } from '../../lib/format.js';
 import { cn } from '../../lib/utils.js';
 import { EmptyState } from '../ui/EmptyState.jsx';
 import { Skeleton } from '../ui/Skeleton.jsx';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 function Sparkline({ data = [], positive }) {
   const values = data.map(Number).filter(Number.isFinite);
@@ -19,6 +20,7 @@ function Sparkline({ data = [], positive }) {
 }
 
 export function WatchlistPanel({ items = [], loading = false, status = 'OK', onOpenTicker, onAnalyze }) {
+  const { t } = useTranslation();
   return (
     <section className="min-w-0 overflow-hidden rounded-xl border border-border bg-surface p-5" aria-labelledby="dashboard-watchlist-title">
       <div className="mb-4 flex items-start justify-between gap-4">
@@ -84,9 +86,9 @@ export function WatchlistPanel({ items = [], loading = false, status = 'OK', onO
                   className="min-h-[30px] rounded-lg border border-border bg-panel-solid px-[9px] py-1 text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:text-foreground"
                   type="button"
                   onClick={() => onAnalyze?.(item.ticker)}
-                  aria-label={`วิเคราะห์ ${item.ticker}`}
+                  aria-label={t('dashboard.analyze_ticker', { ticker: item.ticker })}
                 >
-                  วิเคราะห์
+                  {t('dashboard.analyze')}
                 </button>
               </div>
             );

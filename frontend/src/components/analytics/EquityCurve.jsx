@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useTranslation } from '../../i18n/useTranslation.js';
 import { EmptyState } from '../ui/EmptyState.jsx';
 import { buildEquityPoints, formatMoney } from './analyticsCalculations.js';
 
@@ -19,6 +20,7 @@ function polylinePoints(points) {
 }
 
 export function EquityCurve({ trades }) {
+  const { t } = useTranslation();
   const points = buildEquityPoints(trades);
   const currentValue = points.at(-1)?.value ?? 0;
   const line = polylinePoints(points);
@@ -31,10 +33,10 @@ export function EquityCurve({ trades }) {
       <div className="flex items-center justify-between gap-3 border-b border-border-subtle px-6 py-4 max-[640px]:flex-col max-[640px]:items-start">
         <div>
           <h2 id="analytics-equity-title" className="mb-0.5 text-[0.95rem] font-semibold text-foreground">
-            Equity Curve
+            {t('analytics.equity_curve')}
           </h2>
           <p className="text-pretty [margin:0] [padding:var(--space-3)] [border:1px_solid_rgba(var(--status-warning-rgb),_0.36)] [color:var(--fin-warning)] [font-size:0.76rem] text-xs text-text-secondary">
-            Cumulative P/L {formatMoney(currentValue, { sign: true })}
+            {t('analytics.cumulative_pl', { value: formatMoney(currentValue, { sign: true }) })}
           </p>
         </div>
       </div>
@@ -43,7 +45,7 @@ export function EquityCurve({ trades }) {
           <svg
             className="[width:100%] [min-height:220px] [height:auto] [display:block] [overflow:visible]"
             role="img"
-            aria-label="Equity curve"
+            aria-label={t('analytics.equity_curve_aria')}
             viewBox="0 0 100 80"
             preserveAspectRatio="none"
           >
@@ -64,7 +66,7 @@ export function EquityCurve({ trades }) {
           </svg>
         </div>
       ) : (
-        <EmptyState title="ยังไม่มีข้อมูลเพียงพอสำหรับกราฟ" description="ต้องมี closed trade อย่างน้อยสองรายการใน filter นี้" />
+        <EmptyState title={t('analytics.equity_empty_title')} description={t('analytics.equity_empty_description')} />
       )}
     </section>
   );

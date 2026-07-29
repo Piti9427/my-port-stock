@@ -7,6 +7,7 @@ import { DEFAULT_SECTOR_LIMIT, buildPortfolioRisk } from '../components/risk/ris
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Progress } from '../components/ui/progress';
 import { EmptyState } from '../components/ui/EmptyState';
+import { useTranslation } from '../i18n/useTranslation';
 import { cn, cssVars } from '../lib/utils';
 
 function sectorDrilldownSubtitle(sector) {
@@ -39,6 +40,7 @@ function riskBudgetTone(risk) {
 export default function PortfolioRiskPage() {
   const { getToken } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [selectedSector, setSelectedSector] = useState(null);
   const { holdings, loading, status, refetch } = usePortfolio({ getToken });
 
@@ -57,9 +59,9 @@ export default function PortfolioRiskPage() {
     return (
       <div className="[flex:1_1_auto] [min-height:0] [overflow-y:auto] [padding:24px_28px] [display:flex] [flex-direction:column] [gap:16px] max-[768px]:![overflow-y:visible] max-[768px]:![height:auto] max-[768px]:![min-height:0]">
         <EmptyState
-          title="ยังไม่มีพอร์ตการลงทุน 📈"
-          description="ระบบไม่สามารถวิเคราะห์และประเมินเพดานความเสี่ยงได้ เนื่องจากยังไม่มีหุ้นในพอร์ตโฟลิโอของคุณ เริ่มต้นโดยการเพิ่มหุ้นตัวแรกในระบบบันทึกเทรด"
-          action="บันทึกเทรดตัวแรก"
+          title={t('risk.empty_portfolio_title')}
+          description={t('risk.empty_portfolio_description')}
+          action={t('risk.empty_portfolio_action')}
           onAction={() => navigate('/journal')}
         />
       </div>
@@ -81,12 +83,7 @@ export default function PortfolioRiskPage() {
       );
     }
     if (risk.sectors.length === 0) {
-      return (
-        <EmptyState
-          title="เพิ่มหุ้นในพอร์ตเพื่อดูความเสี่ยง"
-          description="ยังไม่มี Supabase holdings สำหรับบัญชีนี้ จึงยังคำนวณ sector, stop-loss, และ risk budget ไม่ได้"
-        />
-      );
+      return <EmptyState title={t('risk.empty_sector_title')} description={t('risk.empty_sector_description')} />;
     }
     return (
       <div className="[flex:1] [overflow-y:auto] [padding:8px_12px_12px] [display:flex] [flex-direction:column] [gap:2px]">
@@ -122,7 +119,7 @@ export default function PortfolioRiskPage() {
                 <span className={cn('font-mono text-[0.82rem] font-semibold', isOver ? 'text-fin-loss' : 'text-fin-profit')}>
                   {sector.weight.toFixed(1)}%
                 </span>
-                <span className="[font-size:0.72rem] [color:var(--text-secondary)]">/ เพดาน {sector.limit}%</span>
+                <span className="[font-size:0.72rem] [color:var(--text-secondary)]">{t('risk.limit_display', { limit: sector.limit })}</span>
                 <span className="sr-only">{sector.statusLabel}</span>
               </div>
             </button>
@@ -138,21 +135,22 @@ export default function PortfolioRiskPage() {
         <Alert variant="destructive" className="mb-4">
           <ShieldAlert className="h-4 w-4" />
           <AlertDescription>
-            คำเตือนสัดส่วนการลงทุน: <strong>{risk.overLimit.map((s) => s.sector).join(', ')}</strong> เกินเพดานที่ตั้งไว้
+            {t('risk.allocation_warning_prefix')} <strong>{risk.overLimit.map((s) => s.sector).join(', ')}</strong>{' '}
+            {t('risk.allocation_warning_suffix')}
           </AlertDescription>
         </Alert>
       )}
 
       <div className="max-[900px]:[grid-template-columns:1fr] [display:grid] [grid-template-columns:repeat(3,_1fr)] [gap:12px] max-[1200px]:[grid-template-columns:repeat(auto-fit,_minmax(240px,_1fr))]">
         <div className="rounded-lg border border-border bg-panel shadow-none [padding:16px_20px] [border:1px_solid_var(--border-subtle)] [border-radius:var(--radius-md)] [background:var(--bg-panel)]">
-          <div className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-text-secondary">มูลค่าพอร์ต</div>
+          <div className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-text-secondary">{t('risk.portfolio_value')}</div>
           <div className="mb-1 font-mono text-[1.4rem] font-semibold leading-[1.15] text-foreground">
             {risk.totalValue > 0 ? formatCurrency(risk.totalValue) : '—'}
           </div>
-          <div className="text-xs text-text-secondary">{holdings.length} สถานะจาก Supabase</div>
+          <div className="text-xs text-text-secondary">{t('risk.positions_from_supabase', { count: holdings.length })}</div>
         </div>
         <div className="rounded-lg border border-border bg-panel shadow-none [padding:16px_20px] [border:1px_solid_var(--border-subtle)] [border-radius:var(--radius-md)] [background:var(--bg-panel)]">
-          <div className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-text-secondary">กลุ่มที่เกินเพดาน</div>
+          <div className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-text-secondary">{t('risk.groups_over_limit')}</div>
           <div
             className={cn(
               'mb-1 font-mono text-[1.4rem] font-semibold leading-[1.15]',
@@ -161,7 +159,7 @@ export default function PortfolioRiskPage() {
           >
             {risk.overLimit.length}
           </div>
-          <div className="text-xs text-text-secondary">เพดานเริ่มต้น {DEFAULT_SECTOR_LIMIT}% ต่อ sector</div>
+          <div className="text-xs text-text-secondary">{t('risk.default_sector_limit', { limit: DEFAULT_SECTOR_LIMIT })}</div>
         </div>
         <div className="rounded-lg border border-border bg-panel shadow-none [padding:16px_20px] [border:1px_solid_var(--border-subtle)] [border-radius:var(--radius-md)] [background:var(--bg-panel)] [gap:10px]">
           <div className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.07em] text-text-secondary">Risk Budget Used</div>
@@ -178,7 +176,11 @@ export default function PortfolioRiskPage() {
             aria-valuemax={risk.riskBudget}
           />
           <div className="text-xs text-text-secondary">
-            งบประมาณ {formatCurrency(risk.riskBudget)} ({risk.riskBudgetPct.toFixed(0)}%) • {missingStopCopy(risk.missingStopCount)}
+            {t('risk.budget_summary', {
+              amount: formatCurrency(risk.riskBudget),
+              percent: risk.riskBudgetPct.toFixed(0),
+              missingStop: missingStopCopy(risk.missingStopCount),
+            })}
           </div>
         </div>
       </div>
@@ -186,9 +188,9 @@ export default function PortfolioRiskPage() {
       <div className="rounded-lg border border-border bg-panel shadow-none [padding:var(--space-5)]">
         <div className="flex items-center justify-between gap-3 border-b border-border-subtle px-6 py-4 max-[640px]:flex-col max-[640px]:items-start">
           <div>
-            <h2 className="mb-0.5 text-[0.95rem] font-semibold text-foreground">การกระจายความเสี่ยงรายกลุ่ม</h2>
+            <h2 className="mb-0.5 text-[0.95rem] font-semibold text-foreground">{t('risk.sector_distribution')}</h2>
             <p className="text-pretty [margin:0] [padding:var(--space-3)] [border:1px_solid_rgba(var(--status-warning-rgb),_0.36)] [color:var(--fin-warning)] [font-size:0.76rem] text-xs text-text-secondary">
-              คำนวณจาก holdings จริง ไม่มีข้อมูลจำลอง
+              {t('risk.real_holdings_only')}
             </p>
           </div>
         </div>
@@ -252,7 +254,7 @@ export default function PortfolioRiskPage() {
                           : '—'}
                       </td>
                       <td className={holding.time_stop_hit ? 'text-fin-loss' : undefined}>
-                        {holding.age_days !== undefined ? `${holding.age_days} วัน` : '—'}
+                        {holding.age_days !== undefined ? t('risk.age_days', { count: holding.age_days }) : '—'}
                       </td>
                       <td>{holding.status}</td>
                     </tr>

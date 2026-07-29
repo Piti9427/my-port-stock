@@ -16,11 +16,13 @@ describe('impeccable critique remediation contract', () => {
     const watchlist = read('src/pages/WatchlistPage.jsx');
     const analytics = read('src/pages/AnalyticsPage.jsx');
     const risk = read('src/pages/PortfolioRiskPage.jsx');
+    const translations = read('src/i18n/translations.js');
 
     expect(watchlist).toContain('DATA_STAMP');
     expect(watchlist).toContain('Your watchlist is empty');
     expect(watchlist).not.toContain('INITIAL_ALERTS');
-    expect(analytics).toContain('Insufficient data');
+    expect(analytics).toContain("t('common.insufficient_data')");
+    expect(translations).toContain('Insufficient Data');
     expect(risk).toContain('Insufficient data');
   });
 
@@ -34,9 +36,12 @@ describe('impeccable critique remediation contract', () => {
 
   it('keeps scenario planner protected against invalid trade math', () => {
     const scenarioPlanner = read('src/components/ScenarioPlanner.jsx');
+    const translations = read('src/i18n/translations.js');
 
-    expect(scenarioPlanner).toContain('ราคาเป้าหมายต้องสูงกว่าจุดตัดขาดทุน');
-    expect(scenarioPlanner).toContain('แนวรับต้องเรียงจาก S1 สูงสุดไป S3 ต่ำสุด');
+    expect(scenarioPlanner).toContain("t('scenario.target_stop_error')");
+    expect(scenarioPlanner).toContain("t('scenario.support_order_error')");
+    expect(translations).toContain('ราคาเป้าหมายต้องสูงกว่าจุดตัดขาดทุน');
+    expect(translations).toContain('แนวรับต้องเรียงจาก S1 สูงสุดไป S3 ต่ำสุด');
     expect(scenarioPlanner).toContain('disabled={hasErrors || rows.length === 0}');
   });
 

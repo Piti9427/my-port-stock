@@ -1,5 +1,6 @@
 import { DataStamp } from '../ui/DataStamp.jsx';
 import { cn } from '../../lib/utils.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 function numberValue(value) {
   const numeric = Number(value);
@@ -18,6 +19,7 @@ function formatMoney(value, { signed = false } = {}) {
 }
 
 export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', timestamp = null, stale = false }) {
+  const { t } = useTranslation();
   const metrics = holdings.reduce(
     (result, holding) => {
       const shares = numberValue(holding.shares);
@@ -62,7 +64,7 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
         </div>
       )}
       <div className="flex flex-col justify-center gap-2 border-b border-border p-6 md:border-b-0 md:border-r">
-        <span className="text-[0.72rem] font-semibold uppercase tracking-wider text-text-secondary">มูลค่ารวมพอร์ต</span>
+        <span className="text-[0.72rem] font-semibold uppercase tracking-wider text-text-secondary">{t('dashboard.total_value')}</span>
         <strong className="[color:var(--text-primary)] font-mono [font-size:2rem] [line-height:1.1] font-mono text-[2.2rem] font-bold leading-none tracking-tight text-foreground tabular-nums">
           {formatMoney(metrics.totalValue)}
         </strong>
@@ -70,7 +72,7 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
       </div>
       <dl className="grid gap-px bg-border [grid-template-columns:repeat(auto-fit,minmax(130px,1fr))]">
         <div className="flex min-w-0 flex-col justify-center gap-2 bg-surface p-5">
-          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">กำไร/ขาดทุนรายวัน</dt>
+          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">{t('dashboard.daily_pl')}</dt>
           <dd
             className={cn(
               'flex items-center gap-1.5 font-mono text-base font-semibold tabular-nums',
@@ -82,7 +84,7 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
           </dd>
         </div>
         <div className="flex min-w-0 flex-col justify-center gap-2 bg-surface p-5">
-          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">กำไร/ขาดทุนรวม</dt>
+          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">{t('dashboard.total_pl')}</dt>
           <dd className={cn('font-mono text-base font-semibold tabular-nums', totalPl >= 0 ? 'text-fin-profit' : 'text-fin-loss')}>
             {formatMoney(totalPl, { signed: true })}
           </dd>
@@ -99,7 +101,7 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
           </dd>
         </div>
         <div className="flex min-w-0 flex-col justify-center gap-2 bg-surface p-5">
-          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">จำนวนสถานะ</dt>
+          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">{t('dashboard.position_count')}</dt>
           <dd className="font-mono text-base font-semibold text-foreground tabular-nums">{holdings.length}</dd>
         </div>
       </dl>

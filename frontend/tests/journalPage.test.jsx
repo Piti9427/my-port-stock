@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router';
 import { beforeEach, expect, test, vi } from 'vitest';
 import JournalPage from '../src/pages/JournalPage';
+import { PreferencesContext } from '../src/preferences/PreferencesContext.jsx';
 
 const getToken = vi.fn().mockResolvedValue('token_123');
 const fetchWithAuth = vi.fn();
@@ -58,12 +59,18 @@ beforeEach(() => {
   });
 });
 
-test('Journal page persists filters in the URL and shows expandable trade detail', async () => {
-  render(
-    <MemoryRouter initialEntries={['/journal?ticker=NVDA&mode=Swing%20Trade&status=CLOSED']}>
-      <JournalPage />
-    </MemoryRouter>
+function renderJournal(initialEntry = '/journal', language = 'en') {
+  return render(
+    <PreferencesContext.Provider value={{ preferences: { language } }}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <JournalPage />
+      </MemoryRouter>
+    </PreferencesContext.Provider>
   );
+}
+
+test('Journal page persists filters in the URL and shows expandable trade detail', async () => {
+  renderJournal('/journal?ticker=NVDA&mode=Swing%20Trade&status=CLOSED');
 
   expect(await screen.findByRole('link', { name: 'NVDA' })).toBeInTheDocument();
   expect(screen.queryByRole('link', { name: 'TSM' })).not.toBeInTheDocument();
@@ -73,9 +80,9 @@ test('Journal page persists filters in the URL and shows expandable trade detail
   expect(within(screen.getByRole('row', { name: /NVDA/i })).getByText('Closed')).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('row', { name: /NVDA/i }));
-  expect(screen.getByText('Original thesis')).toBeInTheDocument();
+  expect(screen.getByText('Original Thesis')).toBeInTheDocument();
   expect(screen.getByText('AI infrastructure thesis')).toBeInTheDocument();
-  expect(screen.getByText('Post-mortem')).toBeInTheDocument();
+  expect(screen.getByText('Post-Mortem Review')).toBeInTheDocument();
   expect(screen.getByRole('link', { name: /Open related analysis/i })).toHaveAttribute('href', '/command-center?ticker=NVDA');
 
   fireEvent.change(screen.getByLabelText('Mode filter'), { target: { value: 'ALL' } });
@@ -86,11 +93,7 @@ test('Journal page persists filters in the URL and shows expandable trade detail
 });
 
 test('Journal page does not refetch endlessly when auth token function identity changes', async () => {
-  render(
-    <MemoryRouter initialEntries={['/journal']}>
-      <JournalPage />
-    </MemoryRouter>
-  );
+  renderJournal();
 
   await screen.findByRole('link', { name: 'NVDA' });
   await waitFor(() => expect(fetchWithAuth).toHaveBeenCalledTimes(3));
@@ -100,18 +103,14 @@ test('Journal page does not refetch endlessly when auth token function identity 
 });
 
 test('Journal table sorts by realized P/L and opens a risk-aware trade drawer', async () => {
-  render(
-    <MemoryRouter initialEntries={['/journal']}>
-      <JournalPage />
-    </MemoryRouter>
-  );
+  renderJournal();
 
   await screen.findByRole('link', { name: 'NVDA' });
   fireEvent.click(screen.getByRole('button', { name: 'P/L' }));
   const rows = screen.getAllByRole('row').filter((row) => within(row).queryByRole('link'));
   expect(within(rows[0]).getByRole('link', { name: 'NVDA' })).toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Log trade' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Log Trade' }));
   const drawer = screen.getByRole('dialog', { name: 'Log trade' });
   expect(drawer).toBeInTheDocument();
   expect(within(drawer).getByLabelText('Ticker')).toHaveAttribute('list', 'journal-ticker-suggestions');
@@ -145,4 +144,24 @@ test('Journal table sorts by realized P/L and opens a risk-aware trade drawer', 
       })
     )
   );
+});
+
+test('Journal renders English page content when English is selected', async () => {
+  renderJournal('/journal', 'en');
+
+  expect(await screen.findByRole('heading', { level: 2, name: 'Trade Journal & Post-Mortem Analytics' })).toBeInTheDocument();
+  expect(screen.getByText('Trade Execution History')).toBeInTheDocument();
+  expect(screen.getByText('Decision Loop')).toBeInTheDocument();
+  expect(screen.getByRole('cell', { name: 'Jun 18, 2026' })).toBeInTheDocument();
+});
+
+test('Journal table renders Thai labels when Thai is selected', async () => {
+  renderJournal('/journal', 'th');
+
+  await screen.findByRole('link', { name: 'NVDA' });
+  expect(screen.getByRole('button', { name: 'วันที่' })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('row', { name: /NVDA/i }));
+  expect(screen.getByText('Thesis เดิม')).toBeInTheDocument();
+  expect(screen.getByText('จุดเข้า / จุดออก')).toBeInTheDocument();
 });

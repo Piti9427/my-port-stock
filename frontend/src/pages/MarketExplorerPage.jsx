@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Search, TrendingUp, TrendingDown, Zap, ChevronRight, X, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { usePreferences } from '../hooks/usePreferences';
+import { useTranslation } from '../i18n/useTranslation.js';
 import { cn } from '../lib/utils';
 
 /* ─── Default ticker universe ─────────────────────────────── */
@@ -317,6 +318,7 @@ TickerRow.propTypes = {
 
 export default function MarketExplorerPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(TICKERS[0]);
   const [priceData, setPriceData] = useState(null);
@@ -399,7 +401,7 @@ export default function MarketExplorerPage() {
       <aside className="[display:flex] [flex-direction:column] [border-radius:0] [border-top:none] [background:var(--bg-shell)] [backdrop-filter:none] [overflow:hidden] rounded-lg border border-border bg-panel shadow-none">
         <div className="[padding:16px_16px_12px] [border-bottom:1px_solid_var(--border-subtle)] [flex-shrink:0]">
           <div className="[font-size:0.75rem] [font-weight:600] [letter-spacing:0.08em] [text-transform:uppercase] [color:var(--text-secondary)] [margin-bottom:12px]">
-            ค้นหาหุ้น
+            {t('market.search_label')}
           </div>
           <div className="[position:relative] [display:flex] [align-items:center]">
             <Search
@@ -412,7 +414,7 @@ export default function MarketExplorerPage() {
               id="ticker-search"
               className="min-h-10 w-full rounded-sm border border-border bg-panel-solid pl-8 pr-14 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand"
               type="search"
-              placeholder="ค้นหาชื่อหุ้นหรือบริษัท..."
+              placeholder={t('market.search_placeholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search tickers"
@@ -508,7 +510,7 @@ export default function MarketExplorerPage() {
           {filtered.length === 0 ? (
             <div className="[display:flex] [flex-direction:column] [align-items:center] [justify-content:center] [padding:40px_16px] [color:var(--text-secondary)] [font-size:0.8rem] [text-align:center]">
               <Search size={20} className="mb-2 opacity-30" />
-              <p>ไม่พบผลลัพธ์สำหรับ "{query}"</p>
+              <p>{t('market.no_results_query', { query })}</p>
             </div>
           ) : (
             filtered.map((ticker) => (
@@ -524,9 +526,7 @@ export default function MarketExplorerPage() {
         </div>
 
         <div className="[padding:10px_16px] [border-top:1px_solid_var(--border-subtle)] [font-size:0.7rem] [color:var(--text-secondary)] [flex-shrink:0]">
-          <span>
-            {TICKERS.length} รายการ · แสดง {filtered.length} รายการ
-          </span>
+          <span>{t('market.result_count', { total: TICKERS.length, shown: filtered.length })}</span>
         </div>
       </aside>
 
@@ -602,7 +602,7 @@ export default function MarketExplorerPage() {
               id="send-to-ai-btn"
               className="[&:active:not(:disabled)]:[transform:scale(0.98)_translateY(1px)] [display:flex] [align-items:center] [gap:6px] [padding:7px_14px] [background:var(--brand-primary)] [border:none] [border-radius:var(--radius-xs)] [color:var(--text-inverse)] [font-size:0.78rem] [font-weight:600] font-sans [cursor:pointer] [transition:transform_0.15s] [white-space:nowrap] hover:[transform:translateY(-1px)] active:[transform:translateY(0)]"
               onClick={() => handleQuickAnalyze(selected.symbol)}
-              title={`ส่ง ${selectedSymbol} ไปให้ AI วิเคราะห์`}
+              title={t('market.send_to_ai', { ticker: selectedSymbol })}
               aria-label={`Quick analyze ${selectedSymbol}`}
             >
               <Zap size={14} fill="currentColor" strokeWidth={0} aria-hidden="true" />

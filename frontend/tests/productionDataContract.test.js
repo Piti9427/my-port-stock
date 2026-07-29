@@ -23,8 +23,10 @@ afterEach(() => {
 
 test('Dashboard holdings use real empty portfolio copy instead of sample data copy', () => {
   const source = read('src/components/dashboard/HoldingsTable.jsx');
+  const translations = read('src/i18n/translations.js');
 
-  expect(source).toContain('No portfolio data yet');
+  expect(source).toContain("t('dashboard.empty_holdings_description')");
+  expect(translations).toContain('No portfolio data yet');
   expect(source).not.toMatch(/sample|mock|demo portfolio/i);
 });
 
