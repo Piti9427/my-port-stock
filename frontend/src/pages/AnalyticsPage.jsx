@@ -103,7 +103,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="[flex:1_1_auto] [min-height:0] [overflow-y:auto] [padding:24px_28px] [display:flex] [flex-direction:column] [gap:16px] max-[768px]:![overflow-y:visible] max-[768px]:![height:auto] max-[768px]:![min-height:0]">
-      <header className="rounded-lg border border-border bg-panel shadow-none [&_h2]:[margin:0] [&_h2]:[font-size:1.2rem] [&_p]:[margin:6px_0_0] [&_p]:[color:var(--text-secondary)] [&_p]:[font-size:var(--font-size-sm)]">
+      <header className="rounded-lg border border-border bg-panel p-5 sm:p-6 shadow-none [display:grid] [gap:var(--space-4)] [&_h2]:[margin:0] [&_h2]:[font-size:1.2rem] [&_p]:[margin:6px_0_0] [&_p]:[color:var(--text-secondary)] [&_p]:[font-size:var(--font-size-sm)]">
         <div className="[display:flex] [align-items:flex-start] [justify-content:space-between] [gap:var(--space-4)]">
           <div>
             <h2>Performance Analytics</h2>

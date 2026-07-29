@@ -181,7 +181,7 @@ export default function JournalPage() {
 
   return (
     <div className="[flex:1_1_auto] [min-height:0] [overflow-y:auto] [padding:24px_28px] [display:grid] [grid-template-columns:minmax(0,_1fr)_320px] [grid-template-rows:auto_1fr] [gap:20px] [grid-template-areas:'header_header'_'trades_perf'] max-[1100px]:[grid-template-columns:1fr] max-[1100px]:[grid-template-areas:'header'_'perf'_'trades'] max-[560px]:[padding:var(--space-4)] max-[768px]:![overflow-y:visible] max-[768px]:![height:auto] max-[768px]:![min-height:0]">
-      <header className="rounded-lg border border-border bg-panel shadow-none [grid-area:header] [display:grid] [gap:var(--space-5)] [&_h2]:[margin:0_0_var(--space-1)] [&_h2]:[color:var(--text-primary)] [&_h2]:[font-size:1.2rem] [&_p]:[margin:0] [&_p]:[color:var(--text-secondary)] [&_p]:[font-size:0.84rem] [&_p]:[line-height:1.55]">
+      <header className="rounded-lg border border-border bg-panel p-5 sm:p-6 shadow-none [grid-area:header] [display:grid] [gap:var(--space-5)] [&_h2]:[margin:0_0_var(--space-1)] [&_h2]:[color:var(--text-primary)] [&_h2]:[font-size:1.2rem] [&_p]:[margin:0] [&_p]:[color:var(--text-secondary)] [&_p]:[font-size:0.84rem] [&_p]:[line-height:1.55]">
         <div className="[display:flex] [align-items:flex-start] [justify-content:space-between] [gap:var(--space-4)] max-[1100px]:[flex-direction:column]">
           <div>
             <h2>บันทึกการเทรดและวิเคราะห์หลังจบเกม</h2>
@@ -232,7 +232,7 @@ export default function JournalPage() {
       </section>
 
       <aside
-        className="rounded-lg border border-border bg-panel shadow-none [&_p]:[margin:0] [&_p]:[color:var(--text-secondary)] [&_p]:[font-size:0.84rem] [&_p]:[line-height:1.55] [grid-area:perf] [display:flex] [flex-direction:column] [gap:16px]"
+        className="rounded-lg border border-border bg-panel p-5 sm:p-6 shadow-none [&_p]:[margin:0] [&_p]:[color:var(--text-secondary)] [&_p]:[font-size:0.84rem] [&_p]:[line-height:1.55] [grid-area:perf] [display:flex] [flex-direction:column] [gap:16px]"
         aria-labelledby="journal-loop-title"
       >
         <div

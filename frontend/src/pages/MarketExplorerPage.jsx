@@ -410,7 +410,7 @@ export default function MarketExplorerPage() {
             <input
               ref={searchRef}
               id="ticker-search"
-              className="min-h-10 w-full rounded-sm border border-border bg-panel-solid px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand"
+              className="min-h-10 w-full rounded-sm border border-border bg-panel-solid pl-8 pr-14 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand"
               type="search"
               placeholder="ค้นหาชื่อหุ้นหรือบริษัท..."
               value={query}
