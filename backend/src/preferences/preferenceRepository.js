@@ -33,13 +33,33 @@ async function upsertForUser(userId, values) {
     updated_at: now,
   };
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("user_preferences")
     .upsert(payload, { onConflict: "user_id" })
     .select()
     .single();
 
   if (error) {
+    // Fail-safe: If DB schema does not have the 'language' column yet, retry without 'language'
+    if (
+      error.message?.includes("language") ||
+      error.code === "PGRST204" ||
+      String(error.details || "").includes("language")
+    ) {
+      const fallbackPayload = { ...payload };
+      delete fallbackPayload.language;
+      const fallbackResult = await supabase
+        .from("user_preferences")
+        .upsert(fallbackPayload, { onConflict: "user_id" })
+        .select()
+        .single();
+      if (!fallbackResult.error) {
+        return {
+          ...fallbackResult.data,
+          language: fallbackResult.data?.language || existing?.language || "th",
+        };
+      }
+    }
     throw error;
   }
   return data;

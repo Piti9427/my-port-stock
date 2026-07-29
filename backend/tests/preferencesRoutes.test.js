@@ -104,6 +104,7 @@ describe("Preferences API Routes", () => {
     assert.equal(res.body.reporting_currency, "THB");
     assert.equal(res.body.disclosure_level, "beginner");
     assert.equal(res.body.theme, "light");
+    assert.equal(res.body.language, "th");
     assert.equal(res.body.onboarding_completed, false);
   });
 
@@ -114,6 +115,7 @@ describe("Preferences API Routes", () => {
       reporting_currency: "USD",
       disclosure_level: "advanced",
       theme: "dark",
+      language: "en",
       onboarding_completed_at: "2026-07-03T00:00:00.000Z",
     };
 
@@ -122,6 +124,7 @@ describe("Preferences API Routes", () => {
     assert.equal(res.body.reporting_currency, "USD");
     assert.equal(res.body.disclosure_level, "advanced");
     assert.equal(res.body.theme, "dark");
+    assert.equal(res.body.language, "en");
     assert.equal(res.body.onboarding_completed, true);
   });
 
@@ -150,6 +153,7 @@ describe("Preferences API Routes", () => {
       reporting_currency: "USD",
       disclosure_level: "advanced",
       theme: "dark",
+      language: "en",
     };
 
     const res = await request(app).put("/api/preferences").send(payload);
@@ -158,7 +162,9 @@ describe("Preferences API Routes", () => {
     assert.equal(lastUpsertData.reporting_currency, "USD");
     assert.equal(lastUpsertData.disclosure_level, "advanced");
     assert.equal(lastUpsertData.theme, "dark");
+    assert.equal(lastUpsertData.language, "en");
     assert.equal(lastUpsertData.user_id, "user_123");
+    assert.equal(res.body.language, "en");
   });
 
   it("PUT /api/preferences accepts theme system successfully", async () => {
@@ -175,7 +181,7 @@ describe("Preferences API Routes", () => {
     assert.equal(lastUpsertData.theme, "system");
   });
 
-  it("PUT /api/preferences rejects invalid currency, disclosure level, or theme with 400", async () => {
+  it("PUT /api/preferences rejects invalid currency, disclosure level, theme, or language with 400", async () => {
     const app = createApp("user_123");
 
     const badCurrency = await request(app).put("/api/preferences").send({
@@ -198,6 +204,14 @@ describe("Preferences API Routes", () => {
       theme: "blue",
     });
     assert.equal(badTheme.statusCode, 400);
+
+    const badLanguage = await request(app).put("/api/preferences").send({
+      reporting_currency: "THB",
+      disclosure_level: "beginner",
+      theme: "light",
+      language: "fr",
+    });
+    assert.equal(badLanguage.statusCode, 400);
   });
 
   it("PUT /api/preferences rejects unknown keys or risk-policy overrides", async () => {
@@ -212,5 +226,95 @@ describe("Preferences API Routes", () => {
     });
 
     assert.equal(res.statusCode, 400);
+  });
+});
+
+describe("Preference repository rolling-migration fallback", () => {
+  it("returns the persisted default language when the database has no language column", async (t) => {
+    const supabaseClient = require("../src/db/supabaseClient");
+    const upsertPayloads = [];
+    /** @type {any} */
+    const scopedClient = {
+      from(table) {
+        assert.equal(table, "user_preferences");
+        return {
+          select() {
+            return {
+              eq(column, userId) {
+                assert.equal(column, "user_id");
+                assert.equal(userId, "user_123");
+                return {
+                  async maybeSingle() {
+                    return {
+                      data: {
+                        user_id: "user_123",
+                        reporting_currency: "THB",
+                        disclosure_level: "beginner",
+                        theme: "light",
+                        onboarding_completed_at: "2026-07-03T00:00:00.000Z",
+                      },
+                      error: null,
+                    };
+                  },
+                };
+              },
+            };
+          },
+          upsert(payload) {
+            upsertPayloads.push(payload);
+            const isInitialAttempt = upsertPayloads.length === 1;
+            return {
+              select() {
+                return {
+                  async single() {
+                    if (isInitialAttempt) {
+                      return {
+                        data: null,
+                        error: {
+                          code: "PGRST204",
+                          message:
+                            "Could not find the 'language' column of 'user_preferences' in the schema cache",
+                        },
+                      };
+                    }
+                    return { data: payload, error: null };
+                  },
+                };
+              },
+            };
+          },
+        };
+      },
+    };
+
+    const originalCreateScopedClient = supabaseClient.createScopedClient;
+    supabaseClient.createScopedClient = () => scopedClient;
+    try {
+      delete require.cache[
+        require.resolve("../src/preferences/preferenceRepository")
+      ];
+      const preferenceRepository = require("../src/preferences/preferenceRepository");
+
+      const result = await preferenceRepository.upsertForUser("user_123", {
+        reporting_currency: "THB",
+        disclosure_level: "beginner",
+        theme: "light",
+        language: "en",
+      });
+
+      assert.equal(upsertPayloads[0].language, "en");
+      assert.equal(
+        Object.hasOwn(upsertPayloads[1], "language"),
+        false,
+        "fallback must omit the unavailable column",
+      );
+      assert.equal(
+        result.language,
+        "th",
+        "fallback must not claim the requested language was persisted",
+      );
+    } finally {
+      supabaseClient.createScopedClient = originalCreateScopedClient;
+    }
   });
 });

@@ -165,6 +165,10 @@ test("canonical schema snapshots contain user_preferences table, RLS, and grants
     );
     assert.match(
       candidate,
+      /language TEXT NOT NULL DEFAULT 'th' CONSTRAINT user_preferences_language_check CHECK \(language IN \('th', 'en'\)\)/i,
+    );
+    assert.match(
+      candidate,
       /ALTER TABLE public\.user_preferences ENABLE ROW LEVEL SECURITY/i,
     );
     assert.match(
@@ -172,4 +176,23 @@ test("canonical schema snapshots contain user_preferences table, RLS, and grants
       /GRANT SELECT, INSERT, UPDATE ON public\.user_preferences TO authenticated/i,
     );
   }
+});
+
+test("user language migration adds a constrained non-null Thai default", () => {
+  const migration = fs.readFileSync(
+    path.join(
+      __dirname,
+      "../../supabase/migrations/20260729170500_add_user_language.sql",
+    ),
+    "utf8",
+  );
+
+  assert.match(
+    migration,
+    /ALTER TABLE public\.user_preferences ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'th'/i,
+  );
+  assert.match(
+    migration,
+    /ADD CONSTRAINT user_preferences_language_check CHECK \(language IN \('th', 'en'\)\)/i,
+  );
 });

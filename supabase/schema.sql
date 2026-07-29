@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS public.user_preferences (
     reporting_currency TEXT NOT NULL DEFAULT 'THB' CONSTRAINT user_preferences_currency_check CHECK (reporting_currency IN ('THB', 'USD')),
     disclosure_level TEXT NOT NULL DEFAULT 'beginner' CONSTRAINT user_preferences_disclosure_check CHECK (disclosure_level IN ('beginner', 'advanced')),
     theme TEXT NOT NULL DEFAULT 'light' CONSTRAINT user_preferences_theme_check CHECK (theme IN ('dark', 'light', 'system')),
+    language TEXT NOT NULL DEFAULT 'th' CONSTRAINT user_preferences_language_check CHECK (language IN ('th', 'en')),
     onboarding_completed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
