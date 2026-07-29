@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, expect, test, vi } from 'vitest';
 import CommandCenterPage from '../src/pages/CommandCenterPage';
+import { PreferencesContext } from '../src/preferences/PreferencesContext.jsx';
 
 const getToken = vi.fn().mockResolvedValue('token_123');
 const fetchWithAuth = vi.fn();
@@ -55,6 +56,30 @@ test('uses authenticated helpers for quote and immediate analysis result', async
     getToken,
     expect.objectContaining({ method: 'POST', body: expect.objectContaining({ ticker: 'TSM', decision_mode: 'Quick Trade' }) })
   );
+});
+
+test('sends the selected English language with AI analysis and chat requests', async () => {
+  render(
+    <PreferencesContext.Provider value={{ preferences: { language: 'en' } }}>
+      <MemoryRouter initialEntries={['/command-center?ticker=TSM']}>
+        <CommandCenterPage />
+      </MemoryRouter>
+    </PreferencesContext.Provider>
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: 'Analyze' }));
+  await screen.findByText('Confirm broker quote');
+  expect(fetchWithAuth).toHaveBeenCalledWith(
+    '/api/analyze',
+    getToken,
+    expect.objectContaining({ body: expect.objectContaining({ language: 'en' }) })
+  );
+
+  fireEvent.click(screen.getByRole('tab', { name: 'Chat' }));
+  fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'What invalidates this thesis?' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+  await screen.findByText('Verified-context answer');
+  expect(fetchWithAuth).toHaveBeenCalledWith('/api/chat', getToken, expect.objectContaining({ body: expect.objectContaining({ language: 'en' }) }));
 });
 
 test('routes chat and executed trade writes through authenticated APIs', async () => {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useAuth } from '../auth/clerkAdapter';
 import { fetchWithAuth } from '../lib/api';
+import { useTranslation } from '../i18n/useTranslation.js';
 import { useAgentEvents } from './useAgentEvents';
 
 function tickerFromQuery(searchParams) {
@@ -25,6 +26,7 @@ export function useCommandCenter() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { getToken } = useAuth();
+  const { language } = useTranslation();
   const events = useAgentEvents() || {};
   const initialTicker = tickerFromQuery(searchParams);
   const [workspaceMode, setWorkspaceMode] = useState('analysis');
@@ -68,7 +70,7 @@ export function useCommandCenter() {
     try {
       const result = await fetchWithAuth('/api/analyze', getToken, {
         method: 'POST',
-        body: { ticker, decision_mode: decisionMode, manual_price: manualPrice },
+        body: { ticker, decision_mode: decisionMode, manual_price: manualPrice, language },
       });
       setLocalAnalysis(analysisPayload(result));
     } catch (error) {
@@ -85,7 +87,7 @@ export function useCommandCenter() {
     try {
       const result = await fetchWithAuth('/api/chat', getToken, {
         method: 'POST',
-        body: { ticker, decision_mode: decisionMode, message },
+        body: { ticker, decision_mode: decisionMode, message, language },
       });
       setChatMessages((current) => [...current, { role: 'assistant', content: result.message || result.error_details }]);
     } catch (error) {

@@ -89,79 +89,50 @@ async function generateContentWithTimeout(prompt) {
   }
 }
 
-async function chatWithVerifiedContext({
-  ticker,
-  message,
-  decisionMode,
-  packet,
-}) {
-  const testProvider = getTestProviders()?.gemini;
-  if (testProvider)
-    return testProvider.analyze({ ticker, message, decisionMode, packet });
-  if (apiKey === "mock") {
-    return unavailableChat("Gemini API key is missing");
-  }
-
-  if (!packet || packet.status === "INSUFFICIENT_DATA") {
-    return unavailableChat(
-      packet?.error_details || "Verified packet is unavailable",
-    );
-  }
-
-  const prompt = `Act as Elite Investor CIO for MyPortStock.
-Answer in concise Thai.
-
-Rules:
-- Use only the verified packet below and the user's question.
-- Do not invent current price, portfolio state, journal state, catalyst timing, stop-loss, target, or execution advice.
-- If the verified packet is insufficient for the question, return INSUFFICIENT_DATA and explain what is missing.
-- Do not recommend Buy/Add unless the packet's current price acceptance gate and risk rules support it.
-
-Ticker: ${ticker}
-Decision Mode: ${decisionMode}
-User question: ${message}
-Verified packet JSON: ${JSON.stringify(packet)}
-
-Return plain Thai text only.`;
-
-  try {
-    const response = await generateContentWithTimeout(prompt);
-    const text = String(response.text || "").trim();
-    return {
-      status: text ? "READY" : "INSUFFICIENT_DATA",
-      message: text || "Gemini response was empty",
-    };
-  } catch (error) {
-    console.error("Gemini Chat Error:", error.message);
-    return unavailableChat(`Gemini API unavailable: ${error.message}`);
-  }
+function responseLanguage(language) {
+  return language === "en" ? "English" : "Thai";
 }
 
-async function analyzeTicker(ticker, portfolioData, oracleData) {
-  const testProvider = getTestProviders()?.gemini;
-  if (testProvider)
-    return testProvider.analyze({ ticker, portfolioData, oracleData });
-  if (apiKey === "mock") {
-    return unavailableAnalysis("Gemini API key is missing");
+function analysisOutline(language) {
+  if (language === "en") {
+    return `=========================================
+7-Dimension Master SOP Audit
+=========================================
+[Dimension 1 - Megatrend & Global Macro]
+- AI Cycle Stage / Bottleneck Wave: ...
+- Macro Alignment: ...
+
+[Dimension 2 & 6 - SWOT Analysis]
+- Strengths: ...
+- Opportunities: ...
+- Weaknesses - Devil's Advocate, exactly 3 points/blindspots:
+  1. ...
+  2. ...
+  3. ...
+- Threats: ...
+
+[Dimension 3 - Financials & Earnings Quality]
+- PEG Ratio Gate: ...
+- Expectation Gap & Guidance: ...
+- FCF Margin / Earnings Quality: ...
+
+[Dimension 4 - Sentiment & Whale Flow]
+- Institutional & Option Flow: ...
+
+[Dimension 5 - Technical Setup & W1 Golden Filter]
+- W1 Golden Filter Status: ...
+- D1 Entry & Support Levels: ...
+- Anchored VWAP Level: ...
+
+[Dimension 7 - Master Trading Plan & R/R Challenge]
+- Thesis & Invalidation: ...
+- Entry Zone: ...
+- Stop-Loss: ...
+- Target 1 / Target 2: ...
+- R/R Ratio & Emotional Challenge: ...`;
   }
 
-  const prompt = `Act as Elite Investor CIO. 
-Ticker: ${ticker}
-Oracle Technicals/Fundamentals: ${JSON.stringify(oracleData)}
-Portfolio Context: ${JSON.stringify(portfolioData)}
-
-Perform a deep analysis of ${ticker} according to the Elite Investor 7-Dimension Master SOP and SWOT framework from the SOP.
-Analyze the following dimensions in detail:
-1. Megatrend & Global Macro: Megatrend alignment, Fed/inflation macro regime, AI Super Cycle Stage (Stage 1-4), AI Bottleneck Rotation Wave (Wave 1-8).
-2. Fundamental Moat & Industry SWOT (Strengths & Opportunities): Moat strength, pricing power, industry strengths & opportunities.
-3. Financials & Earnings Report Intelligence: PEG ratio (SOP gate: PEG < 1.5), Free Cash Flow Margin (positive/negative), earnings quality. Compare actual earnings/revenue against Wall Street consensus (calculate the Expectation Gap) and track forward guidance revisions. Cite at least two distinct institutional financial sources for validation.
-4. Sentiment & Whale Intelligence: Institutional flow (13F holdings), dark pool blocks, options flow.
-5. Advanced Technical Analysis: Weekly structural trend (W1 Golden Filter: Price vs W1 200 EMA/50 MA/20 EMA), Daily pullback to dynamic support (EMA 20/MA 50), ATR-based stop-loss, and Anchored VWAP (AVWAP) from the latest earnings date.
-6. Devil's Advocate & Industry SWOT (Weaknesses & Threats): Identify exactly 3 high-conviction bear-case points / blindspots (Internal weaknesses like debt/burn rate, external threats like competition/displacement).
-7. Master Trading Plan & Thesis Integrity: Investment thesis, entry zone, stop-loss, Target 1, Target 2, Risk/Reward ratio. Provide a dynamic Risk/Reward challenge serving as an emotional brake.
-
-Format the 'analysis' property as a clean, highly readable markdown text breakdown in Thai, structured exactly as follows:
-=========================================
+  return `=========================================
 วิเคราะห์เชิงลึก 7 มิติ (7-Dimension Master SOP Audit)
 =========================================
 [Dimension 1 - Megatrend & Global Macro]
@@ -195,14 +166,66 @@ Format the 'analysis' property as a clean, highly readable markdown text breakdo
 - Entry Zone: ...
 - Stop-Loss: ...
 - Target 1 / Target 2: ...
-- R/R Ratio & Emotional Challenge: ...
+- R/R Ratio & Emotional Challenge: ...`;
+}
+
+function buildChatPrompt({
+  ticker,
+  message,
+  decisionMode,
+  packet,
+  language = "th",
+}) {
+  const languageName = responseLanguage(language);
+  return `Act as Elite Investor CIO for MyPortStock.
+Answer in concise ${languageName}.
+
+Rules:
+- Use only the verified packet below and the user's question.
+- Do not invent current price, portfolio state, journal state, catalyst timing, stop-loss, target, or execution advice.
+- If the verified packet is insufficient for the question, return INSUFFICIENT_DATA and explain what is missing.
+- Do not recommend Buy/Add unless the packet's current price acceptance gate and risk rules support it.
+
+Ticker: ${ticker}
+Decision Mode: ${decisionMode}
+User question: ${message}
+Verified packet JSON: ${JSON.stringify(packet)}
+
+Return plain ${languageName} text only.`;
+}
+
+function buildAnalysisPrompt(
+  ticker,
+  portfolioData,
+  oracleData,
+  language = "th",
+) {
+  const languageName = responseLanguage(language);
+  return `Act as Elite Investor CIO.
+Ticker: ${ticker}
+Oracle Technicals/Fundamentals: ${JSON.stringify(oracleData)}
+Portfolio Context: ${JSON.stringify(portfolioData)}
+
+Perform a deep analysis of ${ticker} according to the Elite Investor 7-Dimension Master SOP and SWOT framework from the SOP.
+Analyze the following dimensions in detail:
+1. Megatrend & Global Macro: Megatrend alignment, Fed/inflation macro regime, AI Super Cycle Stage (Stage 1-4), AI Bottleneck Rotation Wave (Wave 1-8).
+2. Fundamental Moat & Industry SWOT (Strengths & Opportunities): Moat strength, pricing power, industry strengths & opportunities.
+3. Financials & Earnings Report Intelligence: PEG ratio (SOP gate: PEG < 1.5), Free Cash Flow Margin (positive/negative), earnings quality. Compare actual earnings/revenue against Wall Street consensus (calculate the Expectation Gap) and track forward guidance revisions. Cite at least two distinct institutional financial sources for validation.
+4. Sentiment & Whale Intelligence: Institutional flow (13F holdings), dark pool blocks, options flow.
+5. Advanced Technical Analysis: Weekly structural trend (W1 Golden Filter: Price vs W1 200 EMA/50 MA/20 EMA), Daily pullback to dynamic support (EMA 20/MA 50), ATR-based stop-loss, and Anchored VWAP (AVWAP) from the latest earnings date.
+6. Devil's Advocate & Industry SWOT (Weaknesses & Threats): Identify exactly 3 high-conviction bear-case points / blindspots (Internal weaknesses like debt/burn rate, external threats like competition/displacement).
+7. Master Trading Plan & Thesis Integrity: Investment thesis, entry zone, stop-loss, Target 1, Target 2, Risk/Reward ratio. Provide a dynamic Risk/Reward challenge serving as an emotional brake.
+
+Write every human-readable value in ${languageName}.
+Format the 'analysis' property as clean, highly readable markdown structured exactly as follows:
+${analysisOutline(language)}
 
 Ensure you return a JSON object ONLY, with the following properties:
 {
   "decision_snapshot": {
     "verdict": "Buy" | "Hold" | "Wait" | "Avoid",
     "score": number (0 to 10),
-    "one_line_reason": "concise reason in Thai"
+    "one_line_reason": "concise reason in ${languageName}"
   },
   "sub_agent_scores": {
     "fundamental": {
@@ -235,8 +258,81 @@ Ensure you return a JSON object ONLY, with the following properties:
     "target_2": "target 2 or INSUFFICIENT_DATA",
     "rr_ratio": "risk/reward or INSUFFICIENT_DATA"
   },
-  "analysis": "Thai detailed analysis text..."
+  "analysis": "${languageName} detailed analysis text..."
 }`;
+}
+
+async function chatWithVerifiedContext({
+  ticker,
+  message,
+  decisionMode,
+  packet,
+  language = "th",
+}) {
+  const testProvider = getTestProviders()?.gemini;
+  if (testProvider)
+    return testProvider.analyze({
+      ticker,
+      message,
+      decisionMode,
+      packet,
+      language,
+    });
+  if (apiKey === "mock") {
+    return unavailableChat("Gemini API key is missing");
+  }
+
+  if (!packet || packet.status === "INSUFFICIENT_DATA") {
+    return unavailableChat(
+      packet?.error_details || "Verified packet is unavailable",
+    );
+  }
+
+  const prompt = buildChatPrompt({
+    ticker,
+    message,
+    decisionMode,
+    packet,
+    language,
+  });
+
+  try {
+    const response = await generateContentWithTimeout(prompt);
+    const text = String(response.text || "").trim();
+    return {
+      status: text ? "READY" : "INSUFFICIENT_DATA",
+      message: text || "Gemini response was empty",
+    };
+  } catch (error) {
+    console.error("Gemini Chat Error:", error.message);
+    return unavailableChat(`Gemini API unavailable: ${error.message}`);
+  }
+}
+
+async function analyzeTicker(
+  ticker,
+  portfolioData,
+  oracleData,
+  language = "th",
+) {
+  const testProvider = getTestProviders()?.gemini;
+  if (testProvider)
+    return testProvider.analyze({
+      ticker,
+      portfolioData,
+      oracleData,
+      language,
+    });
+  if (apiKey === "mock") {
+    return unavailableAnalysis("Gemini API key is missing");
+  }
+
+  const prompt = buildAnalysisPrompt(
+    ticker,
+    portfolioData,
+    oracleData,
+    language,
+  );
 
   try {
     const response = await generateContentWithTimeout(prompt);
@@ -255,6 +351,8 @@ Ensure you return a JSON object ONLY, with the following properties:
 
 module.exports = {
   analyzeTicker,
+  buildAnalysisPrompt,
+  buildChatPrompt,
   chatWithVerifiedContext,
   unavailableAnalysis,
   unavailableChat,

@@ -74,14 +74,17 @@ test('Watchlist does not initialize live alert feed with hard-coded alerts', () 
 test('Deep analysis surfaces render tabbed SOP sections from structured payloads', () => {
   const commandCenter = read('src/pages/CommandCenterPage.jsx');
   const deepAnalysisTabs = read('src/components/DeepAnalysisTabs.jsx');
+  const translations = read('src/i18n/translations.js');
 
   expect(commandCenter).toContain('DeepAnalysisTabs');
   expect(commandCenter).toContain('deep_analysis');
 
-  expect(deepAnalysisTabs).toContain('สรุป & SWOT');
-  expect(deepAnalysisTabs).toContain('งบการเงิน & ปัจจัยพื้นฐาน');
-  expect(deepAnalysisTabs).toContain('สัญญาณเทคนิคอล');
-  expect(deepAnalysisTabs).toContain('แผนเทรด SOP');
+  expect(deepAnalysisTabs).toContain("labelKey: 'command.summary_tab'");
+  expect(deepAnalysisTabs).toContain("labelKey: 'command.fundamentals_tab'");
+  expect(deepAnalysisTabs).toContain("labelKey: 'command.technicals_tab'");
+  expect(deepAnalysisTabs).toContain("labelKey: 'command.trade_plan_tab'");
+  expect(translations).toContain('สรุป & SWOT');
+  expect(translations).toContain('Summary & SWOT');
 });
 
 test('App keeps Clerk auth by default but supports explicit dev UI auth bypass', () => {

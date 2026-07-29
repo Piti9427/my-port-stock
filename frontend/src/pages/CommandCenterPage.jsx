@@ -8,9 +8,11 @@ import { TickerInput } from '../components/command-center/TickerInput.jsx';
 import { TradeTicket } from '../components/command-center/TradeTicket.jsx';
 import DeepAnalysisTabs from '../components/DeepAnalysisTabs';
 import { useCommandCenter } from '../hooks/useCommandCenter.js';
+import { useTranslation } from '../i18n/useTranslation.js';
 
 export default function CommandCenterPage() {
   const state = useCommandCenter();
+  const { t } = useTranslation();
   const snapshot = state.analysis?.decision_snapshot || {};
 
   const { tradeOpen, setTradeOpen } = state;
@@ -41,13 +43,13 @@ export default function CommandCenterPage() {
             type="button"
             role="tab"
             aria-selected={state.workspaceMode === 'analysis'}
-            aria-label="วิเคราะห์ mode"
+            aria-label={t('command.analysis_mode_aria')}
             onClick={() => state.setWorkspaceMode('analysis')}
           >
-            วิเคราะห์
+            {t('command.analysis_tab')}
           </button>
           <button type="button" role="tab" aria-selected={state.workspaceMode === 'chat'} onClick={() => state.setWorkspaceMode('chat')}>
-            สนทนา
+            {t('command.chat_tab')}
           </button>
         </div>
         <TickerInput value={state.searchTicker} onChange={state.setSearchTicker} onSearch={state.loadQuote} loading={state.quoteLoading} />

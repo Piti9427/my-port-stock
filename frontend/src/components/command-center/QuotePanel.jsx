@@ -4,6 +4,7 @@ import { cn } from '../../lib/utils.js';
 import { DataStamp } from '../ui/DataStamp.jsx';
 import { EmptyState } from '../ui/EmptyState.jsx';
 import { Skeleton } from '../ui/Skeleton.jsx';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 function formatPrice(value, currency = 'USD') {
   const number = Number(value);
@@ -23,6 +24,7 @@ function formatDelayStatus(value) {
 }
 
 export function QuotePanel({ quote, loading = false, error = '', onRetry = null }) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <section className="min-w-0 overflow-hidden rounded-md border border-border-subtle bg-panel p-5" aria-label="Quote loading">
@@ -89,7 +91,7 @@ export function QuotePanel({ quote, loading = false, error = '', onRetry = null 
         role={gatePassed ? 'status' : 'alert'}
       >
         <Clock3 size={15} aria-hidden="true" />
-        {gatePassed ? 'Price gate: PASS — dual-source confirmed' : 'Price gate: FAIL — ต้องยืนยัน Tier 1 ก่อน execution'}
+        {gatePassed ? 'Price gate: PASS — dual-source confirmed' : t('command.gate_fail')}
       </div>
       {onRetry && (
         <button

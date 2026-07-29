@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Drawer } from '../ui/Drawer.jsx';
 import { cn } from '../../lib/utils.js';
 import { currencySymbol } from '../../lib/format';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 function numeric(value) {
   const number = Number(value);
@@ -20,6 +21,7 @@ export function TradeTicket({
   saving = false,
   serverError = '',
 }) {
+  const { t } = useTranslation();
   const [type, setType] = useState('BUY');
   const [shares, setShares] = useState('');
   const [price, setPrice] = useState(quotePrice ? String(quotePrice) : '');
@@ -136,7 +138,7 @@ export function TradeTicket({
           <span>R/R: {calculation.rr == null ? '—' : `1:${calculation.rr.toFixed(2)}`}</span>
           {hypotheticalAvgCost != null && (
             <span>
-              ต้นทุนเฉลี่ยใหม่: {currencySymbol(ticker)}
+              {t('command.hypothetical_average_cost')}: {currencySymbol(ticker)}
               {hypotheticalAvgCost.toFixed(2)}
             </span>
           )}

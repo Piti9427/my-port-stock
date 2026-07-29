@@ -71,3 +71,30 @@ test("AI analyst rejects unstructured deep-analysis output", () => {
     /swot/,
   );
 });
+
+test("AI analyst builds English-only instructions for English requests", () => {
+  const {
+    buildAnalysisPrompt,
+    buildChatPrompt,
+  } = require("../src/services/aiAnalyst");
+
+  const chatPrompt = buildChatPrompt({
+    ticker: "NVDA",
+    message: "What invalidates the thesis?",
+    decisionMode: "Swing Trade",
+    packet: { status: "READY" },
+    language: "en",
+  });
+  const analysisPrompt = buildAnalysisPrompt(
+    "NVDA",
+    { is_held: false },
+    { last_price: 190 },
+    "en",
+  );
+
+  assert.match(chatPrompt, /Answer in concise English/);
+  assert.match(chatPrompt, /Return plain English text only/);
+  assert.match(analysisPrompt, /concise reason in English/);
+  assert.match(analysisPrompt, /English detailed analysis text/);
+  assert.doesNotMatch(analysisPrompt, /[ก-๙]/);
+});

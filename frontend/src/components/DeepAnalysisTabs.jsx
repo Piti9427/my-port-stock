@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import PropTypes from 'prop-types';
+import { useTranslation } from '../i18n/useTranslation.js';
 
 const TABS = [
-  { id: 'swot', label: 'สรุป & SWOT' },
-  { id: 'fundamentals', label: 'งบการเงิน & ปัจจัยพื้นฐาน' },
-  { id: 'technicals', label: 'สัญญาณเทคนิคอล' },
-  { id: 'trade', label: 'แผนเทรด SOP' },
+  { id: 'swot', labelKey: 'command.summary_tab' },
+  { id: 'fundamentals', labelKey: 'command.fundamentals_tab' },
+  { id: 'technicals', labelKey: 'command.technicals_tab' },
+  { id: 'trade', labelKey: 'command.trade_plan_tab' },
 ];
 
 const SWOT_LABELS = {
@@ -180,6 +181,7 @@ function TradePlanTab({ deepAnalysis }) {
 }
 
 export default function DeepAnalysisTabs({ deepAnalysis, fallbackAnalysis }) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('swot');
   const hasStructuredPayload = Boolean(deepAnalysis);
   const activeConfig = useMemo(() => TABS.find((tab) => tab.id === activeTab) || TABS[0], [activeTab]);
@@ -212,7 +214,7 @@ export default function DeepAnalysisTabs({ deepAnalysis, fallbackAnalysis }) {
             aria-selected={tab.id === activeConfig.id}
             onClick={() => setActiveTab(tab.id)}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>

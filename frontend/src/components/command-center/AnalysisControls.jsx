@@ -2,10 +2,12 @@ import PropTypes from 'prop-types';
 import { Brain } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../../lib/utils.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 const MODES = ['Quick Trade', 'Swing Trade', 'Long-Term/Core', 'Existing Position / Exit Review'];
 
 export function AnalysisControls({ ticker, decisionMode, onDecisionModeChange, onAnalyze, loading = false }) {
+  const { t } = useTranslation();
   const [manualPrice, setManualPrice] = useState('');
   const [error, setError] = useState('');
 
@@ -81,7 +83,7 @@ export function AnalysisControls({ ticker, decisionMode, onDecisionModeChange, o
         onClick={submit}
       >
         <Brain size={16} aria-hidden="true" />
-        {loading ? 'กำลังวิเคราะห์...' : 'วิเคราะห์'}
+        {loading ? t('command.analyzing') : t('command.analyze')}
       </button>
     </section>
   );

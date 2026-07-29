@@ -63,21 +63,29 @@ describe("API Routes", () => {
 
     const res = await request(app)
       .post("/api/analyze")
-      .send({ ticker: "not valid ticker", portfolioData: { shares: 10 } });
+      .send({
+        ticker: "not valid ticker",
+        portfolioData: { shares: 10 },
+        language: "en",
+      });
 
     assert.equal(res.statusCode, 200);
     assert.equal(res.body.status, "INSUFFICIENT_DATA");
+    assert.equal(res.body.language, "en");
   });
 
   it("fails closed on invalid chat ticker", async () => {
     const { app } = require("../server");
 
-    const res = await request(app)
-      .post("/api/chat")
-      .send({ ticker: "not valid ticker", message: "What changed?" });
+    const res = await request(app).post("/api/chat").send({
+      ticker: "not valid ticker",
+      message: "What changed?",
+      language: "fr",
+    });
 
     assert.equal(res.statusCode, 200);
     assert.equal(res.body.status, "INSUFFICIENT_DATA");
+    assert.equal(res.body.language, "th");
   });
 
   it("requires authenticated context before market chat", async () => {

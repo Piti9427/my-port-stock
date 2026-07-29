@@ -11,6 +11,7 @@ import { ScenarioPlanner } from '../components/ScenarioPlanner';
 import { fetchWithAuth } from '../lib/api';
 import { formatCurrency } from '../lib/format';
 import { useApi } from '../hooks/useApi';
+import { useTranslation } from '../i18n/useTranslation.js';
 
 const DEFAULT_DECISION_MODE = 'Swing Trade';
 
@@ -59,6 +60,7 @@ function isInsufficient(...payloads) {
 }
 
 export default function TickerDetailPage() {
+  const { t, language } = useTranslation();
   const { symbol: routeSymbol } = useParams();
   const symbol = normalizeSymbol(routeSymbol);
   const navigate = useNavigate();
@@ -120,7 +122,7 @@ export default function TickerDetailPage() {
     try {
       const result = await fetchWithAuth('/api/analyze', getToken, {
         method: 'POST',
-        body: { ticker: symbol, decision_mode: DEFAULT_DECISION_MODE },
+        body: { ticker: symbol, decision_mode: DEFAULT_DECISION_MODE, language },
       });
       setAnalysis(result);
     } catch (error) {
@@ -128,7 +130,7 @@ export default function TickerDetailPage() {
     } finally {
       setAnalyzing(false);
     }
-  }, [getToken, symbol]);
+  }, [getToken, language, symbol]);
 
   if (!symbol) {
     return (
@@ -316,14 +318,14 @@ export default function TickerDetailPage() {
             disabled={analyzing}
           >
             <Brain size={16} aria-hidden="true" />
-            {analyzing ? 'กำลังวิเคราะห์...' : 'วิเคราะห์ Setup'}
+            {analyzing ? t('command.analyzing') : t('ticker.analyze_setup')}
           </button>
           <Link
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-border-subtle bg-transparent px-5 py-2.5 font-sans text-sm font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:text-text-muted"
             to={`/journal?ticker=${encodeURIComponent(symbol)}`}
           >
             <BookOpen size={15} aria-hidden="true" />
-            บันทึกเทรด
+            {t('dashboard.log_trade')}
           </Link>
           <button
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-border-subtle bg-transparent px-5 py-2.5 font-sans text-sm font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:text-text-muted"
@@ -331,7 +333,7 @@ export default function TickerDetailPage() {
             onClick={() => setPlannerOpen(true)}
           >
             <Target size={15} aria-hidden="true" />
-            เปิด Scenario Planner
+            {t('ticker.open_scenario')}
           </button>
         </section>
       )}

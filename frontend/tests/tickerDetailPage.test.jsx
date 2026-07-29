@@ -194,7 +194,7 @@ describe('TickerDetailPage', () => {
         '/api/analyze',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({ ticker: 'NVDA', decision_mode: 'Swing Trade' }),
+          body: JSON.stringify({ ticker: 'NVDA', decision_mode: 'Swing Trade', language: 'th' }),
           headers: expect.objectContaining({ Authorization: 'Bearer token_123' }),
         })
       );
