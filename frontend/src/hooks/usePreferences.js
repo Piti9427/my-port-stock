@@ -7,6 +7,7 @@ const FALLBACK_CONTEXT = {
     reporting_currency: 'THB',
     disclosure_level: 'beginner',
     theme: 'dark', // Fallback to 'dark' for components rendered outside provider (e.g. tests)
+    language: 'th',
     onboarding_completed: true,
   },
   loading: false,

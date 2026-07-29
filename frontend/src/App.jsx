@@ -35,6 +35,7 @@ import { DataStamp } from './components/ui/DataStamp';
 import { isDevAuthBypassEnabled } from './auth/devAuth';
 import { PreferencesProvider } from './preferences/PreferencesContext';
 import { usePreferences } from './hooks/usePreferences';
+import { useTranslation } from './i18n/useTranslation';
 import { cn } from './lib/utils';
 import './index.css';
 
@@ -42,36 +43,36 @@ const NAV_GROUPS = [
   {
     title: 'OVERVIEW',
     links: [
-      { to: '/', label: 'วันนี้', end: true, icon: CalendarCheck },
-      { to: '/dashboard', label: 'พอร์ตโฟลิโอ', icon: LayoutDashboard },
-      { to: '/risk', label: 'ความเสี่ยง', icon: ShieldAlert },
+      { to: '/', labelKey: 'nav.today', end: true, icon: CalendarCheck },
+      { to: '/dashboard', labelKey: 'nav.portfolio', icon: LayoutDashboard },
+      { to: '/risk', labelKey: 'nav.risk', icon: ShieldAlert },
     ],
   },
   {
     title: 'TRADING',
     links: [
-      { to: '/command-center', label: 'วิเคราะห์หุ้น', icon: Bot },
-      { to: '/market', label: 'สำรวจตลาด', icon: Crosshair },
-      { to: '/journal', label: 'บันทึกเทรด', icon: BookOpen },
+      { to: '/command-center', labelKey: 'nav.command_center', icon: Bot },
+      { to: '/market', labelKey: 'nav.market_explorer', icon: Crosshair },
+      { to: '/journal', labelKey: 'nav.journal', icon: BookOpen },
     ],
   },
   {
     title: 'INSIGHTS',
-    links: [{ to: '/analytics', label: 'สถิติผลงาน', icon: BarChart2 }],
+    links: [{ to: '/analytics', labelKey: 'nav.analytics', icon: BarChart2 }],
   },
 ];
 
-const UTILITY_LINKS = [{ to: '/config', label: 'ตั้งค่าระบบ', icon: Settings2 }];
+const UTILITY_LINKS = [{ to: '/config', labelKey: 'nav.config', icon: Settings2 }];
 
 const PAGE_META = [
-  { test: (pathname) => pathname === '/', title: 'วันนี้', section: 'Overview', source: 'Queue' },
-  { test: (pathname) => pathname === '/dashboard', title: 'พอร์ตโฟลิโอ', section: 'Overview', source: 'Supabase holdings' },
-  { test: (pathname) => pathname === '/risk', title: 'ความเสี่ยง', section: 'Overview', source: 'Supabase holdings' },
-  { test: (pathname) => pathname === '/command-center', title: 'วิเคราะห์หุ้น', section: 'Trading', source: 'Quote packet + decision gate' },
-  { test: (pathname) => pathname === '/market', title: 'สำรวจตลาด', section: 'Trading', source: 'Display-only quote data' },
-  { test: (pathname) => pathname === '/journal', title: 'บันทึกเทรด', section: 'Trading', source: 'Supabase journal' },
-  { test: (pathname) => pathname === '/analytics', title: 'สถิติผลงาน', section: 'Insights', source: 'Supabase journal' },
-  { test: (pathname) => pathname === '/config', title: 'ตั้งค่าระบบ', section: 'Settings', source: 'Local configuration' },
+  { test: (pathname) => pathname === '/', titleKey: 'nav.today', section: 'Overview', source: 'Queue' },
+  { test: (pathname) => pathname === '/dashboard', titleKey: 'nav.portfolio', section: 'Overview', source: 'Supabase holdings' },
+  { test: (pathname) => pathname === '/risk', titleKey: 'nav.risk', section: 'Overview', source: 'Supabase holdings' },
+  { test: (pathname) => pathname === '/command-center', titleKey: 'nav.command_center', section: 'Trading', source: 'Quote packet + decision gate' },
+  { test: (pathname) => pathname === '/market', titleKey: 'nav.market_explorer', section: 'Trading', source: 'Display-only quote data' },
+  { test: (pathname) => pathname === '/journal', titleKey: 'nav.journal', section: 'Trading', source: 'Supabase journal' },
+  { test: (pathname) => pathname === '/analytics', titleKey: 'nav.analytics', section: 'Insights', source: 'Supabase journal' },
+  { test: (pathname) => pathname === '/config', titleKey: 'nav.config', section: 'Settings', source: 'Local configuration' },
 ];
 
 function getPageMeta(pathname) {
@@ -98,6 +99,7 @@ function AuthenticatedShell({ showUserButton = true }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
   const pageMeta = getPageMeta(location.pathname);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -111,7 +113,7 @@ function AuthenticatedShell({ showUserButton = true }) {
     return () => globalThis.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const { resolvedTheme, toggleTheme } = usePreferences();
+  const { preferences, savePreferences, resolvedTheme, toggleTheme } = usePreferences();
   const ThemeIcon = resolvedTheme === 'dark' ? Sun : Moon;
 
   return (
@@ -159,25 +161,28 @@ function AuthenticatedShell({ showUserButton = true }) {
                 {group.title}
               </div>
               <ul aria-labelledby={`group-${group.title}`} className="m-0 list-none p-0 max-[768px]:flex max-[768px]:items-center max-[768px]:gap-1">
-                {group.links.map(({ to, label, end, icon: Icon }) => (
-                  <li key={to}>
-                    <NavLink
-                      to={to}
-                      end={end}
-                      className={({ isActive }) =>
-                        cn(
-                          'flex items-center gap-3 rounded-sm px-3.5 py-2.5 text-sm font-medium text-text-secondary no-underline transition-colors hover:bg-panel-hover hover:text-foreground max-[768px]:min-h-11 max-[768px]:min-w-16 max-[768px]:flex-col max-[768px]:justify-center max-[768px]:gap-1 max-[768px]:px-2 max-[768px]:py-1.5 max-[768px]:text-center max-[768px]:text-xs',
-                          isActive && 'border border-brand bg-brand-dim text-foreground',
-                          sidebarCollapsed && 'justify-center px-3 py-[11px]'
-                        )
-                      }
-                      aria-label={label}
-                    >
-                      <Icon size={18} aria-hidden="true" />
-                      <span className={cn(sidebarCollapsed && 'hidden max-[768px]:inline')}>{label}</span>
-                    </NavLink>
-                  </li>
-                ))}
+                {group.links.map(({ to, labelKey, end, icon: Icon }) => {
+                  const label = t(labelKey);
+                  return (
+                    <li key={to}>
+                      <NavLink
+                        to={to}
+                        end={end}
+                        className={({ isActive }) =>
+                          cn(
+                            'flex items-center gap-3 rounded-sm px-3.5 py-2.5 text-sm font-medium text-text-secondary no-underline transition-colors hover:bg-panel-hover hover:text-foreground max-[768px]:min-h-11 max-[768px]:min-w-16 max-[768px]:flex-col max-[768px]:justify-center max-[768px]:gap-1 max-[768px]:px-2 max-[768px]:py-1.5 max-[768px]:text-center max-[768px]:text-xs',
+                            isActive && 'border border-brand bg-brand-dim text-foreground',
+                            sidebarCollapsed && 'justify-center px-3 py-[11px]'
+                          )
+                        }
+                        aria-label={label}
+                      >
+                        <Icon size={18} aria-hidden="true" />
+                        <span className={cn(sidebarCollapsed && 'hidden max-[768px]:inline')}>{label}</span>
+                      </NavLink>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
@@ -189,23 +194,26 @@ function AuthenticatedShell({ showUserButton = true }) {
           )}
         >
           <div className="grid gap-2 max-[768px]:flex max-[768px]:items-center max-[768px]:gap-1">
-            {UTILITY_LINKS.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-3 rounded-sm px-3.5 py-2.5 text-sm font-medium text-text-secondary no-underline transition-colors hover:bg-panel-hover hover:text-foreground max-[768px]:min-h-11 max-[768px]:min-w-16 max-[768px]:flex-col max-[768px]:justify-center max-[768px]:gap-1 max-[768px]:px-2 max-[768px]:py-1.5 max-[768px]:text-center max-[768px]:text-xs',
-                    isActive && 'border border-brand bg-brand-dim text-foreground',
-                    sidebarCollapsed && 'justify-center px-3 py-[11px]'
-                  )
-                }
-                aria-label={label}
-              >
-                <Icon size={18} aria-hidden="true" />
-                <span className={cn(sidebarCollapsed && 'hidden max-[768px]:inline')}>{label}</span>
-              </NavLink>
-            ))}
+            {UTILITY_LINKS.map(({ to, labelKey, icon: Icon }) => {
+              const label = t(labelKey);
+              return (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-3 rounded-sm px-3.5 py-2.5 text-sm font-medium text-text-secondary no-underline transition-colors hover:bg-panel-hover hover:text-foreground max-[768px]:min-h-11 max-[768px]:min-w-16 max-[768px]:flex-col max-[768px]:justify-center max-[768px]:gap-1 max-[768px]:px-2 max-[768px]:py-1.5 max-[768px]:text-center max-[768px]:text-xs',
+                      isActive && 'border border-brand bg-brand-dim text-foreground',
+                      sidebarCollapsed && 'justify-center px-3 py-[11px]'
+                    )
+                  }
+                  aria-label={label}
+                >
+                  <Icon size={18} aria-hidden="true" />
+                  <span className={cn(sidebarCollapsed && 'hidden max-[768px]:inline')}>{label}</span>
+                </NavLink>
+              );
+            })}
           </div>
           <button
             type="button"
@@ -224,7 +232,7 @@ function AuthenticatedShell({ showUserButton = true }) {
                 K
               </kbd>
             </span>
-            <span className={cn(sidebarCollapsed && 'hidden')}>Quick search</span>
+            <span className={cn(sidebarCollapsed && 'hidden')}>{t('nav.quick_search')}</span>
           </button>
           <div className={cn('flex items-center gap-2 max-[768px]:hidden', sidebarCollapsed && 'justify-center')}>
             <span className="size-2 rounded-full bg-fin-profit" aria-hidden="true" />
@@ -249,9 +257,20 @@ function AuthenticatedShell({ showUserButton = true }) {
         <header className="flex min-h-[76px] shrink-0 items-center justify-between gap-4 border-b border-border bg-shell px-7 py-4 max-[768px]:min-h-[68px] max-[768px]:flex-col max-[768px]:items-start max-[768px]:px-4 max-[768px]:py-3.5">
           <div>
             <div className="mb-1 font-mono text-xs uppercase text-text-secondary">MyPortStock / {pageMeta.section}</div>
-            <h1 className="m-0 text-[1.35rem] leading-[1.2] tracking-normal text-foreground">{pageMeta.title}</h1>
+            <h1 className="m-0 text-[1.35rem] leading-[1.2] tracking-normal text-foreground">
+              {pageMeta.titleKey ? t(pageMeta.titleKey) : pageMeta.title}
+            </h1>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="flex min-h-8 min-w-8 cursor-pointer items-center justify-center rounded border border-border bg-surface px-2 text-xs font-mono font-bold text-foreground transition-transform hover:scale-[1.06] hover:border-border-hover hover:bg-surface-hover active:scale-95 max-[768px]:min-h-11 max-[768px]:min-w-11"
+              onClick={() => savePreferences({ language: (preferences?.language || 'th') === 'th' ? 'en' : 'th' })}
+              aria-label={(preferences?.language || 'th') === 'th' ? 'Switch to English' : 'Switch to Thai'}
+              title={(preferences?.language || 'th') === 'th' ? 'Switch to English' : 'Switch to Thai'}
+            >
+              {(preferences?.language || 'th').toUpperCase()}
+            </button>
             <button
               type="button"
               className="flex size-8 cursor-pointer items-center justify-center rounded border border-border bg-surface text-foreground transition-transform hover:rotate-[15deg] hover:scale-[1.06] hover:border-border-hover hover:bg-surface-hover active:scale-95 motion-reduce:transform-none max-[768px]:size-11"
@@ -288,12 +307,13 @@ AuthenticatedShell.propTypes = {
 
 function PreferencesGateway({ children }) {
   const { preferences, loading, error, refetch } = usePreferences();
+  const { t } = useTranslation();
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-6">
         <div className="flex min-h-[200px] w-full max-w-xl items-center justify-center rounded-lg border border-border bg-panel p-6">
-          <p className="text-text-secondary">กำลังโหลดข้อมูลการตั้งค่าเริ่มต้น...</p>
+          <p className="text-text-secondary">{t('common.preferences_loading')}</p>
         </div>
       </div>
     );
@@ -303,10 +323,10 @@ function PreferencesGateway({ children }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-6">
         <div className="grid w-full max-w-xl gap-4 rounded-lg border border-border bg-panel p-6 text-center">
-          <h2 className="text-xl text-fin-loss">ไม่สามารถดึงข้อมูลการตั้งค่าได้</h2>
-          <p className="text-text-secondary">{error.message || 'ระบบหลังบ้านหรือฐานข้อมูลขัดข้องชั่วคราว'}</p>
+          <h2 className="text-xl text-fin-loss">{t('common.preferences_load_error')}</h2>
+          <p className="text-text-secondary">{error.message || t('common.backend_unavailable')}</p>
           <button type="button" className="mt-2 rounded-md bg-brand px-4 py-2 font-semibold text-text-inverse" onClick={refetch}>
-            ลองใหม่อีกครั้ง
+            {t('common.retry')}
           </button>
         </div>
       </div>

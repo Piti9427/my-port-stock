@@ -1,12 +1,16 @@
 import PropTypes from 'prop-types';
+import { useId } from 'react';
 import { NumberField, SliderField, ToggleField } from './ConfigFields.jsx';
 import { usePreferences } from '../../hooks/usePreferences';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 function SectionFrame({ title, description, children, dirty, onSave }) {
+  const headingId = useId();
+
   return (
-    <section className="flex min-w-0 flex-col" aria-labelledby={`config-${title}`}>
+    <section className="flex min-w-0 flex-col" aria-labelledby={headingId}>
       <div className="mb-6 [&_h2]:text-xl [&_h2]:font-semibold [&_p]:mt-1 [&_p]:text-sm [&_p]:text-text-secondary">
-        <h2 id={`config-${title}`}>{title}</h2>
+        <h2 id={headingId}>{title}</h2>
         <p>{description}</p>
       </div>
       <div className="flex flex-col gap-6">{children}</div>
@@ -39,15 +43,16 @@ SectionFrame.propTypes = {
 
 function GeneralSection({ config, update, dirty, onSave }) {
   const { preferences, savePreferences } = usePreferences();
+  const { t } = useTranslation();
 
   return (
-    <SectionFrame title="General" description="Display preferences and common decision modes." dirty={dirty} onSave={onSave}>
+    <SectionFrame title={t('config.general_settings')} description={t('config.general_description')} dirty={dirty} onSave={onSave}>
       <div className="flex flex-col">
         <label className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]" htmlFor="currency">
-          Display currency
+          {t('config.display_currency')}
         </label>
         <p className="[font-size:0.85rem] [color:var(--text-secondary)] [line-height:1.5] [margin-bottom:16px] [max-width:65ch]">
-          Used for local UI labels only; execution math still needs verified source data.
+          {t('config.display_currency_description')}
         </p>
         <select
           id="currency"
@@ -61,10 +66,10 @@ function GeneralSection({ config, update, dirty, onSave }) {
       </div>
       <div className="flex flex-col">
         <label className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]" htmlFor="density">
-          Interface density
+          {t('config.interface_density')}
         </label>
         <p className="[font-size:0.85rem] [color:var(--text-secondary)] [line-height:1.5] [margin-bottom:16px] [max-width:65ch]">
-          Keeps repeated workflows scannable without changing analysis behavior.
+          {t('config.interface_density_description')}
         </p>
         <select
           id="density"
@@ -72,16 +77,16 @@ function GeneralSection({ config, update, dirty, onSave }) {
           value={config.density}
           onChange={(event) => update('density')(event.target.value)}
         >
-          <option value="comfortable">Comfortable</option>
-          <option value="compact">Compact</option>
+          <option value="comfortable">{t('config.density_comfortable')}</option>
+          <option value="compact">{t('config.density_compact')}</option>
         </select>
       </div>
       <div className="flex flex-col">
         <label className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]" htmlFor="theme">
-          Visual theme
+          {t('config.visual_theme')}
         </label>
         <p className="[font-size:0.85rem] [color:var(--text-secondary)] [line-height:1.5] [margin-bottom:16px] [max-width:65ch]">
-          Choose between Light (default), Dark (terminal UI), or System theme.
+          {t('config.visual_theme_description')}
         </p>
         <select
           id="theme"
@@ -89,15 +94,33 @@ function GeneralSection({ config, update, dirty, onSave }) {
           value={preferences.theme || 'light'}
           onChange={(event) => savePreferences({ theme: event.target.value })}
         >
-          <option value="light">Light Mode (Default)</option>
-          <option value="dark">Dark Mode</option>
-          <option value="system">System Mode</option>
+          <option value="light">{t('config.theme_light')}</option>
+          <option value="dark">{t('config.theme_dark')}</option>
+          <option value="system">{t('config.theme_system')}</option>
         </select>
       </div>
       <div className="flex flex-col">
-        <span className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]">Preferred decision modes</span>
+        <label className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]" htmlFor="language">
+          {t('config.language_heading')}
+        </label>
         <p className="[font-size:0.85rem] [color:var(--text-secondary)] [line-height:1.5] [margin-bottom:16px] [max-width:65ch]">
-          These only affect local display order.
+          {t('config.language_description')}
+        </p>
+        <select
+          id="language"
+          className="min-h-10 w-full rounded-sm border border-border bg-panel-solid px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand"
+          value={preferences.language || 'th'}
+          onChange={(event) => savePreferences({ language: event.target.value })}
+          aria-label="Language selection"
+        >
+          <option value="th">{t('config.lang_th')}</option>
+          <option value="en">{t('config.lang_en')}</option>
+        </select>
+      </div>
+      <div className="flex flex-col">
+        <span className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]">{t('config.preferred_modes')}</span>
+        <p className="[font-size:0.85rem] [color:var(--text-secondary)] [line-height:1.5] [margin-bottom:16px] [max-width:65ch]">
+          {t('config.preferred_modes_description')}
         </p>
         <div className="flex flex-wrap gap-2">
           {['Quick Trade', 'Swing Trade', 'Long-Term/Core', 'Exit Review'].map((mode) => (

@@ -6,6 +6,7 @@ import App from '../src/App.jsx';
 
 const root = resolve(__dirname, '..');
 const read = (file) => readFileSync(resolve(root, file), 'utf8');
+const fetchWithAuth = vi.fn();
 
 vi.mock('@sentry/react', () => ({
   ErrorBoundary: ({ children }) => children,
@@ -14,6 +15,10 @@ vi.mock('@sentry/react', () => ({
 vi.mock('../src/auth/devAuth', () => ({
   isDevAuthBypassEnabled: () => true,
   shouldUseClerkProvider: () => false,
+}));
+
+vi.mock('../src/lib/api', () => ({
+  fetchWithAuth: (...args) => fetchWithAuth(...args),
 }));
 
 vi.mock('../src/components/CommandPalette', () => ({
@@ -50,6 +55,29 @@ test('authenticated shell groups navigation, keeps config as utility, and expose
 
   fireEvent.keyDown(window, { key: 'b', metaKey: true });
   expect(nav).toHaveAttribute('data-collapsed', 'false');
+});
+
+test('authenticated shell switches visible navigation and page content from Thai to English', async () => {
+  fetchWithAuth.mockResolvedValueOnce({
+    reporting_currency: 'THB',
+    disclosure_level: 'beginner',
+    theme: 'light',
+    language: 'en',
+    onboarding_completed_at: '2026-07-29T00:00:00.000Z',
+  });
+
+  render(<App />);
+
+  expect(document.documentElement).toHaveAttribute('lang', 'th');
+  expect(screen.getByRole('heading', { level: 1, name: 'วันนี้' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'บันทึกเทรด' })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Switch to English' }));
+
+  expect(await screen.findByRole('heading', { level: 1, name: 'Today' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Trade Journal' })).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'บันทึกเทรด' })).not.toBeInTheDocument();
+  expect(document.documentElement).toHaveAttribute('lang', 'en');
 });
 
 test('authenticated route pages do not create nested main landmarks inside the app shell', () => {

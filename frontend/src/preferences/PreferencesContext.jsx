@@ -13,6 +13,7 @@ const DEFAULT_PREFERENCES = {
   reporting_currency: 'THB',
   disclosure_level: 'beginner',
   theme: 'light',
+  language: 'th',
   onboarding_completed: isTestEnv ? true : false,
 };
 
@@ -114,6 +115,10 @@ export function PreferencesProvider({ children }) {
     }
   }, [preferences?.theme]);
 
+  useEffect(() => {
+    document.documentElement.setAttribute('lang', preferences?.language || 'th');
+  }, [preferences?.language]);
+
   const savePreferences = useCallback(
     async (nextPrefs) => {
       setError(null);
@@ -122,6 +127,7 @@ export function PreferencesProvider({ children }) {
           reporting_currency: nextPrefs.reporting_currency ?? preferences.reporting_currency,
           disclosure_level: nextPrefs.disclosure_level ?? preferences.disclosure_level,
           theme: nextPrefs.theme ?? preferences.theme,
+          language: nextPrefs.language ?? preferences.language,
         };
         const data = await fetchWithAuth('/api/preferences', getTokenRef.current, {
           method: 'PUT',
