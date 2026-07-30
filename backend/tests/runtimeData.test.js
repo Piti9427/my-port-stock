@@ -18,22 +18,50 @@ function quotePacket(overrides = {}) {
   };
 }
 
-function loadServerWithoutSupabase() {
+function clearRuntimeModules() {
+  [
+    "../server",
+    "../src/routes/api",
+    "../src/db",
+    "../src/db/supabaseClient",
+    "../src/providers/providerRegistry",
+    "../src/providers/testProviders",
+  ].forEach((mod) => {
+    delete require.cache[require.resolve(mod)];
+  });
+}
+
+function loadServerWithoutSupabase({
+  testMode = false,
+  devUiAuthBypass = undefined,
+} = {}) {
   const previousUrl = process.env.SUPABASE_URL;
   const previousKey = process.env.SUPABASE_ANON_KEY;
   const previousServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const previousTestMode = process.env.MPS_TEST_MODE;
+  const previousScenario = process.env.MPS_TEST_SCENARIO;
+  const previousBypass = process.env.DEV_UI_AUTH_BYPASS;
 
   process.env.SUPABASE_URL = "https://mock.supabase.co";
   process.env.SUPABASE_ANON_KEY = "mock_key";
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-  delete require.cache[require.resolve("../server")];
-  delete require.cache[require.resolve("../src/db/supabaseClient")];
+  if (testMode) {
+    process.env.MPS_TEST_MODE = "1";
+    process.env.MPS_TEST_SCENARIO = process.env.MPS_TEST_SCENARIO || "matrix";
+  } else {
+    delete process.env.MPS_TEST_MODE;
+    delete process.env.MPS_TEST_SCENARIO;
+  }
+  if (devUiAuthBypass === undefined) delete process.env.DEV_UI_AUTH_BYPASS;
+  else process.env.DEV_UI_AUTH_BYPASS = devUiAuthBypass;
 
+  clearRuntimeModules();
   const server = require("../server");
 
   return {
     app: server.app,
     restore() {
+      clearRuntimeModules();
       if (previousUrl) process.env.SUPABASE_URL = previousUrl;
       else delete process.env.SUPABASE_URL;
       if (previousKey) process.env.SUPABASE_ANON_KEY = previousKey;
@@ -41,6 +69,12 @@ function loadServerWithoutSupabase() {
       if (previousServiceKey)
         process.env.SUPABASE_SERVICE_ROLE_KEY = previousServiceKey;
       else delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (previousTestMode) process.env.MPS_TEST_MODE = previousTestMode;
+      else delete process.env.MPS_TEST_MODE;
+      if (previousScenario) process.env.MPS_TEST_SCENARIO = previousScenario;
+      else delete process.env.MPS_TEST_SCENARIO;
+      if (previousBypass) process.env.DEV_UI_AUTH_BYPASS = previousBypass;
+      else delete process.env.DEV_UI_AUTH_BYPASS;
     },
   };
 }
@@ -57,7 +91,7 @@ describe("runtime personal data endpoints", () => {
   });
 
   it("GET /api/journal fails closed without Supabase config instead of returning sample trades", async () => {
-    const loaded = loadServerWithoutSupabase();
+    const loaded = loadServerWithoutSupabase({ testMode: false });
     restore = loaded.restore;
 
     const res = await request(loaded.app).get("/api/journal");
@@ -69,7 +103,7 @@ describe("runtime personal data endpoints", () => {
   });
 
   it("POST /api/journal fails closed without Supabase config instead of mock-saving", async () => {
-    const loaded = loadServerWithoutSupabase();
+    const loaded = loadServerWithoutSupabase({ testMode: false });
     restore = loaded.restore;
 
     const res = await request(loaded.app)
@@ -79,6 +113,38 @@ describe("runtime personal data endpoints", () => {
     assert.equal(res.statusCode, 503);
     assert.equal(res.body.status, "INSUFFICIENT_DATA");
     assert.doesNotMatch(JSON.stringify(res.body), /Mock save successful/i);
+  });
+
+  it("POST/GET /api/journal uses deterministic fixtures in MPS_TEST_MODE without Supabase", async () => {
+    const loaded = loadServerWithoutSupabase({
+      testMode: true,
+      devUiAuthBypass: "true",
+    });
+    restore = loaded.restore;
+
+    const post = await request(loaded.app)
+      .post("/api/journal")
+      .set("Authorization", "Bearer dev-ui-auth-bypass")
+      .send({
+        ticker: "NVDA",
+        type: "BUY",
+        shares: 2,
+        price: 100,
+        status: "OPEN",
+      });
+
+    assert.equal(post.statusCode, 200);
+    assert.equal(post.body[0]?.ticker, "NVDA");
+    assert.equal(post.body[0]?.shares, 2);
+
+    const get = await request(loaded.app)
+      .get("/api/journal")
+      .set("Authorization", "Bearer dev-ui-auth-bypass");
+
+    assert.equal(get.statusCode, 200);
+    assert.equal(get.body.status, undefined);
+    assert.equal(get.body.trades?.[0]?.ticker, "NVDA");
+    assert.equal(get.body.trades?.[0]?.shares, 2);
   });
 
   it("runtime routes do not auto-import owner markdown for empty users", () => {

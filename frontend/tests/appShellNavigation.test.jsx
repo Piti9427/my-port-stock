@@ -6,6 +6,7 @@ import App from '../src/App.jsx';
 
 const root = resolve(__dirname, '..');
 const read = (file) => readFileSync(resolve(root, file), 'utf8');
+const fetchWithAuth = vi.fn();
 
 vi.mock('@sentry/react', () => ({
   ErrorBoundary: ({ children }) => children,
@@ -14,6 +15,10 @@ vi.mock('@sentry/react', () => ({
 vi.mock('../src/auth/devAuth', () => ({
   isDevAuthBypassEnabled: () => true,
   shouldUseClerkProvider: () => false,
+}));
+
+vi.mock('../src/lib/api', () => ({
+  fetchWithAuth: (...args) => fetchWithAuth(...args),
 }));
 
 vi.mock('../src/components/CommandPalette', () => ({
@@ -45,11 +50,34 @@ test('authenticated shell groups navigation, keeps config as utility, and expose
   expect(screen.getByText(/Queue/i)).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('button', { name: /Collapse sidebar/i }));
-  expect(nav).toHaveClass('collapsed');
+  expect(nav).toHaveAttribute('data-collapsed', 'true');
   expect(screen.getByRole('button', { name: /Expand sidebar/i })).toBeInTheDocument();
 
   fireEvent.keyDown(window, { key: 'b', metaKey: true });
-  expect(nav).not.toHaveClass('collapsed');
+  expect(nav).toHaveAttribute('data-collapsed', 'false');
+});
+
+test('authenticated shell switches visible navigation and page content from Thai to English', async () => {
+  fetchWithAuth.mockResolvedValueOnce({
+    reporting_currency: 'THB',
+    disclosure_level: 'beginner',
+    theme: 'light',
+    language: 'en',
+    onboarding_completed_at: '2026-07-29T00:00:00.000Z',
+  });
+
+  render(<App />);
+
+  expect(document.documentElement).toHaveAttribute('lang', 'th');
+  expect(screen.getByRole('heading', { level: 1, name: 'วันนี้' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'บันทึกเทรด' })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Switch to English' }));
+
+  expect(await screen.findByRole('heading', { level: 1, name: 'Today' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Trade Journal' })).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'บันทึกเทรด' })).not.toBeInTheDocument();
+  expect(document.documentElement).toHaveAttribute('lang', 'en');
 });
 
 test('authenticated route pages do not create nested main landmarks inside the app shell', () => {
@@ -66,68 +94,49 @@ test('authenticated route pages do not create nested main landmarks inside the a
   }
 });
 
-test('mobile shell CSS uses a bottom navigation rail with touch targets', () => {
-  const styles = `${read('src/styles/layout.css')}\n${read('src/styles/pages.css')}`;
+test('mobile shell uses Tailwind bottom navigation and touch-target contracts', () => {
+  const app = read('src/App.jsx');
 
-  expect(styles).toContain('@media (max-width: 768px)');
-  expect(styles).toMatch(/\.app-content\s*{[^}]*padding-bottom:\s*calc\(72px \+ env\(safe-area-inset-bottom\)\)/s);
-  expect(styles).toMatch(/\.side-nav,\s*\.side-nav\.collapsed\s*{[^}]*position:\s*fixed[^}]*bottom:\s*0/s);
-  expect(styles).toMatch(/\.side-link,\s*\.side-nav\.collapsed \.side-link\s*{[^}]*min-height:\s*44px/s);
-  expect(styles).toMatch(/\.ui-drawer\s*{[^}]*width:\s*100% !important/s);
+  expect(app).toContain('max-[768px]:fixed');
+  expect(app).toContain('max-[768px]:bottom-0');
+  expect(app).toContain('max-[768px]:min-h-11');
+  expect(app).toContain('max-[768px]:pb-[calc(72px+env(safe-area-inset-bottom))]');
+  expect(read('src/components/ui/Drawer.jsx')).toContain('w-full max-w-full');
 });
 
-test('mobile route CSS stacks dense workspaces without clipping and enforces 44px controls', () => {
-  const styles = `${read('src/styles/layout.css')}\n${read('src/styles/pages.css')}`;
-
-  expect(styles).toMatch(
-    /@media \(max-width: 768px\)[\s\S]*\.market-explorer\s*{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)[^}]*height:\s*auto[^}]*overflow:\s*visible/
-  );
-  expect(styles).toMatch(/@media \(max-width: 768px\)[\s\S]*\.explorer-chart-panel\s*{[^}]*min-height:\s*620px/);
-  expect(styles).toMatch(/@media \(max-width: 768px\)[\s\S]*\.chart-header\s*{[^}]*align-items:\s*stretch[^}]*flex-direction:\s*column/);
-  expect(styles).toMatch(/@media \(max-width: 768px\)[\s\S]*\.config-sidenav\s*{[^}]*width:\s*100%[^}]*min-width:\s*0/);
-  expect(styles).toMatch(/@media \(max-width: 768px\)[\s\S]*\.config-sections-nav\s*{[^}]*min-width:\s*0[^}]*overflow-x:\s*auto/);
-  expect(styles).toMatch(
-    /@media \(max-width: 760px\)[\s\S]*\.ticker-detail-page\s*{[^}]*width:\s*calc\(100% - \(var\(--space-4\) \* 2\)\)[^}]*max-width:\s*100%[^}]*padding:\s*var\(--space-4\) 0/
-  );
-  expect(styles).toMatch(
-    /@media \(max-width: 760px\)[\s\S]*\.ticker-detail-header,\s*\.ticker-detail-grid,\s*\.ticker-detail-context,\s*\.ticker-detail-history,\s*\.ticker-detail-sources,\s*\.ticker-detail-state,\s*\.ticker-detail-actions\s*{[^}]*min-width:\s*0/
-  );
-  expect(styles).toMatch(/\.app-content :is\(button, input, select, textarea\)\s*{[^}]*min-height:\s*44px !important/s);
-  expect(styles).toMatch(/\.ticker-row__quick-analyze,\s*\.search-clear\s*{[^}]*min-width:\s*44px[^}]*min-height:\s*44px/s);
+test('mobile route utilities stack dense workspaces without clipping and preserve touch targets', () => {
+  expect(read('src/pages/MarketExplorerPage.jsx')).toContain('max-[768px]:[grid-template-columns:minmax(0,_1fr)]');
+  expect(read('src/pages/MarketExplorerPage.jsx')).toContain('max-[768px]:[min-height:620px]');
+  expect(read('src/pages/ConfigPage.jsx')).toContain('max-[960px]:[grid-template-columns:1fr]');
+  expect(read('src/pages/TickerDetailPage.jsx')).toContain('max-[760px]:[max-width:100%]');
+  expect(read('src/pages/TickerDetailPage.jsx')).toContain('max-[760px]:[min-width:0]');
+  expect(read('src/pages/MarketExplorerPage.jsx')).toContain('max-[768px]:[min-height:44px]');
 });
 
 test('command center and journal have mobile-specific product UI adaptations', () => {
-  const styles = read('src/styles/pages.css');
+  const commandCenter = read('src/pages/CommandCenterPage.jsx');
+  const agentResults = read('src/components/command-center/AgentResults.jsx');
+  const journalTable = read('src/components/journal/JournalTradeTable.jsx');
 
-  expect(styles).toMatch(/\.command-results-column\s*{[^}]*align-content:\s*start/s);
-  expect(styles).toMatch(/\.command-agent-panel\s*{[^}]*min-height:\s*240px/s);
-  expect(styles).toMatch(/@media \(max-width: 560px\)[\s\S]*\.command-quote-metrics\s*{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
-  expect(styles).toMatch(/@media \(max-width: 560px\)[\s\S]*\.command-quote-metrics \.quote-delay\s*{[^}]*grid-column:\s*1 \/ -1/s);
-  expect(styles).toMatch(/@media \(max-width: 640px\)[\s\S]*\.journal-table thead\s*{[^}]*display:\s*none/s);
-  expect(styles).toMatch(/@media \(max-width: 640px\)[\s\S]*\.journal-row\s*{[^}]*display:\s*grid/s);
-  expect(styles).toMatch(/@media \(max-width: 640px\)[\s\S]*\.journal-row td::before\s*{[^}]*content:\s*attr\(data-label\)/s);
+  expect(commandCenter).toContain('[align-content:start]');
+  expect(agentResults).toContain('[min-height:240px]');
+  expect(journalTable).toContain('max-[640px]:hidden');
+  expect(journalTable).toContain('max-[640px]:grid');
 });
 
 test('viewport-height workspaces flex below the dynamic shell header', () => {
-  const layout = read('src/styles/layout.css');
-  const pages = read('src/styles/pages.css');
+  const app = read('src/App.jsx');
 
-  expect(layout).toMatch(/\.app-content\s*{[^}]*height:\s*100vh[^}]*min-height:\s*0/s);
-  expect(layout).toMatch(/\.page-header\s*{[^}]*flex:\s*0 0 auto/s);
-  expect(pages).not.toContain('var(--nav-height)');
-  for (const selector of ['ai-floor-page', 'journal-page', 'risk-page', 'analytics-page', 'watchlist-page', 'config-page', 'market-explorer']) {
-    expect(pages).toMatch(new RegExp(`\\.${selector}\\s*{[^}]*flex:\\s*1 1 auto;[^}]*min-height:\\s*0;`, 's'));
+  expect(app).toContain('h-screen min-h-0');
+  expect(app).toContain('shrink-0');
+  for (const page of ['AIFloorPage', 'JournalPage', 'PortfolioRiskPage', 'AnalyticsPage', 'WatchlistPage', 'ConfigPage', 'MarketExplorerPage']) {
+    expect(read(`src/pages/${page}.jsx`)).toMatch(/(?:min-h-0|\[min-height:0\])/);
   }
 });
 
 test('tablet layout keeps the side rail until the mobile bottom-nav breakpoint', () => {
-  const styles = read('src/styles/pages.css');
-  const tabletStart = styles.indexOf('@media (max-width: 1100px)');
-  const tabletEnd = styles.indexOf('@media (max-width: 900px)', tabletStart);
-  const tabletBlock = styles.slice(tabletStart, tabletEnd);
+  const app = read('src/App.jsx');
 
-  expect(tabletBlock).not.toContain('.app-root');
-  expect(tabletBlock).not.toContain('.side-nav {');
-  expect(tabletBlock).not.toContain('.side-nav-links');
-  expect(styles).toMatch(/@media \(max-width: 768px\)[\s\S]*\.side-nav,\s*\.side-nav\.collapsed\s*{[^}]*position:\s*fixed/s);
+  expect(app).not.toContain('max-[1100px]:fixed');
+  expect(app).toContain('max-[768px]:fixed');
 });

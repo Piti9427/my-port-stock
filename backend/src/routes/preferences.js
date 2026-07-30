@@ -40,6 +40,7 @@ router.get("/", async (req, res, next) => {
         reporting_currency: "THB",
         disclosure_level: "beginner",
         theme: "light",
+        language: "th",
         onboarding_completed: false,
         onboarding_completed_at: null,
       });

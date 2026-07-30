@@ -2,7 +2,10 @@ import PropTypes from 'prop-types';
 
 export function AnalyticsFilters({ filters, modeOptions, onFilterChange, onReset, tickerOptions }) {
   return (
-    <div className="analytics-filters" aria-label="Analytics filters">
+    <div
+      className="grid grid-cols-[repeat(5,minmax(120px,1fr))_auto] items-end gap-3 max-[1100px]:grid-cols-3 max-[700px]:grid-cols-1 [&_label]:grid [&_label]:gap-2 [&_label]:text-xs [&_label]:font-bold [&_label]:text-text-secondary [&_select]:min-h-10 [&_select]:w-full [&_select]:rounded-sm [&_select]:border [&_select]:border-border-subtle [&_select]:bg-panel [&_select]:px-3 [&_select]:py-2 [&_select]:text-sm [&_select]:text-foreground"
+      aria-label="Analytics filters"
+    >
       <label>
         <span>Ticker</span>
         <select aria-label="Ticker filter" value={filters.ticker} onChange={(event) => onFilterChange('ticker', event.target.value)}>
@@ -33,7 +36,11 @@ export function AnalyticsFilters({ filters, modeOptions, onFilterChange, onReset
         <span>To</span>
         <input aria-label="End date filter" type="date" value={filters.end} onChange={(event) => onFilterChange('end', event.target.value)} />
       </label>
-      <button className="btn-secondary" type="button" onClick={onReset}>
+      <button
+        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-border-subtle bg-transparent px-5 py-2.5 font-sans text-sm font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:text-text-muted"
+        type="button"
+        onClick={onReset}
+      >
         Reset
       </button>
     </div>

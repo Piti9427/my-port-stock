@@ -3,8 +3,21 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import ConfigPage from '../src/pages/ConfigPage.jsx';
+import { PreferencesContext } from '../src/preferences/PreferencesContext.jsx';
 
 const root = path.resolve(__dirname, '..');
+const preferenceContext = {
+  preferences: { language: 'en', theme: 'light' },
+  savePreferences: vi.fn(),
+};
+
+function renderConfig() {
+  return render(
+    <PreferencesContext.Provider value={preferenceContext}>
+      <ConfigPage />
+    </PreferencesContext.Provider>
+  );
+}
 
 beforeEach(() => {
   localStorage.clear();
@@ -12,20 +25,21 @@ beforeEach(() => {
 });
 
 test('Config page exposes production settings sections with sidebar navigation', () => {
-  render(<ConfigPage />);
+  renderConfig();
 
   const nav = screen.getByRole('navigation', { name: 'Settings sections' });
   for (const section of ['General', 'API Keys', 'Risk Parameters', 'Notifications', 'Data Management']) {
     expect(within(nav).getByRole('button', { name: section })).toBeInTheDocument();
   }
 
-  expect(screen.getByRole('heading', { name: 'General' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'General Settings' })).toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'General Settings' })).toBeInTheDocument();
   fireEvent.click(within(nav).getByRole('button', { name: 'Risk Parameters' }));
   expect(screen.getByRole('heading', { name: 'Risk Parameters' })).toBeInTheDocument();
 });
 
 test('Config page saves only the active section and shows section-specific unsaved state', () => {
-  render(<ConfigPage />);
+  renderConfig();
 
   const nav = screen.getByRole('navigation', { name: 'Settings sections' });
   fireEvent.click(within(nav).getByRole('button', { name: 'Risk Parameters' }));
@@ -41,7 +55,7 @@ test('Config page saves only the active section and shows section-specific unsav
 });
 
 test('Config API key section masks secrets and never stores API key in localStorage', () => {
-  render(<ConfigPage />);
+  renderConfig();
 
   fireEvent.click(screen.getByRole('button', { name: 'API Keys' }));
   const apiKeyInput = screen.getByLabelText('Gemini API key');
@@ -59,4 +73,12 @@ test('ConfigPage stays orchestration-only after section extraction', () => {
 
   expect(source.length).toBeLessThan(5000);
   expect(source).toContain("from '../components/config/'");
+});
+
+test('Config language controls show English copy when English is selected', () => {
+  renderConfig();
+
+  expect(screen.getByText('Language')).toBeInTheDocument();
+  expect(screen.getByText('Choose interface display language (Thai or English)')).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: 'Thai (TH)' })).toBeInTheDocument();
 });

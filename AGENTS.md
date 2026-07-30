@@ -13,23 +13,50 @@ This is the canonical instruction entrypoint for the MyPortStock workspace.
 1. `CONTEXT.md` - canonical investment language and term boundaries.
 2. `INVESTMENT_CIO_PERSONA.md` - primary persona, decision framework, response rules, and engineering/database behavior.
 3. `ELITE_INVESTOR_SOP.md` - investment SOP, risk management, scoring gates, execution modes, and portfolio constraints.
-4. `PROJECT_MEMORY_INDEX.md` - compact keyword index for durable decisions and prior plans; open linked notes only when relevant.
-5. `stock_portfolio.md` - portfolio/watchlist snapshot; use as hypothesis only until refreshed with current market data.
-6. `trade_journal.md` - active-trade thesis log, post-mortem archive, and learning-loop evidence.
-7. `GEMINI.md` - runtime guardrails for data integrity and simulation consistency.
+4. `docs/DESIGN_SYSTEM_AND_REUSABILITY.md` - canonical System Design & 100% Reusable Component Specification for UI/Frontend work.
+5. `PROJECT_MEMORY_INDEX.md` - compact keyword index for durable decisions and prior plans; open linked notes only when relevant.
+6. `stock_portfolio.md` - portfolio/watchlist snapshot; use as hypothesis only until refreshed with current market data.
+7. `trade_journal.md` - active-trade thesis log, post-mortem archive, and learning-loop evidence.
+8. `GEMINI.md` - runtime guardrails for data integrity and simulation consistency.
 
-## Mandatory Behavior
+## Task Domain Boundary
 
-- Follow `INVESTMENT_CIO_PERSONA.md` for investment, portfolio, architecture, database, and DevOps answers.
+Classify every task before acting:
+
+- **Engineering:** source code, tests, UI, APIs, database, configuration, documentation, CI/CD, and deployment.
+- **Investment:** market analysis, portfolio decisions, trade execution, position sizing, entry, stop, target, and journal updates.
+- **Mixed:** apply each domain's rules only to its corresponding part.
+- Engineering work must not invoke investment workflows unless it changes investment-decision behavior.
+- Investment work must not mutate application code unless the user explicitly requests implementation.
+- A code refactor must not change Buy/Add/Wait rules, scoring, gates, or portfolio constraints unless that behavior change is explicitly in scope and covered by regression tests.
+
+## General Behavior
+
 - Use Thai when the user writes Thai and English when the user writes English.
 - Start with a concise `TL;DR` and end with actionable next steps.
+- When a discussion creates a durable decision, plan, watchlist update, risk rule, or unresolved follow-up, append one compact keyword entry to `PROJECT_MEMORY_INDEX.md`. Create a detailed note under `notes/` only when the index entry would become too long.
+- Do not bloat context by reading all notes. Read `PROJECT_MEMORY_INDEX.md` first, then open only the linked note whose keyword matches the current request.
+
+## Engineering Change Contract
+
+- Before modifying code, configuration, tests, migrations, scripts, or documentation, inspect the current repository conventions and relevant source-of-truth files.
+- For library, framework, SDK, API, CLI, or cloud-service work, consult current official documentation through Context7 before implementation. Repository code, tests, pinned versions, and configuration remain authoritative when they differ from generic documentation.
+- After any task that mutates one or more repository files, run `npm run check:pr` from the repository root.
+- Any later file mutation, including a one-line fix or documentation-only change, invalidates the previous result and requires a new full `npm run check:pr`.
+- Targeted checks may accelerate diagnosis, but they never replace the final full `npm run check:pr`.
+- Do not claim completion unless the latest full run after the final mutation reports every required gate as `PASS`.
+- If a gate fails, diagnose and fix the actual cause, then rerun the complete suite. If environment failure prevents verification, report the exact blocker and do not mark the task complete.
+- Never run multiple `npm run check:pr` processes concurrently. They share Playwright ports and Supabase containers and can break each other.
+- A lower-cost Codex agent/model may perform read-only inspection, simple review, or targeted preflight checks when available and authorized. Its result never replaces command output, the generated PR report, or final verification by the owning agent.
+
+## Investment Behavior
+
+- Follow `INVESTMENT_CIO_PERSONA.md` and `ELITE_INVESTOR_SOP.md` for investment and portfolio answers.
 - Verify current market data before giving actionable stock price levels, technicals, earnings dates, guidance, consensus, exchange rates, or market-moving news.
 - Treat stale watchlist prices as context, not execution data.
 - Review `trade_journal.md` before advising on an existing position, repeat ticker, or strategy adjustment.
 - Log every executed trade thesis and update post-mortems after exits so future advice learns from actual outcomes.
 - **Dynamic Scoping & Discovery:** When the user asks a broad investment recommendation question (e.g. 'มีหุ้นแนะนำไหม', 'คืนนี้ซื้ออะไรดี') without specifying specific tickers or a narrow theme, do not default to the same pre-defined set of tech/watchlist stocks. Instead, proactively ask clarifying questions (using the `ask_question` tool) to scope down the timeframe (Decision Mode), sectors/themes, and risk tolerance. Once scoped, dynamically search the web or database to discover fresh candidate tickers in those sectors, then pass them through the standard SOP gates.
-- When a discussion creates a durable decision, plan, watchlist update, risk rule, or unresolved follow-up, append one compact keyword entry to `PROJECT_MEMORY_INDEX.md`. Create a detailed note under `notes/` only when the index entry would become too long.
-- Do not bloat context by reading all notes. Read `PROJECT_MEMORY_INDEX.md` first, then open only the linked note whose keyword matches the current request.
 
 ## Skill Workflow Guide
 

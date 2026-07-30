@@ -1,4 +1,6 @@
 import { DataStamp } from '../ui/DataStamp.jsx';
+import { cn } from '../../lib/utils.js';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 function numberValue(value) {
   const numeric = Number(value);
@@ -17,6 +19,7 @@ function formatMoney(value, { signed = false } = {}) {
 }
 
 export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', timestamp = null, stale = false }) {
+  const { t } = useTranslation();
   const metrics = holdings.reduce(
     (result, holding) => {
       const shares = numberValue(holding.shares);
@@ -50,38 +53,56 @@ export function PortfolioSummary({ holdings = [], source = 'Supabase holdings', 
   const isDrawdownBreached = drawdownPct >= 15;
 
   return (
-    <section className="portfolio-summary" role="region" aria-label="Portfolio summary">
+    <section
+      className="relative grid min-w-0 overflow-hidden rounded-xl border border-border bg-surface text-foreground md:grid-cols-[minmax(220px,1.2fr)_minmax(0,1.8fr)]"
+      role="region"
+      aria-label="Portfolio summary"
+    >
       {isDrawdownBreached && (
-        <div className="drawdown-banner">
+        <div className="col-span-full m-4 mb-0 flex items-center gap-2 rounded-lg border border-fin-loss bg-fin-loss-dim px-3 py-2.5 font-mono text-xs font-semibold text-fin-loss">
           <span>🛑 DRAWDOWN LIMIT HIT — New buys suspended ({drawdownPct.toFixed(1)}% / 15%)</span>
         </div>
       )}
-      <div className="portfolio-summary-primary">
-        <span className="portfolio-summary-label">มูลค่ารวมพอร์ต</span>
-        <strong className="portfolio-summary-value">{formatMoney(metrics.totalValue)}</strong>
+      <div className="flex flex-col justify-center gap-2 border-b border-border p-6 md:border-b-0 md:border-r">
+        <span className="text-[0.72rem] font-semibold uppercase tracking-wider text-text-secondary">{t('dashboard.total_value')}</span>
+        <strong className="[color:var(--text-primary)] font-mono [font-size:2rem] [line-height:1.1] font-mono text-[2.2rem] font-bold leading-none tracking-tight text-foreground tabular-nums">
+          {formatMoney(metrics.totalValue)}
+        </strong>
         <DataStamp source={source} timestamp={timestamp} stale={stale} />
       </div>
-      <dl className="portfolio-summary-metrics">
-        <div>
-          <dt>กำไร/ขาดทุนรายวัน</dt>
-          <dd className={metrics.dayPl >= 0 ? 'semantic-positive' : 'semantic-negative'}>
+      <dl className="grid gap-px bg-border [grid-template-columns:repeat(auto-fit,minmax(130px,1fr))]">
+        <div className="flex min-w-0 flex-col justify-center gap-2 bg-surface p-5">
+          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">{t('dashboard.daily_pl')}</dt>
+          <dd
+            className={cn(
+              'flex items-center gap-1.5 font-mono text-base font-semibold tabular-nums',
+              metrics.dayPl >= 0 ? 'text-fin-profit' : 'text-fin-loss'
+            )}
+          >
             {formatMoney(metrics.dayPl, { signed: true })}
-            <span>{dayPlPct == null ? '—' : `${dayPlPct >= 0 ? '+' : ''}${dayPlPct.toFixed(2)}%`}</span>
+            <span className="text-xs">{dayPlPct == null ? '—' : `${dayPlPct >= 0 ? '+' : ''}${dayPlPct.toFixed(2)}%`}</span>
           </dd>
         </div>
-        <div>
-          <dt>กำไร/ขาดทุนรวม</dt>
-          <dd className={totalPl >= 0 ? 'semantic-positive' : 'semantic-negative'}>{formatMoney(totalPl, { signed: true })}</dd>
+        <div className="flex min-w-0 flex-col justify-center gap-2 bg-surface p-5">
+          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">{t('dashboard.total_pl')}</dt>
+          <dd className={cn('font-mono text-base font-semibold tabular-nums', totalPl >= 0 ? 'text-fin-profit' : 'text-fin-loss')}>
+            {formatMoney(totalPl, { signed: true })}
+          </dd>
         </div>
-        <div>
-          <dt>Portfolio Beta</dt>
-          <dd style={{ color: portfolioBeta > 1.2 ? 'var(--fin-loss)' : portfolioBeta < 0.8 ? 'var(--accent-primary)' : 'var(--fin-profit)' }}>
+        <div className="flex min-w-0 flex-col justify-center gap-2 bg-surface p-5">
+          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">Portfolio Beta</dt>
+          <dd
+            className={cn(
+              'font-mono text-base font-semibold tabular-nums',
+              portfolioBeta > 1.2 ? 'text-fin-loss' : portfolioBeta < 0.8 ? 'text-fin-info' : 'text-fin-profit'
+            )}
+          >
             {portfolioBeta.toFixed(2)}
           </dd>
         </div>
-        <div>
-          <dt>จำนวนสถานะ</dt>
-          <dd>{holdings.length}</dd>
+        <div className="flex min-w-0 flex-col justify-center gap-2 bg-surface p-5">
+          <dt className="mb-1 text-[0.72rem] font-medium text-text-secondary">{t('dashboard.position_count')}</dt>
+          <dd className="font-mono text-base font-semibold text-foreground tabular-nums">{holdings.length}</dd>
         </div>
       </dl>
     </section>

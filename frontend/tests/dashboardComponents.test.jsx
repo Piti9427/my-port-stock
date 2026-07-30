@@ -7,6 +7,7 @@ import { PortfolioSummary } from '../src/components/dashboard/PortfolioSummary.j
 import { QuickActions } from '../src/components/dashboard/QuickActions.jsx';
 import { WatchlistPanel } from '../src/components/dashboard/WatchlistPanel.jsx';
 import { ScenarioPlanner } from '../src/components/ScenarioPlanner.jsx';
+import { PreferencesContext } from '../src/preferences/PreferencesContext.jsx';
 
 const holdings = [
   {
@@ -32,13 +33,28 @@ const holdings = [
 ];
 
 describe('Dashboard extracted components', () => {
+  test('English preference translates dashboard actions, metrics, and scenario planner', () => {
+    render(
+      <PreferencesContext.Provider value={{ preferences: { language: 'en' } }}>
+        <PortfolioSummary holdings={holdings} />
+        <QuickActions onAnalyze={() => {}} onLogTrade={() => {}} onAddWatchlist={() => {}} />
+        <ScenarioPlanner open ticker="NVDA" onClose={() => {}} />
+      </PreferencesContext.Provider>
+    );
+
+    expect(screen.getByText('Total Portfolio Value')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Analyze Stock' })).toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: 'Current Shares' })).toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: 'Stop Loss' })).toBeInTheDocument();
+  });
+
   test('PortfolioSummary makes total value the north-star metric with semantic P/L', () => {
     render(<PortfolioSummary holdings={holdings} source="Supabase holdings" stale />);
 
     expect(screen.getByRole('region', { name: /Portfolio summary/i })).toBeInTheDocument();
-    expect(screen.getByText('฿400')).toHaveClass('portfolio-summary-value');
-    expect(screen.getByText('-฿1')).toHaveClass('semantic-negative');
-    expect(screen.getByText('+฿20')).toHaveClass('semantic-positive');
+    expect(screen.getByText('฿400')).toHaveClass('font-mono');
+    expect(screen.getByText('-฿1')).toHaveClass('text-fin-loss');
+    expect(screen.getByText('+฿20')).toHaveClass('text-fin-profit');
     expect(screen.getByText('Supabase holdings')).toBeInTheDocument();
     expect(screen.getByText('Stale')).toBeInTheDocument();
   });

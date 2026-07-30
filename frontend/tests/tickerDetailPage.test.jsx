@@ -102,7 +102,7 @@ describe('TickerDetailPage', () => {
     expect(screen.getByText(/Gate: Pass/i)).toBeInTheDocument();
     expect(screen.getByText(/Supabase per-user context/i)).toBeInTheDocument();
     expect(screen.getByText(/Shares/i)).toBeInTheDocument();
-    expect(screen.getByText('2', { selector: '.ticker-detail-value' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Shares 2')).toBeInTheDocument();
     expect(screen.getByText(/Yahoo Finance API/)).toBeInTheDocument();
 
     // Verify institutional metrics render correctly
@@ -194,7 +194,7 @@ describe('TickerDetailPage', () => {
         '/api/analyze',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({ ticker: 'NVDA', decision_mode: 'Swing Trade' }),
+          body: JSON.stringify({ ticker: 'NVDA', decision_mode: 'Swing Trade', language: 'th' }),
           headers: expect.objectContaining({ Authorization: 'Bearer token_123' }),
         })
       );

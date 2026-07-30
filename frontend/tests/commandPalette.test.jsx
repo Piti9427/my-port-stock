@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, expect, test, vi } from 'vitest';
 import CommandPalette from '../src/components/CommandPalette.jsx';
+import { PreferencesContext } from '../src/preferences/PreferencesContext.jsx';
 
 vi.mock('../src/auth/clerkAdapter', () => ({
   useAuth: () => ({
@@ -100,4 +101,21 @@ test('Command Palette traps focus, closes from any option, and restores its trig
 
   expect(screen.queryByRole('dialog', { name: /Command Palette/i })).not.toBeInTheDocument();
   await waitFor(() => expect(trigger).toHaveFocus());
+});
+
+test('Command Palette shows English page commands when English is selected', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse([])));
+
+  render(
+    <PreferencesContext.Provider value={{ preferences: { language: 'en' } }}>
+      <MemoryRouter initialEntries={['/']}>
+        <CommandPaletteHarness />
+      </MemoryRouter>
+    </PreferencesContext.Provider>
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: 'Open palette' }));
+
+  expect(await screen.findByRole('option', { name: /Dashboard Overview/i })).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: /Trade Journal/i })).toBeInTheDocument();
 });

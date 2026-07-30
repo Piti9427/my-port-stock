@@ -38,12 +38,12 @@ describe('Dark Terminal Product UI theme contract', () => {
     expect(tokenValue('--border-color')).toBe('var(--border-subtle)');
   });
 
-  test('applies the same dark terminal contract to Clerk auth surfaces', () => {
+  test('maps Clerk auth surfaces to the same semantic theme contract', () => {
     expect(main).toContain('const clerkAppearance = {');
-    expect(main).toContain("colorBackground: '#111111'");
-    expect(main).toContain("colorForeground: '#ededed'");
-    expect(main).toContain("colorInput: '#171717'");
-    expect(main).toContain("colorBorder: '#262626'");
+    expect(main).toContain("colorBackground: 'var(--surface-elevated)'");
+    expect(main).toContain("colorForeground: 'var(--text-primary)'");
+    expect(main).toContain("colorInput: 'var(--surface)'");
+    expect(main).toContain("colorBorder: 'var(--border)'");
     expect(main).toContain('appearance={clerkAppearance}');
   });
 });

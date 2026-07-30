@@ -25,7 +25,7 @@ const SEQUENCE_ROUTES = {
 };
 
 function ShortcutKbd({ children }) {
-  return <kbd className="shortcut-kbd">{children}</kbd>;
+  return <kbd className="rounded border border-border bg-surface px-2 py-0.5 font-mono text-sm">{children}</kbd>;
 }
 
 ShortcutKbd.propTypes = {
@@ -108,32 +108,40 @@ export default function KeyboardShortcuts() {
   if (!showHelp) return null;
 
   return (
-    <div className="shortcut-backdrop" onClick={closeHelp}>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-overlay p-5" onClick={closeHelp}>
       <div
-        className="glass-card shortcut-dialog"
+        className="w-full max-w-[420px] rounded-md border border-border bg-surface-elevated p-6"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         onClick={(event) => event.stopPropagation()}
       >
-        <header className="shortcut-dialog-header">
-          <h2 id={titleId}>Keyboard Shortcuts</h2>
-          <button ref={closeButtonRef} className="ui-icon-button" type="button" onClick={closeHelp} aria-label="Close keyboard shortcuts">
+        <header className="mb-5 flex items-center justify-between gap-4">
+          <h2 id={titleId} className="text-base text-foreground">
+            Keyboard Shortcuts
+          </h2>
+          <button
+            ref={closeButtonRef}
+            className="inline-flex size-8 items-center justify-center rounded-md border border-border bg-surface text-text-secondary transition-colors hover:border-border-hover hover:text-foreground"
+            type="button"
+            onClick={closeHelp}
+            aria-label="Close keyboard shortcuts"
+          >
             <X size={16} aria-hidden="true" />
           </button>
         </header>
-        <ul className="shortcut-list">
+        <ul className="m-0 flex list-none flex-col gap-3 p-0 text-text-secondary">
           {HELP_SHORTCUTS.map((shortcut) => (
-            <li className="shortcut-row" key={shortcut.label}>
+            <li className="flex items-center justify-between gap-4" key={shortcut.label}>
               <span>{shortcut.label}</span>
-              <span className="shortcut-keys">
+              <span className="flex items-center gap-1">
                 {shortcut.keys.map((key) => (
                   <ShortcutKbd key={key}>{key}</ShortcutKbd>
                 ))}
               </span>
             </li>
           ))}
-          <li className="shortcut-row shortcut-row-help">
+          <li className="mt-3 flex items-center justify-between gap-4 border-t border-border pt-4">
             <span>Show Help</span>
             <ShortcutKbd>?</ShortcutKbd>
           </li>

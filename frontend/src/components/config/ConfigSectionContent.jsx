@@ -1,20 +1,33 @@
 import PropTypes from 'prop-types';
+import { useId } from 'react';
 import { NumberField, SliderField, ToggleField } from './ConfigFields.jsx';
 import { usePreferences } from '../../hooks/usePreferences';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 function SectionFrame({ title, description, children, dirty, onSave }) {
+  const headingId = useId();
+
   return (
-    <section className="config-section-content" aria-labelledby={`config-${title}`}>
-      <div className="config-section-title">
-        <h2 id={`config-${title}`}>{title}</h2>
+    <section className="flex min-w-0 flex-col" aria-labelledby={headingId}>
+      <div className="mb-6 [&_h2]:text-xl [&_h2]:font-semibold [&_p]:mt-1 [&_p]:text-sm [&_p]:text-text-secondary">
+        <h2 id={headingId}>{title}</h2>
         <p>{description}</p>
       </div>
-      <div className="config-fields">{children}</div>
-      <div className="config-section-actions">
-        <button className="btn-analyze" onClick={onSave} disabled={!dirty} aria-label={`Save ${title}`}>
+      <div className="flex flex-col gap-6">{children}</div>
+      <div className="[display:flex] [align-items:center] [gap:12px] [margin-top:28px] [padding-top:20px] [border-top:1px_solid_var(--border-subtle)]">
+        <button
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-transparent bg-brand px-5 py-3 font-sans text-sm font-bold tracking-wide text-text-inverse transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-hover disabled:text-text-secondary"
+          onClick={onSave}
+          disabled={!dirty}
+          aria-label={`Save ${title}`}
+        >
           Save {title}
         </button>
-        {dirty && <span className="unsaved-badge">Unsaved</span>}
+        {dirty && (
+          <span className="[background:rgba(var(--status-warning-rgb),_0.15)] [color:var(--fin-warning)] [font-size:0.7rem] [font-weight:700] [padding:2px_6px] [border-radius:4px] [display:flex] [align-items:center] [gap:4px] [text-transform:uppercase] [letter-spacing:0.05em] [margin-left:auto]">
+            Unsaved
+          </span>
+        )}
       </div>
     </section>
   );
@@ -30,53 +43,90 @@ SectionFrame.propTypes = {
 
 function GeneralSection({ config, update, dirty, onSave }) {
   const { preferences, savePreferences } = usePreferences();
+  const { t } = useTranslation();
 
   return (
-    <SectionFrame title="General" description="Display preferences and common decision modes." dirty={dirty} onSave={onSave}>
-      <div className="config-field">
-        <label className="config-field-label" htmlFor="currency">
-          Display currency
+    <SectionFrame title={t('config.general_settings')} description={t('config.general_description')} dirty={dirty} onSave={onSave}>
+      <div className="flex flex-col">
+        <label className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]" htmlFor="currency">
+          {t('config.display_currency')}
         </label>
-        <p className="config-field-desc">Used for local UI labels only; execution math still needs verified source data.</p>
-        <select id="currency" className="mode-select" value={config.currency} onChange={(event) => update('currency')(event.target.value)}>
+        <p className="[font-size:0.85rem] [color:var(--text-secondary)] [line-height:1.5] [margin-bottom:16px] [max-width:65ch]">
+          {t('config.display_currency_description')}
+        </p>
+        <select
+          id="currency"
+          className="min-h-10 w-full rounded-sm border border-border bg-panel-solid px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand"
+          value={config.currency}
+          onChange={(event) => update('currency')(event.target.value)}
+        >
           <option value="THB">THB</option>
           <option value="USD">USD</option>
         </select>
       </div>
-      <div className="config-field">
-        <label className="config-field-label" htmlFor="density">
-          Interface density
+      <div className="flex flex-col">
+        <label className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]" htmlFor="density">
+          {t('config.interface_density')}
         </label>
-        <p className="config-field-desc">Keeps repeated workflows scannable without changing analysis behavior.</p>
-        <select id="density" className="mode-select" value={config.density} onChange={(event) => update('density')(event.target.value)}>
-          <option value="comfortable">Comfortable</option>
-          <option value="compact">Compact</option>
+        <p className="[font-size:0.85rem] [color:var(--text-secondary)] [line-height:1.5] [margin-bottom:16px] [max-width:65ch]">
+          {t('config.interface_density_description')}
+        </p>
+        <select
+          id="density"
+          className="min-h-10 w-full rounded-sm border border-border bg-panel-solid px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand"
+          value={config.density}
+          onChange={(event) => update('density')(event.target.value)}
+        >
+          <option value="comfortable">{t('config.density_comfortable')}</option>
+          <option value="compact">{t('config.density_compact')}</option>
         </select>
       </div>
-      <div className="config-field">
-        <label className="config-field-label" htmlFor="theme">
-          Visual theme
+      <div className="flex flex-col">
+        <label className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]" htmlFor="theme">
+          {t('config.visual_theme')}
         </label>
-        <p className="config-field-desc">Choose between Light (default), Dark (terminal UI), or System theme.</p>
+        <p className="[font-size:0.85rem] [color:var(--text-secondary)] [line-height:1.5] [margin-bottom:16px] [max-width:65ch]">
+          {t('config.visual_theme_description')}
+        </p>
         <select
           id="theme"
-          className="mode-select"
+          className="min-h-10 w-full rounded-sm border border-border bg-panel-solid px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand"
           value={preferences.theme || 'light'}
           onChange={(event) => savePreferences({ theme: event.target.value })}
         >
-          <option value="light">Light Mode (Default)</option>
-          <option value="dark">Dark Mode</option>
-          <option value="system">System Mode</option>
+          <option value="light">{t('config.theme_light')}</option>
+          <option value="dark">{t('config.theme_dark')}</option>
+          <option value="system">{t('config.theme_system')}</option>
         </select>
       </div>
-      <div className="config-field">
-        <span className="config-field-label">Preferred decision modes</span>
-        <p className="config-field-desc">These only affect local display order.</p>
-        <div className="mode-chips">
+      <div className="flex flex-col">
+        <label className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]" htmlFor="language">
+          {t('config.language_heading')}
+        </label>
+        <p className="[font-size:0.85rem] [color:var(--text-secondary)] [line-height:1.5] [margin-bottom:16px] [max-width:65ch]">
+          {t('config.language_description')}
+        </p>
+        <select
+          id="language"
+          className="min-h-10 w-full rounded-sm border border-border bg-panel-solid px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand"
+          value={preferences.language || 'th'}
+          onChange={(event) => savePreferences({ language: event.target.value })}
+          aria-label="Language selection"
+        >
+          <option value="th">{t('config.lang_th')}</option>
+          <option value="en">{t('config.lang_en')}</option>
+        </select>
+      </div>
+      <div className="flex flex-col">
+        <span className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]">{t('config.preferred_modes')}</span>
+        <p className="[font-size:0.85rem] [color:var(--text-secondary)] [line-height:1.5] [margin-bottom:16px] [max-width:65ch]">
+          {t('config.preferred_modes_description')}
+        </p>
+        <div className="flex flex-wrap gap-2">
           {['Quick Trade', 'Swing Trade', 'Long-Term/Core', 'Exit Review'].map((mode) => (
             <button
               key={mode}
-              className="filter-chip"
+              className="whitespace-nowrap rounded-sm border border-border bg-transparent px-3 py-[5px] text-xs tracking-[0.05em] text-text-secondary transition-colors hover:border-border-medium hover:text-foreground data-[active=true]:border-brand data-[active=true]:bg-brand-dim data-[active=true]:text-brand"
               data-active={config.preferredModes.includes(mode)}
               onClick={() =>
                 update('preferredModes')(
@@ -97,27 +147,36 @@ function GeneralSection({ config, update, dirty, onSave }) {
 function ApiSection({ config, update, dirty, onSave }) {
   return (
     <SectionFrame title="API Keys" description="Secrets remain browser-local and are never written to localStorage." dirty={dirty} onSave={onSave}>
-      <div className="config-field">
-        <label className="config-field-label" htmlFor="geminiModel">
+      <div className="flex flex-col">
+        <label className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]" htmlFor="geminiModel">
           Gemini model
         </label>
-        <p className="config-field-desc">Model preference for local AI calls.</p>
-        <select id="geminiModel" className="mode-select" value={config.geminiModel} onChange={(event) => update('geminiModel')(event.target.value)}>
+        <p className="[font-size:0.85rem] [color:var(--text-secondary)] [line-height:1.5] [margin-bottom:16px] [max-width:65ch]">
+          Model preference for local AI calls.
+        </p>
+        <select
+          id="geminiModel"
+          className="min-h-10 w-full rounded-sm border border-border bg-panel-solid px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand"
+          value={config.geminiModel}
+          onChange={(event) => update('geminiModel')(event.target.value)}
+        >
           <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
           <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
           <option value="gemini-2.0-pro">Gemini 2.0 Pro</option>
         </select>
       </div>
-      <div className="config-field">
-        <label className="config-field-label" htmlFor="apiKey">
+      <div className="flex flex-col">
+        <label className="[font-size:0.95rem] [font-weight:600] [color:var(--text-primary)]" htmlFor="apiKey">
           Gemini API key
         </label>
-        <p className="config-field-desc">Masked in UI. Saving marks this section clean but excludes the key from persistent browser storage.</p>
+        <p className="[font-size:0.85rem] [color:var(--text-secondary)] [line-height:1.5] [margin-bottom:16px] [max-width:65ch]">
+          Masked in UI. Saving marks this section clean but excludes the key from persistent browser storage.
+        </p>
         <input
           id="apiKey"
           aria-label="Gemini API key"
           type="password"
-          className="form-input"
+          className="min-h-10 w-full rounded-sm border border-border bg-panel-solid px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand"
           value={config.apiKey}
           onChange={(event) => update('apiKey')(event.target.value)}
           autoComplete="off"
@@ -251,20 +310,23 @@ function DataSection({ dirty, onSave, onReset }) {
       dirty={dirty}
       onSave={onSave}
     >
-      <div className="config-status-block">
-        <div className="config-status-title">Storage scope</div>
-        <div className="config-status-item">
-          <span className="config-status-dot done" />
+      <div className="grid gap-3 rounded-md border border-border-subtle bg-panel-solid p-4">
+        <div className="text-xs font-bold uppercase tracking-wide text-text-secondary">Storage scope</div>
+        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+          <span className="size-2 shrink-0 rounded-full bg-brand transition-colors" />
           <span>Preferences</span>
-          <span className="config-status-meta">Browser localStorage</span>
+          <span className="[color:var(--text-secondary)] [font-size:0.78rem]">Browser localStorage</span>
         </div>
-        <div className="config-status-item">
-          <span className="config-status-dot active" />
+        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+          <span className="size-2 shrink-0 rounded-full bg-fin-profit transition-colors" />
           <span>Portfolio / Journal</span>
-          <span className="config-status-meta">Supabase runtime tables</span>
+          <span className="[color:var(--text-secondary)] [font-size:0.78rem]">Supabase runtime tables</span>
         </div>
       </div>
-      <button className="btn-secondary config-reset-button" onClick={onReset}>
+      <button
+        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-border-subtle bg-transparent px-5 py-2.5 font-sans text-sm font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:text-text-muted"
+        onClick={onReset}
+      >
         Reset local preferences
       </button>
     </SectionFrame>

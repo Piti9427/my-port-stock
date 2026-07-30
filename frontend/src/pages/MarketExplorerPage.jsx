@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import { Search, TrendingUp, TrendingDown, Zap, ChevronRight, X, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { usePreferences } from '../hooks/usePreferences';
+import { useTranslation } from '../i18n/useTranslation.js';
+import { cn } from '../lib/utils';
 
 /* ─── Default ticker universe ─────────────────────────────── */
 const TICKERS = [
@@ -247,14 +249,8 @@ function TradingViewChart({ symbol }) {
   const src = `https://www.tradingview-widget.com/embed-widget/advanced-chart/?locale=en#${encodeURIComponent(JSON.stringify(config))}`;
 
   return (
-    <div className="tradingview-widget-container" style={{ height: '100%', width: '100%' }}>
-      <iframe
-        title={`${symbol} TradingView chart`}
-        src={src}
-        loading="lazy"
-        allow="fullscreen"
-        style={{ width: '100%', height: '100%', border: 0 }}
-      />
+    <div className="tradingview-widget-container h-full w-full">
+      <iframe title={`${symbol} TradingView chart`} src={src} loading="lazy" allow="fullscreen" className="h-full w-full border-0" />
     </div>
   );
 }
@@ -264,21 +260,40 @@ function TickerRow({ ticker, isActive, onSelect, onAnalyze }) {
   const symbol = displaySymbol(ticker.symbol);
 
   return (
-    <div className={`ticker-row${isActive ? ' ticker-row--active' : ''}`} role="option" aria-selected={isActive}>
-      <button className="ticker-row__select" type="button" onClick={onSelect} aria-pressed={isActive}>
-        <div className="ticker-row__icon" data-market={ticker.market}>
+    <div
+      className={cn(
+        'flex w-full items-center gap-2 rounded-sm border px-2 py-1.5 transition-colors',
+        isActive ? 'border-brand bg-surface-hover' : 'border-transparent hover:border-border-subtle hover:bg-surface-hover'
+      )}
+      role="listitem"
+    >
+      <button
+        className="flex min-w-0 flex-1 items-center gap-2 rounded-sm bg-transparent px-1 py-1 text-left text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        type="button"
+        onClick={onSelect}
+        aria-pressed={isActive}
+      >
+        <div
+          className="grid size-8 shrink-0 place-items-center rounded-sm border border-border-subtle bg-panel-solid font-mono text-[0.6rem] font-bold text-text-secondary"
+          data-market={ticker.market}
+        >
           {symbol.slice(0, 3)}
         </div>
-        <div className="ticker-row__info">
-          <span className="ticker-row__symbol">{symbol}</span>
-          <span className="ticker-row__name">{ticker.name}</span>
+        <div className="min-w-0 flex-1">
+          <span className="block truncate font-mono text-xs font-bold">{symbol}</span>
+          <span className="block truncate text-xs text-text-secondary">{ticker.name}</span>
         </div>
-        <div className="ticker-row__meta">
-          <span className="ticker-row__market">{ticker.market}</span>
-          {isActive && <ChevronRight size={12} className="ticker-row__arrow" />}
+        <div className="flex shrink-0 items-center gap-1 text-[0.7rem] text-text-secondary">
+          <span>{ticker.market}</span>
+          {isActive && <ChevronRight size={12} aria-hidden="true" />}
         </div>
       </button>
-      <button className="ticker-row__quick-analyze" type="button" onClick={onAnalyze} aria-label={`Quick analyze ${symbol}`}>
+      <button
+        className="grid size-9 shrink-0 place-items-center rounded-sm border border-border-subtle bg-panel-solid text-text-secondary hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        type="button"
+        onClick={onAnalyze}
+        aria-label={`Quick analyze ${symbol}`}
+      >
         <Zap size={12} aria-hidden="true" />
       </button>
     </div>
@@ -303,6 +318,7 @@ TickerRow.propTypes = {
 
 export default function MarketExplorerPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(TICKERS[0]);
   const [priceData, setPriceData] = useState(null);
@@ -380,19 +396,25 @@ export default function MarketExplorerPage() {
   };
 
   return (
-    <div className="market-explorer">
+    <div className="[display:grid] [grid-template-columns:340px_1fr] [flex:1_1_auto] [min-height:0] [overflow:hidden] max-[768px]:[grid-template-columns:minmax(0,_1fr)] max-[768px]:[height:auto] max-[768px]:[overflow:visible]">
       {/* ── Left Panel: Ticker List ── */}
-      <aside className="explorer-sidebar glass-panel">
-        <div className="sidebar-header">
-          <div className="sidebar-title">ค้นหาหุ้น</div>
-          <div className="search-wrap">
-            <Search size={14} className="search-icon" aria-hidden="true" />
+      <aside className="[display:flex] [flex-direction:column] [border-radius:0] [border-top:none] [background:var(--bg-shell)] [backdrop-filter:none] [overflow:hidden] rounded-lg border border-border bg-panel shadow-none">
+        <div className="[padding:16px_16px_12px] [border-bottom:1px_solid_var(--border-subtle)] [flex-shrink:0]">
+          <div className="[font-size:0.75rem] [font-weight:600] [letter-spacing:0.08em] [text-transform:uppercase] [color:var(--text-secondary)] [margin-bottom:12px]">
+            {t('market.search_label')}
+          </div>
+          <div className="[position:relative] [display:flex] [align-items:center]">
+            <Search
+              size={14}
+              className="[position:absolute] [left:10px] [color:var(--text-secondary)] [pointer-events:none] [flex-shrink:0]"
+              aria-hidden="true"
+            />
             <input
               ref={searchRef}
               id="ticker-search"
-              className="search-input"
+              className="min-h-10 w-full rounded-sm border border-border bg-panel-solid pl-8 pr-14 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand"
               type="search"
-              placeholder="ค้นหาชื่อหุ้นหรือบริษัท..."
+              placeholder={t('market.search_placeholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search tickers"
@@ -400,22 +422,37 @@ export default function MarketExplorerPage() {
               spellCheck={false}
             />
             {query && (
-              <button className="search-clear" onClick={() => setQuery('')} aria-label="Clear search">
+              <button
+                className="[position:absolute] [right:36px] [background:none] [border:none] [color:var(--text-secondary)] [cursor:pointer] [padding:4px] [display:flex] [align-items:center] [border-radius:4px] [transition:color_0.15s] hover:[color:var(--text-primary)] max-[768px]:[min-width:44px] max-[768px]:[min-height:44px]"
+                onClick={() => setQuery('')}
+                aria-label="Clear search"
+              >
                 <X size={12} />
               </button>
             )}
-            <kbd className="search-kbd" aria-hidden="true">
+            <kbd
+              className="pointer-events-none absolute right-2 rounded border border-border-subtle bg-surface-hover px-1.5 py-0.5 font-mono text-xs text-text-secondary"
+              aria-hidden="true"
+            >
               ⌘K
             </kbd>
           </div>
         </div>
 
-        <section className="market-overview" aria-label="Market overview">
-          <div className="market-overview__section">
-            <div className="market-overview__title">Market indices</div>
-            <div className="market-index-grid">
+        <section
+          className="[flex-shrink:0] [padding:10px_12px] [border-bottom:1px_solid_var(--border-subtle)] [display:flex] [flex-direction:column] [gap:10px] [max-height:310px] [overflow-y:auto]"
+          aria-label="Market overview"
+        >
+          <div className="flex flex-col gap-2 border-b border-border-subtle py-2">
+            <div className="text-[0.68rem] font-bold uppercase tracking-wide text-text-secondary">Market indices</div>
+            <div className="[display:grid] [gap:6px] [grid-template-columns:repeat(3,_minmax(0,_1fr))]">
               {MARKET_INDICES.map((index) => (
-                <button key={index.symbol} type="button" className="market-index-pill" onClick={() => handleSelectSymbol(index.symbol)}>
+                <button
+                  key={index.symbol}
+                  type="button"
+                  className="[border:1px_solid_var(--border-subtle)] [border-radius:var(--radius-xs)] [background:rgba(var(--text-inverse-rgb),_0.03)] [color:var(--text-secondary)] [cursor:pointer] [min-width:0] [padding:7px_8px] [display:flex] [align-items:center] [justify-content:space-between] [gap:6px] [font-size:0.72rem] [text-align:left] hover:[border-color:var(--border-medium)] hover:[background:var(--bg-panel-hover)] hover:[color:var(--text-primary)] [&_strong]:font-mono [&_strong]:[color:var(--text-primary)] [&_strong]:[font-size:0.7rem]"
+                  onClick={() => handleSelectSymbol(index.symbol)}
+                >
                   <span>{index.label}</span>
                   <strong>{index.symbol}</strong>
                 </button>
@@ -423,26 +460,36 @@ export default function MarketExplorerPage() {
             </div>
           </div>
 
-          <div className="market-overview__section">
-            <div className="market-overview__title">Sector overview</div>
-            <div className="market-sector-grid">
+          <div className="flex flex-col gap-2 border-b border-border-subtle py-2">
+            <div className="text-[0.68rem] font-bold uppercase tracking-wide text-text-secondary">Sector overview</div>
+            <div className="[display:grid] [gap:6px] [grid-template-columns:repeat(2,_minmax(0,_1fr))]">
               {sectorOverview.map((sector) => (
-                <button key={sector.sector} type="button" className="market-sector-cell" onClick={() => setQuery(sector.sector)}>
+                <button
+                  key={sector.sector}
+                  type="button"
+                  className="[border:1px_solid_var(--border-subtle)] [border-radius:var(--radius-xs)] [background:rgba(var(--text-inverse-rgb),_0.03)] [color:var(--text-secondary)] [cursor:pointer] [min-width:0] [padding:7px_8px] [display:flex] [align-items:center] [justify-content:space-between] [gap:6px] [font-size:0.72rem] [text-align:left] hover:[border-color:var(--border-medium)] hover:[background:var(--bg-panel-hover)] hover:[color:var(--text-primary)] [&_strong]:font-mono [&_strong]:[color:var(--text-primary)] [&_strong]:[font-size:0.7rem]"
+                  onClick={() => setQuery(sector.sector)}
+                >
                   <span>{sector.sector}</span>
                   <strong>{sector.count}</strong>
                 </button>
               ))}
             </div>
-            <div className="market-overview__note">Sector performance unavailable without verified current data</div>
+            <div className="text-pretty text-[0.68rem] leading-relaxed text-fin-warning">
+              Sector performance unavailable without verified current data
+            </div>
           </div>
 
-          <div className="market-overview__section">
-            <div className="market-overview__title">Theme watchlists</div>
-            <div className="theme-watchlist-groups">
+          <div className="flex flex-col gap-2 border-b border-border-subtle py-2">
+            <div className="text-[0.68rem] font-bold uppercase tracking-wide text-text-secondary">Theme watchlists</div>
+            <div className="[display:flex] [flex-direction:column] [gap:6px]">
               {THEME_GROUPS.map((group) => (
-                <div key={group.name} className="theme-watchlist-group">
+                <div
+                  key={group.name}
+                  className="[display:flex] [justify-content:space-between] [gap:8px] [align-items:center] [color:var(--text-secondary)] [font-size:0.72rem]"
+                >
                   <span>{group.name}</span>
-                  <div className="theme-symbols">
+                  <div className="flex flex-wrap justify-end gap-1 [&_button]:cursor-pointer [&_button]:rounded-sm [&_button]:border [&_button]:border-border-subtle [&_button]:bg-surface [&_button]:px-1.5 [&_button]:py-1 [&_button]:font-mono [&_button]:text-xs [&_button]:text-text-secondary [&_button:hover]:border-border-medium [&_button:hover]:bg-surface-hover [&_button:hover]:text-foreground">
                     {group.symbols.map((symbol) => (
                       <button key={symbol} type="button" onClick={() => handleQuickAnalyze(symbol)} aria-label={`Quick analyze ${symbol}`}>
                         {symbol}
@@ -455,11 +502,15 @@ export default function MarketExplorerPage() {
           </div>
         </section>
 
-        <div className="ticker-list" role="listbox" aria-label="Ticker list">
+        <div
+          className="[flex:1] [overflow-y:auto] [padding:6px_8px] [scrollbar-width:thin] [scrollbar-color:rgba(var(--text-inverse-rgb),_0.08)_transparent] [&::-webkit-scrollbar]:[width:4px] [&::-webkit-scrollbar-track]:[background:transparent] [&::-webkit-scrollbar-thumb]:[background:rgba(var(--text-inverse-rgb),_0.08)] [&::-webkit-scrollbar-thumb]:[border-radius:2px] max-[768px]:[flex:none] max-[768px]:[max-height:360px]"
+          role="list"
+          aria-label="Ticker list"
+        >
           {filtered.length === 0 ? (
-            <div className="ticker-empty">
-              <Search size={20} style={{ opacity: 0.3, marginBottom: 8 }} />
-              <p>ไม่พบผลลัพธ์สำหรับ "{query}"</p>
+            <div className="[display:flex] [flex-direction:column] [align-items:center] [justify-content:center] [padding:40px_16px] [color:var(--text-secondary)] [font-size:0.8rem] [text-align:center]">
+              <Search size={20} className="mb-2 opacity-30" />
+              <p>{t('market.no_results_query', { query })}</p>
             </div>
           ) : (
             filtered.map((ticker) => (
@@ -474,47 +525,56 @@ export default function MarketExplorerPage() {
           )}
         </div>
 
-        <div className="sidebar-footer">
-          <span>
-            {TICKERS.length} รายการ · แสดง {filtered.length} รายการ
-          </span>
+        <div className="[padding:10px_16px] [border-top:1px_solid_var(--border-subtle)] [font-size:0.7rem] [color:var(--text-secondary)] [flex-shrink:0]">
+          <span>{t('market.result_count', { total: TICKERS.length, shown: filtered.length })}</span>
         </div>
       </aside>
 
       {/* ── Right Panel: Chart ── */}
-      <section className="explorer-chart-panel" aria-label="Price chart">
+      <section className="[display:flex] [flex-direction:column] [overflow:hidden] max-[768px]:[min-height:620px]" aria-label="Price chart">
         {/* Chart Header */}
-        <div className="chart-header glass-panel">
-          <div className="chart-header__left">
-            <div className="chart-header__symbol">{selectedSymbol}</div>
-            <div className="chart-header__name">{selected.name}</div>
-            <span className="chart-header__badge" data-market={selected.market}>
+        <div className="[display:flex] [align-items:center] [justify-content:space-between] [padding:12px_20px] [border-radius:0] [border-top:none] [border-left:none] [border-right:none] [border-bottom:1px_solid_var(--border-subtle)] [background:var(--bg-panel)] [flex-shrink:0] [gap:16px] max-[768px]:[align-items:stretch] max-[768px]:[flex-direction:column] rounded-lg border border-border bg-panel shadow-none">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <div className="font-mono text-lg font-bold text-foreground">{selectedSymbol}</div>
+            <div className="min-w-0 truncate text-sm text-text-secondary">{selected.name}</div>
+            <span
+              className="rounded-full border border-border-subtle bg-surface-hover px-2 py-0.5 text-xs font-bold uppercase text-text-secondary"
+              data-market={selected.market}
+            >
               {selected.market}
             </span>
-            <span className="chart-header__sector">{selected.sector}</span>
-            <span className="data-stamp" style={{ marginLeft: 8 }}>
+            <span className="text-xs text-text-secondary">{selected.sector}</span>
+            <span className="ml-2 flex items-center gap-1 font-mono text-xs text-text-secondary">
               <Clock size={10} aria-hidden="true" />
               <span>Display quote only, not execution gate</span>
             </span>
-            <span className="quote-gate-note">Execution price requires Command Center quote gate</span>
+            <span className="[font-size:0.7rem] [color:var(--fin-warning)] [white-space:nowrap] max-[768px]:[white-space:normal]">
+              Execution price requires Command Center quote gate
+            </span>
           </div>
-          <div className="chart-header__right">
+          <div className="flex items-center gap-3 max-[768px]:w-full max-[768px]:justify-between">
             {priceLoading && (
-              <div className="price-skeleton">
-                <div className="skeleton-bar" style={{ width: 80 }} />
-                <div className="skeleton-bar" style={{ width: 50 }} />
+              <div className="[display:flex] [flex-direction:column] [gap:4px]">
+                <div className="h-3 w-20 animate-pulse rounded bg-surface-hover" />
+                <div className="h-3 w-12 animate-pulse rounded bg-surface-hover" />
               </div>
             )}
             {!priceLoading && !priceData && !selected.symbol.includes('USD') && (
-              <button className="btn-secondary" style={{ padding: '6px 12px', marginTop: 0 }} onClick={() => fetchPrice(selected.symbol)}>
+              <button
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-border-subtle bg-transparent px-3 py-1.5 font-sans text-sm font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:text-text-muted"
+                onClick={() => fetchPrice(selected.symbol)}
+              >
                 Retry quote
               </button>
             )}
             {!priceLoading && priceData && (
-              <div className="live-price">
+              <div className="[display:flex] [align-items:baseline] [gap:8px]">
                 <span
                   key={`${selected.symbol}-${priceData.price}`}
-                  className={`live-price__value data-update-flash ${priceData.change >= 0 ? 'data-update-flash--up' : 'data-update-flash--down'}`}
+                  className={cn(
+                    'flex items-baseline gap-2 rounded-sm',
+                    priceData.change >= 0 ? 'animate-[data-update-flash-up_0.6s_ease-out]' : 'animate-[data-update-flash-down_0.6s_ease-out]'
+                  )}
                 >
                   ฿
                   {priceData.price?.toLocaleString(undefined, {
@@ -523,7 +583,7 @@ export default function MarketExplorerPage() {
                   }) ?? '—'}
                 </span>
                 {priceData.change != null && (
-                  <span className={`live-price__change ${priceData.change >= 0 ? 'up' : 'down'}`}>
+                  <span className={cn('flex items-baseline gap-2 font-mono text-xs', priceData.change >= 0 ? 'text-fin-profit' : 'text-fin-loss')}>
                     {priceData.change >= 0 ? <TrendingUp size={13} aria-hidden="true" /> : <TrendingDown size={13} aria-hidden="true" />}
                     {priceData.change >= 0 ? '+' : ''}
                     {priceData.changePct?.toFixed(2)}%
@@ -531,14 +591,18 @@ export default function MarketExplorerPage() {
                 )}
               </div>
             )}
-            <button className="btn-secondary market-detail-btn" onClick={handleOpenDetail} aria-label={`Open ${selectedSymbol} detail`}>
+            <button
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-border-subtle bg-transparent px-5 py-2.5 font-sans text-sm font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:text-text-muted"
+              onClick={handleOpenDetail}
+              aria-label={`Open ${selectedSymbol} detail`}
+            >
               Open detail
             </button>
             <button
               id="send-to-ai-btn"
-              className="btn-send-ai"
+              className="[&:active:not(:disabled)]:[transform:scale(0.98)_translateY(1px)] [display:flex] [align-items:center] [gap:6px] [padding:7px_14px] [background:var(--brand-primary)] [border:none] [border-radius:var(--radius-xs)] [color:var(--text-inverse)] [font-size:0.78rem] [font-weight:600] font-sans [cursor:pointer] [transition:transform_0.15s] [white-space:nowrap] hover:[transform:translateY(-1px)] active:[transform:translateY(0)]"
               onClick={() => handleQuickAnalyze(selected.symbol)}
-              title={`ส่ง ${selectedSymbol} ไปให้ AI วิเคราะห์`}
+              title={t('market.send_to_ai', { ticker: selectedSymbol })}
               aria-label={`Quick analyze ${selectedSymbol}`}
             >
               <Zap size={14} fill="currentColor" strokeWidth={0} aria-hidden="true" />
@@ -548,7 +612,7 @@ export default function MarketExplorerPage() {
         </div>
 
         {/* TradingView Chart */}
-        <div className="chart-canvas">
+        <div className="[flex:1] [overflow:hidden] [min-height:0] max-[768px]:[min-height:460px]">
           <TradingViewChart symbol={selected.symbol} />
         </div>
       </section>

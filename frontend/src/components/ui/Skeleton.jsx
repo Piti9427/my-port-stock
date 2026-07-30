@@ -1,22 +1,24 @@
+import { cn, cssVars } from '@/lib/utils';
+
 function TableSkeleton({ rows = 5, columns = 4 }) {
   return (
-    <div className="ui-data-table-wrap" aria-hidden="true" data-testid="table-skeleton">
-      <table className="ui-data-table">
-        <thead>
+    <div className="w-full overflow-x-auto rounded-lg border border-border bg-surface" aria-hidden="true" data-testid="table-skeleton">
+      <table className="w-full text-left text-xs border-collapse">
+        <thead className="border-b border-border bg-panel-solid text-text-secondary">
           <tr>
             {Array.from({ length: columns }).map((_, colIndex) => (
-              <th key={colIndex}>
-                <span className="ui-skeleton" style={{ height: '14px', width: '60px', display: 'block' }} />
+              <th key={colIndex} className="p-3">
+                <span className="block h-3.5 w-16 animate-pulse rounded bg-surface-hover" />
               </th>
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-border">
           {Array.from({ length: rows }).map((_, rowIndex) => (
             <tr key={rowIndex} data-testid="table-skeleton-row">
               {Array.from({ length: columns }).map((__, colIndex) => (
-                <td key={colIndex}>
-                  <span className="ui-skeleton" style={{ height: '16px', width: '80%', display: 'block' }} />
+                <td key={colIndex} className="p-3">
+                  <span className="block h-4 w-4/5 animate-pulse rounded bg-surface-hover" />
                 </td>
               ))}
             </tr>
@@ -27,10 +29,22 @@ function TableSkeleton({ rows = 5, columns = 4 }) {
   );
 }
 
-export function Skeleton({ variant = 'text', rows = 5, columns = 4, width = undefined, height = undefined }) {
+export function Skeleton({ variant = 'text', rows = 5, columns = 4, width = undefined, height = undefined, className = '' }) {
   if (variant === 'table') {
     return <TableSkeleton rows={rows} columns={columns} />;
   }
 
-  return <span className={`ui-skeleton ui-skeleton-${variant}`} data-testid={`skeleton-${variant}`} style={{ width, height }} aria-hidden="true" />;
+  return (
+    <span
+      className={cn(
+        'inline-block animate-pulse rounded bg-surface-hover [height:var(--skeleton-height)] [width:var(--skeleton-width)]',
+        variant === 'text' && !height && 'h-4',
+        variant === 'text' && !width && 'w-full',
+        className
+      )}
+      data-testid={`skeleton-${variant}`}
+      style={cssVars({ '--skeleton-width': width, '--skeleton-height': height })}
+      aria-hidden="true"
+    />
+  );
 }

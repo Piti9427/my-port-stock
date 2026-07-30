@@ -63,21 +63,29 @@ describe("API Routes", () => {
 
     const res = await request(app)
       .post("/api/analyze")
-      .send({ ticker: "not valid ticker", portfolioData: { shares: 10 } });
+      .send({
+        ticker: "not valid ticker",
+        portfolioData: { shares: 10 },
+        language: "en",
+      });
 
     assert.equal(res.statusCode, 200);
     assert.equal(res.body.status, "INSUFFICIENT_DATA");
+    assert.equal(res.body.language, "en");
   });
 
   it("fails closed on invalid chat ticker", async () => {
     const { app } = require("../server");
 
-    const res = await request(app)
-      .post("/api/chat")
-      .send({ ticker: "not valid ticker", message: "What changed?" });
+    const res = await request(app).post("/api/chat").send({
+      ticker: "not valid ticker",
+      message: "What changed?",
+      language: "fr",
+    });
 
     assert.equal(res.statusCode, 200);
     assert.equal(res.body.status, "INSUFFICIENT_DATA");
+    assert.equal(res.body.language, "th");
   });
 
   it("requires authenticated context before market chat", async () => {
@@ -99,7 +107,7 @@ describe("API Routes", () => {
       .send({ ticker: "NVDA", message: "hidden\u0000control" });
 
     assert.equal(res.statusCode, 400);
-    assert.deepEqual(res.body, { error: "Message must be 1-1000 characters" });
+    assert.equal(res.body?.error, "Message must be 1-1000 characters");
   });
 
   it("rejects market chat messages over 1,000 characters", async () => {
@@ -110,7 +118,7 @@ describe("API Routes", () => {
       .send({ ticker: "NVDA", message: "x".repeat(1001) });
 
     assert.equal(res.statusCode, 400);
-    assert.deepEqual(res.body, { error: "Message must be 1-1000 characters" });
+    assert.equal(res.body?.error, "Message must be 1-1000 characters");
   });
 
   it("allows tabs and newlines through market chat message validation", async () => {

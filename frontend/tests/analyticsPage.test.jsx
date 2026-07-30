@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { MemoryRouter, useLocation } from 'react-router';
 import { beforeEach, expect, test, vi } from 'vitest';
 import AnalyticsPage from '../src/pages/AnalyticsPage.jsx';
+import { PreferencesContext } from '../src/preferences/PreferencesContext.jsx';
 
 const getToken = vi.fn().mockResolvedValue('token_123');
 const fetchWithAuth = vi.fn();
@@ -52,12 +53,14 @@ function LocationProbe() {
   return <output aria-label="location">{location.search}</output>;
 }
 
-function renderAnalytics(initialPath = '/analytics') {
+function renderAnalytics(initialPath = '/analytics', language = 'en') {
   return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <AnalyticsPage />
-      <LocationProbe />
-    </MemoryRouter>
+    <PreferencesContext.Provider value={{ preferences: { language } }}>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <AnalyticsPage />
+        <LocationProbe />
+      </MemoryRouter>
+    </PreferencesContext.Provider>
   );
 }
 
@@ -82,6 +85,7 @@ test('Analytics page renders KPI cards and a cumulative equity curve from closed
   expect(screen.getByText('TSM -฿40')).toBeInTheDocument();
   expect(screen.getByRole('img', { name: 'Equity curve' })).toBeInTheDocument();
   expect(screen.getByText('Cumulative P/L +฿160')).toBeInTheDocument();
+  expect(screen.getByRole('cell', { name: 'Jun 1, 2026' })).toBeInTheDocument();
 
   await waitFor(() => expect(fetchWithAuth).toHaveBeenCalledTimes(1));
   await new Promise((resolve) => setTimeout(resolve, 50));
@@ -109,14 +113,22 @@ test('Analytics distinguishes no closed data from filters with no matching trade
   fetchWithAuth.mockResolvedValueOnce({ trades: [{ ticker: 'NVDA', status: 'OPEN', profit: 20 }] });
   renderAnalytics();
 
-  expect(await screen.findByText('ต้องมี trade ที่ปิดแล้วอย่างน้อย 1 รายการ')).toBeInTheDocument();
-  expect(screen.getByText('ยังไม่มีข้อมูลเพียงพอสำหรับกราฟ')).toBeInTheDocument();
+  expect(await screen.findByText('At least 1 closed trade is required to calculate performance metrics.')).toBeInTheDocument();
+  expect(screen.getByText('Not enough data for chart')).toBeInTheDocument();
 
   cleanup();
   fetchWithAuth.mockReset();
   fetchWithAuth.mockResolvedValue({ trades: closedTrades });
   renderAnalytics('/analytics?ticker=MSFT');
 
-  expect(await screen.findByText('ไม่มี trade ที่ตรงกับ filter นี้')).toBeInTheDocument();
-  expect(screen.getByText('ยังไม่มีข้อมูลเพียงพอสำหรับกราฟ')).toBeInTheDocument();
+  expect(await screen.findByText('No trades matching the selected filters.')).toBeInTheDocument();
+  expect(screen.getByText('Not enough data for chart')).toBeInTheDocument();
+});
+
+test('Analytics renders Thai equity labels and Thai dates when Thai is selected', async () => {
+  renderAnalytics('/analytics', 'th');
+
+  expect(await screen.findByRole('heading', { level: 2, name: 'สถิติผลงาน (Performance Analytics)' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 2, name: 'เส้นโค้งมูลค่าพอร์ต (Equity Curve)' })).toBeInTheDocument();
+  expect(screen.getByRole('cell', { name: '1 มิ.ย. 2569' })).toBeInTheDocument();
 });

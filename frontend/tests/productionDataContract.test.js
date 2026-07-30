@@ -23,8 +23,10 @@ afterEach(() => {
 
 test('Dashboard holdings use real empty portfolio copy instead of sample data copy', () => {
   const source = read('src/components/dashboard/HoldingsTable.jsx');
+  const translations = read('src/i18n/translations.js');
 
-  expect(source).toContain('No portfolio data yet');
+  expect(source).toContain("t('dashboard.empty_holdings_description')");
+  expect(translations).toContain('No portfolio data yet');
   expect(source).not.toMatch(/sample|mock|demo portfolio/i);
 });
 
@@ -72,14 +74,17 @@ test('Watchlist does not initialize live alert feed with hard-coded alerts', () 
 test('Deep analysis surfaces render tabbed SOP sections from structured payloads', () => {
   const commandCenter = read('src/pages/CommandCenterPage.jsx');
   const deepAnalysisTabs = read('src/components/DeepAnalysisTabs.jsx');
+  const translations = read('src/i18n/translations.js');
 
   expect(commandCenter).toContain('DeepAnalysisTabs');
   expect(commandCenter).toContain('deep_analysis');
 
-  expect(deepAnalysisTabs).toContain('สรุป & SWOT');
-  expect(deepAnalysisTabs).toContain('งบการเงิน & ปัจจัยพื้นฐาน');
-  expect(deepAnalysisTabs).toContain('สัญญาณเทคนิคอล');
-  expect(deepAnalysisTabs).toContain('แผนเทรด SOP');
+  expect(deepAnalysisTabs).toContain("labelKey: 'command.summary_tab'");
+  expect(deepAnalysisTabs).toContain("labelKey: 'command.fundamentals_tab'");
+  expect(deepAnalysisTabs).toContain("labelKey: 'command.technicals_tab'");
+  expect(deepAnalysisTabs).toContain("labelKey: 'command.trade_plan_tab'");
+  expect(translations).toContain('สรุป & SWOT');
+  expect(translations).toContain('Summary & SWOT');
 });
 
 test('App keeps Clerk auth by default but supports explicit dev UI auth bypass', () => {
@@ -104,19 +109,12 @@ test('App keeps Clerk auth by default but supports explicit dev UI auth bypass',
 test('Command Center has responsive layout contracts for small screens', () => {
   const commandCenter = read('src/pages/CommandCenterPage.jsx');
   const chatPanel = read('src/components/command-center/ChatPanel.jsx');
-  const css = readCssBundle();
 
-  expect(commandCenter).toContain('command-center-page command-workspace');
-  expect(commandCenter).toContain('command-workspace-header');
-  expect(commandCenter).toContain('command-progressive-grid');
-  expect(commandCenter).toContain('command-setup-column');
-  expect(commandCenter).toContain('command-results-column');
-  expect(chatPanel).toContain('command-chat-panel');
-  expect(css).toContain('@media (max-width: 900px)');
-  expect(css).toContain('.command-progressive-grid');
-  expect(css).toContain('.command-center-page.command-workspace');
-  expect(css).toContain('grid-template-columns: minmax(0, 1fr)');
-  expect(css).toContain('.command-chat-thread');
+  expect(commandCenter).toContain('max-[900px]:[grid-template-columns:minmax(0,_1fr)]');
+  expect(commandCenter).toContain('[grid-template-columns:minmax(280px,_340px)_minmax(0,_1fr)]');
+  expect(commandCenter).toContain('[align-content:start]');
+  expect(chatPanel).toContain('[overflow-y:auto]');
+  expect(chatPanel).toContain('max-[640px]');
 });
 
 test('Ticker drilldown route and entry points are wired through the product app', () => {
@@ -143,12 +141,12 @@ test('Command palette is wired as a global authenticated navigation surface', ()
 
   expect(app).toContain("from './components/CommandPalette'");
   expect(app).toContain('<CommandPalette');
-  expect(app).toContain('sidebar-cmd-hint');
-  expect(app).toContain('<kbd>⌘</kbd>');
-  expect(app).toContain('<kbd>K</kbd>');
+  expect(app).toContain('aria-label="Open Command Palette"');
+  expect(app).toMatch(/<kbd[^>]*>\s*⌘\s*<\/kbd>/);
+  expect(app).toMatch(/<kbd[^>]*>\s*K\s*<\/kbd>/);
   expect(keyboardShortcuts).toContain('Cmd+K');
-  expect(css).toContain('.command-palette-backdrop');
-  expect(css).toContain('.sidebar-cmd-hint');
+  expect(css).not.toContain('.command-palette-backdrop');
+  expect(css).not.toContain('.sidebar-cmd-hint');
 });
 
 test('fetchWithAuth sends auth headers and mutation options', async () => {

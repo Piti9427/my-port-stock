@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { beforeEach, expect, test, vi } from 'vitest';
 import TodayPage from '../src/pages/TodayPage.jsx';
+import { PreferencesContext } from '../src/preferences/PreferencesContext.jsx';
 
 const mockTodayData = {
   queue: [
@@ -71,20 +72,24 @@ function LocationProbe() {
   return <div data-testid="location">{`${location.pathname}${location.search}`}</div>;
 }
 
-function renderTodayPage() {
+function renderTodayPage(language) {
+  const content = (
+    <Routes>
+      <Route
+        path="*"
+        element={
+          <>
+            <TodayPage />
+            <LocationProbe />
+          </>
+        }
+      />
+    </Routes>
+  );
+
   return render(
     <MemoryRouter initialEntries={['/']}>
-      <Routes>
-        <Route
-          path="*"
-          element={
-            <>
-              <TodayPage />
-              <LocationProbe />
-            </>
-          }
-        />
-      </Routes>
+      {language ? <PreferencesContext.Provider value={{ preferences: { language } }}>{content}</PreferencesContext.Provider> : content}
     </MemoryRouter>
   );
 }
@@ -109,6 +114,12 @@ test('TodayPage renders priority queue and pulse metrics', () => {
   expect(screen.getByText('12.5% / 20%')).toBeInTheDocument();
   expect(screen.getByText('Technology')).toBeInTheDocument();
   expect(screen.getByText('42% > 35%')).toBeInTheDocument();
+});
+
+test('TodayPage renders translated page copy in English mode', () => {
+  renderTodayPage('en');
+
+  expect(screen.getByText('Review portfolio signals and actions from the daily risk assessment system.')).toBeInTheDocument();
 });
 
 test('TodayPage card CTAs trigger correct page routing', async () => {

@@ -16,23 +16,60 @@
 
 ## Keyword Map
 
-| Keyword                  | Meaning                                                                          | Primary File                                                        |
-| :----------------------- | :------------------------------------------------------------------------------- | :------------------------------------------------------------------ |
-| `portfolio-review`       | Full held-portfolio health review                                                | `stock_portfolio.md`, `trade_journal.md`                            |
-| `space-data-center`      | Orbital compute / space data center theme from BT beartai clip                   | `stock_portfolio.md`, `notes/2026-05-30-space-data-center-theme.md` |
-| `theme-watchlist`        | Research/watchlist additions, not executed trades                                | `stock_portfolio.md`                                                |
-| `risk-plan-missing`      | Holdings or active trades missing stop/R/R/hard THB risk                         | `trade_journal.md`                                                  |
-| `ANET-conflict`          | [Resolved 2026-06-01] ANET limit order was never filled; trade journal corrected | `trade_journal.md`                                                  |
-| `no-chase`               | Avoid buying extended momentum names without pullback/R/R                        | `ELITE_INVESTOR_SOP.md`                                             |
-| `skills-workflow`        | Project developer workflow using integrated Agent Skills                         | `docs/PROJECT_SKILLS_WORKFLOW.md`                                   |
-| `clerk-isolation`        | Clerk user data isolation and Supabase database RLS architecture                 | `docs/adr/0002-clerk-user-isolation-rls.md`                         |
-| `autonomous-search`      | Sub-agent contextual search and hybrid oracle contract architecture              | `docs/adr/0003-subagent-autonomous-search.md`                       |
-| `cls-vrt-deep-dive`      | Celestica and Vertiv 7-Dimension SOP deep dive                                   | `notes/2026-07-07-cls-vrt-deep-dive.md`                             |
+| Keyword                  | Meaning                                                                          | Primary File                                                              |
+| :----------------------- | :------------------------------------------------------------------------------- | :------------------------------------------------------------------------ |
+| `portfolio-review`       | Full held-portfolio health review                                                | `stock_portfolio.md`, `trade_journal.md`                                  |
+| `space-data-center`      | Orbital compute / space data center theme from BT beartai clip                   | `stock_portfolio.md`, `notes/2026-05-30-space-data-center-theme.md`       |
+| `theme-watchlist`        | Research/watchlist additions, not executed trades                                | `stock_portfolio.md`                                                      |
+| `risk-plan-missing`      | Holdings or active trades missing stop/R/R/hard THB risk                         | `trade_journal.md`                                                        |
+| `ANET-conflict`          | [Resolved 2026-06-01] ANET limit order was never filled; trade journal corrected | `trade_journal.md`                                                        |
+| `no-chase`               | Avoid buying extended momentum names without pullback/R/R                        | `ELITE_INVESTOR_SOP.md`                                                   |
+| `skills-workflow`        | Project developer workflow using integrated Agent Skills                         | `docs/PROJECT_SKILLS_WORKFLOW.md`                                         |
+| `clerk-isolation`        | Clerk user data isolation and Supabase database RLS architecture                 | `docs/adr/0002-clerk-user-isolation-rls.md`                               |
+| `autonomous-search`      | Sub-agent contextual search and hybrid oracle contract architecture              | `docs/adr/0003-subagent-autonomous-search.md`                             |
+| `cls-vrt-deep-dive`      | Celestica and Vertiv 7-Dimension SOP deep dive                                   | `notes/2026-07-07-cls-vrt-deep-dive.md`                                   |
 | `enterprise-qa-pipeline` | Merge Gates, Advisory Checks, Scheduled Assurance, QA/security pipeline          | `docs/plans/completed/2026-07-26-enterprise-qa-security-pipeline-plan.md` |
-| `test-coverage-gap-plan` | 3-Phase Test Coverage Gap Implementation Plan (+31 tests)                         | `docs/plans/pending/2026-07-27-test-coverage-gap-plan.md`          |
-| `tool-integration-map`  | Multi-Agent Tool Integration Architecture & Directory Registry                   | `docs/guidelines/TOOL_INTEGRATION_MAP.md`                           |
+| `agent-domain-boundary`  | Separate engineering verification from investment decision rules                | `AGENTS.md`                                                              |
+| `test-coverage-gap-plan` | 3-Phase Test Coverage Gap Implementation Plan (+31 tests)                        | `docs/plans/pending/2026-07-27-test-coverage-gap-plan.md`                 |
+| `e2e-networkidle-fix-plan` | Remediation Plan for Playwright E2E Gate 10 Networkidle Timeout Failure | `docs/plans/pending/2026-07-28-e2e-networkidle-fix-plan.md` |
+| `tool-integration-map`   | Multi-Agent Tool Integration Architecture & Directory Registry                   | `docs/guidelines/TOOL_INTEGRATION_MAP.md`                                 |
 
 ## Durable Entries
+
+### 2026-07-29 - Runtime TH/EN Language Contract
+
+- Keywords: `i18n-runtime`, `language-preference`, `english-ui`, `ai-response-language`, `supabase-migration`
+- Decision: `user_preferences.language` is the per-user source for active `th`/`en` UI, document/date locale, onboarding, and AI response language; missing keys must not leak Thai into English.
+- Action: Wired active production surfaces, AI request/prompt propagation, catalog/API/schema regressions, and the canonical Supabase migration.
+- Source: `docs/HANDOFF.md`, `frontend/src/i18n/translations.js`, `supabase/migrations/20260729170500_add_user_language.sql`
+
+### 2026-07-28 - Engineering and Investment Agent Domain Boundary
+
+- Keywords: `agent-domain-boundary`, `engineering-change-contract`, `check-pr`, `context7`
+- Decision: Separate engineering rules from investment and trade-entry rules. Every repository mutation requires a fresh, non-concurrent `npm run check:pr`; Context7 supports current library guidance without overriding pinned repository truth.
+- Action: Updated `AGENTS.md` with explicit General, Engineering, and Investment sections plus lower-cost agent verification limits.
+- Source: `AGENTS.md`
+
+### 2026-07-28 - Playwright E2E Gate 10 Networkidle Remediation Plan
+
+- Keywords: `e2e-networkidle-fix-plan`, `playwright-gate-10`, `tradingview-iframe-streaming`, `deterministic-assertions`
+- Decision: Diagnosed PR Gate 10 failure as a continuous TradingView iframe network streaming timeout on `waitForLoadState('networkidle')`. Drafted deterministic remediation plan in `docs/plans/pending/2026-07-28-e2e-networkidle-fix-plan.md` to replace `networkidle` with `waitUntil: 'domcontentloaded'` and `expect(locator).toBeVisible()` without hardcoding.
+- Action: Created [2026-07-28-e2e-networkidle-fix-plan.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/plans/pending/2026-07-28-e2e-networkidle-fix-plan.md).
+- Source: `docs/plans/pending/2026-07-28-e2e-networkidle-fix-plan.md`
+
+### 2026-07-28 - Hybrid Tailwind CSS & Monolithic CSS Coexistence Architecture
+
+- Keywords: `tailwind-coexistence`, `pages-css-restored`, `dark-terminal-ui`, `visual-fidelity`, `ui-handoff`
+- Decision: **Superseded on 2026-07-28 by Tailwind-Only UI Architecture.** This entry records the temporary restoration of the `develop` CSS architecture and must not be treated as the current standard.
+- Action: Created [HANDOFF_UI_TAILWIND_ARCHITECTURE.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/HANDOFF_UI_TAILWIND_ARCHITECTURE.md), verified all 40 Vitest test suites (203 tests) and 48 Playwright E2E & visual audit tests.
+- Source: `docs/HANDOFF_UI_TAILWIND_ARCHITECTURE.md`
+
+### 2026-07-27 - 100% Tailwind CSS Migration & Architecture Alignment
+
+- Keywords: `tailwind-migration`, `tailwindcss-v4-ready`, `cva-primitives`, `bundle-optimization`, `monolith-deprecation`
+- Decision: **Superseded on 2026-07-28.** This earlier completion claim retained legacy fallback files and did not cover every active and orphan surface; use the Tailwind-Only entry and current handoff instead.
+- Action: Created [HANDOFF_TAILWIND_MIGRATION.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/HANDOFF_TAILWIND_MIGRATION.md), updated `tailwind_migration_task_breakdown.md` and `walkthrough.md`.
+- Source: `docs/HANDOFF_TAILWIND_MIGRATION.md`
 
 ### 2026-07-27 - Multi-Agent Tool Integration & Single Source of Truth Architecture
 
@@ -43,13 +80,10 @@
 
 ### 2026-07-27 - Test Coverage Gap Implementation Plan
 
-
 - Keywords: `test-coverage-gap-plan`, `pgtap`, `rls-isolation`, `landing-page-test`, `ui-primitives-contract`
 - Decision: Saved 3-Phase actionable test coverage plan (+31 tests across DB, Frontend, Backend). Phase 1 (DB RLS & CHECK constraints), Phase 2 (LandingPage & 7 shadcn UI primitives), Phase 3 (Backend helpers & routes).
 - Action: Created [2026-07-27-test-coverage-gap-plan.md](file:///Users/nopparuj/my-agents/MyPortStock/docs/plans/pending/2026-07-27-test-coverage-gap-plan.md).
 - Source: `docs/plans/pending/2026-07-27-test-coverage-gap-plan.md`
-
-
 
 ### 2026-06-28 - Gate 0 Backend Hardening Local Implementation
 
@@ -506,3 +540,24 @@
 - Action: Implemented TypeScript 5.9 full-repo checkJs, fail-closed property tests, deterministic Express/WebSocket providers, additive migration baseline and pgTAP, Gitleaks/dependency gates, six parallel CI gate jobs with an aggregate report, Dependabot, and bounded nightly load assurance.
 - Resolution: React Router `GHSA-qwww-vcr4-c8h2` was cleared by migrating the frontend from `react-router-dom` 7.18.1 to unified `react-router` 8.3.0 with React/ReactDOM 19.2.7 and Node >= 22.22. Deterministic E2E moved from collision-prone ports 4173/8180 to 43173/48180 and forces Vite dependency optimization on every run. `npm run check:pr` passes all 11 gates.
 - Source: `docs/plans/2026-07-26-enterprise-qa-security-pipeline-plan.md`, `docs/adr/0006-supabase-migrations-source-of-truth.md`
+
+### 2026-07-27 - Playwright Impeccable UI Responsiveness & Typography Audit
+
+- Keywords: `impeccable-ui-audit`, `playwright-responsiveness-4-viewports`, `sub-11px-typography-fix`, `aria-nested-interactive-fix`, `zero-text-clipping`
+- Decision: Performed a full automated UI responsiveness and text layout audit across all 11 routes and 4 viewports (Desktop 1440x900, Laptop 1024x768, Tablet 768x1024, Mobile 390x844) using Playwright, Axe-Core, and Impeccable Design Guidelines.
+- Action: Created `frontend/e2e/impeccableUiLayoutAudit.spec.ts`. Fixed sub-11px font sizes (<11px raised to 12px/11.5px) in `components.css` and `pages.css`, resolved nested-interactive ARIA violations in `MarketExplorerPage.jsx`, and added focusable keyboard access to scrollable table containers. All 48 Playwright test scenarios passed with 0 text clipping, 0 page overflow, and clean visual readability.
+- Source: `ui_impeccable_layout_audit_plan.md`, `walkthrough.md`, `.impeccable/critique/2026-07-27-ui-responsiveness-audit-report.md`, `frontend/e2e/impeccableUiLayoutAudit.spec.ts`
+
+### 2026-07-27 - Pragmatic Hybrid CSS Architecture Standard
+
+- Keywords: `hybrid-css-architecture`, `tailwind-shadcn-primitives`, `modern-vanilla-css-dashboards`, `container-queries-autofit-grid`
+- Decision: **Superseded on 2026-07-28 by Tailwind-Only UI Architecture.** This entry remains historical evidence for the temporary hybrid approach.
+- Action: Updated `tailwind.config.js` theme color tokens, added `padding: 24px` to `.glass-panel` in `components.css`, replaced rigid 5-column grids with flex-wrap and auto-fit grids in `pages.css` (`.command-agent-tabs`, `.journal-filters`, `.analytics-filters`, `.journal-perf`, `.journal-header`, `.analytics-header`). Verified 48/48 Playwright E2E layout tests and `npm run check:frontend-standard` (0 errors).
+- Source: `hybrid_css_architecture_plan.md`, `walkthrough.md`, `frontend/tailwind.config.js`, `frontend/src/styles/components.css`, `frontend/src/styles/pages.css`
+
+### 2026-07-28 - Tailwind-Only UI Architecture and Contract Verification
+
+- Keywords: `tailwind-v3-migration`, `semantic-tokens`, `layout-token-contract`, `legacy-css-removal`, `orphan-surface-harness`
+- Decision: Replaced the temporary hybrid CSS architecture with Tailwind v3.4 utilities backed by semantic CSS variables. Preserve `data-theme` Light/Dark/System behavior, existing component APIs, business behavior, accessibility semantics, and responsive topology; screenshots remain review artifacts rather than pixel-diff blockers.
+- Action: Migrated shared primitives, app shell, active routes, Landing, Onboarding, Watchlist, AI Floor, and Pixel Trading Floor; removed `App.css`, `utilities.css`, `layout.css`, `components.css`, and `pages.css`; hardened governance against raw colors, static inline styles, malformed/dynamic classes, and new CSS files; added active-route and orphan-surface theme/layout contracts.
+- Source: `docs/HANDOFF_UI_TAILWIND_ARCHITECTURE.md`, `docs/DESIGN_SYSTEM_AND_REUSABILITY.md`, `frontend/scripts/verify-tailwind-governance.js`, `frontend/e2e/baselines/develop-055a92c.ts`, `frontend/e2e/tailwindThemeContract.spec.ts`, `frontend/e2e/orphanSurfaceContract.spec.ts`

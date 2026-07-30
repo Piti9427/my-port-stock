@@ -219,7 +219,7 @@ test('new dev-signed-in user can analyze, log a first trade, then inspect journa
   expect(await screen.findByRole('link', { name: 'NVDA' })).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('link', { name: 'สถิติผลงาน' }));
-  expect(await screen.findByText('ต้องมี trade ที่ปิดแล้วอย่างน้อย 1 รายการ')).toBeInTheDocument();
+  expect(await screen.findByText('ต้องมี trade ที่ปิดแล้วอย่างน้อย 1 รายการเพื่อคำนวณสถิติ')).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('link', { name: 'ความเสี่ยง' }));
   expect((await screen.findAllByText(/AI Infrastructure/i)).length).toBeGreaterThan(0);
@@ -249,7 +249,7 @@ test('returning dev-signed-in user can drill into a holding, run analysis, plan 
   fireEvent.click(within(planner).getByRole('button', { name: 'เปิดบันทึกเทรด' }));
 
   expect(await screen.findByRole('heading', { level: 1, name: 'บันทึกเทรด' })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Log trade' }));
+  fireEvent.click(screen.getByRole('button', { name: 'บันทึกเทรด' }));
   const drawer = screen.getByRole('dialog', { name: 'Log trade' });
   fireEvent.change(within(drawer).getByLabelText('Ticker'), { target: { value: 'NVDA' } });
   fireEvent.change(within(drawer).getByLabelText('Entry Price'), { target: { value: '190' } });

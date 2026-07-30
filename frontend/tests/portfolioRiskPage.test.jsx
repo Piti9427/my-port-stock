@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router';
 import { beforeEach, expect, test, vi } from 'vitest';
 import PortfolioRiskPage from '../src/pages/PortfolioRiskPage.jsx';
+import { PreferencesContext } from '../src/preferences/PreferencesContext.jsx';
 
 const getToken = vi.fn().mockResolvedValue('token_123');
 const fetchWithAuth = vi.fn();
@@ -44,6 +45,19 @@ const holdings = [
 beforeEach(() => {
   fetchWithAuth.mockReset();
   fetchWithAuth.mockResolvedValue(holdings);
+});
+
+test('Portfolio Risk renders translated page copy in English mode', async () => {
+  render(
+    <PreferencesContext.Provider value={{ preferences: { language: 'en' } }}>
+      <MemoryRouter>
+        <PortfolioRiskPage />
+      </MemoryRouter>
+    </PreferencesContext.Provider>
+  );
+
+  expect(await screen.findByText('Portfolio Value')).toBeInTheDocument();
+  expect(screen.getByRole('alert')).toHaveTextContent('Allocation warning:');
 });
 
 test('Portfolio Risk sector buttons are accessible, selectable, and do not refetch on unstable auth wrapper identity', async () => {

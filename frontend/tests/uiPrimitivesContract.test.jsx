@@ -20,8 +20,8 @@ describe('shared UI primitives contract', () => {
     render(<MetricCard label="Total Portfolio Value" value="฿1,234" change="+2.4%" changeType="positive" dataStamp="Supabase holdings" />);
 
     expect(screen.getByText('Total Portfolio Value')).toBeInTheDocument();
-    expect(screen.getByText('฿1,234')).toHaveClass('metric-card-value');
-    expect(screen.getByText('+2.4%')).toHaveClass('metric-card-change-positive');
+    expect(screen.getByText('฿1,234')).toHaveClass('text-foreground');
+    expect(screen.getByText('+2.4%')).toHaveClass('text-fin-profit');
     expect(screen.getByText('Supabase holdings')).toBeInTheDocument();
   });
 
@@ -129,7 +129,7 @@ describe('shared UI primitives contract', () => {
     expect(onAction).toHaveBeenCalled();
     expect(screen.getByText(/Supabase holdings/)).toBeInTheDocument();
     expect(screen.getByTestId('skeleton-text')).toBeInTheDocument();
-    expect(screen.getByText('Wait')).toHaveClass('status-badge-wait');
+    expect(screen.getByText('Wait')).toHaveClass('text-fin-warning');
   });
 
   test('Toast and Tooltip handle user actions without layout copy', () => {

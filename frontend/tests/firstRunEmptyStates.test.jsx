@@ -64,7 +64,7 @@ test('Journal first-run empty state opens the log trade drawer', async () => {
   renderRoute('/journal', <JournalPage />);
 
   expect(await screen.findByText('บันทึกเทรดครั้งแรกเพื่อเริ่มติดตาม')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'บันทึกเทรดครั้งแรก' }));
+  fireEvent.click(screen.getAllByRole('button', { name: 'บันทึกเทรด' })[0]);
 
   expect(screen.getByRole('dialog', { name: 'Log trade' })).toBeInTheDocument();
 });
@@ -72,7 +72,7 @@ test('Journal first-run empty state opens the log trade drawer', async () => {
 test('Analytics first-run state requires at least one closed trade', async () => {
   renderRoute('/analytics', <AnalyticsPage />);
 
-  expect(await screen.findByText('ต้องมี trade ที่ปิดแล้วอย่างน้อย 1 รายการ')).toBeInTheDocument();
+  expect(await screen.findByText('ต้องมี trade ที่ปิดแล้วอย่างน้อย 1 รายการเพื่อคำนวณสถิติ')).toBeInTheDocument();
   expect(screen.getByText('ยังไม่มีข้อมูลเพียงพอสำหรับกราฟ')).toBeInTheDocument();
 });
 

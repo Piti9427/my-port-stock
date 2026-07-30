@@ -33,6 +33,6 @@ test.describe('Trade Execution Journey E2E Flow', () => {
     const journalTable = page.getByRole('table');
     await expect(journalTable).toContainText('NVDA');
     await expect(journalTable).toContainText('2');
-    await expect(journalTable.locator('td[data-label="Price"]')).toContainText('100.00');
+    await expect(journalTable.locator('td[data-field="price"]')).toContainText('100.00');
   });
 });

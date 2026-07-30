@@ -1,8 +1,8 @@
 # Frontend Design Guide
 
-The single source of truth for MyPortStock visual design is [`../docs/DESIGN.md`](../docs/DESIGN.md).
+The single source of truth for MyPortStock visual design and component reusability is [`../docs/DESIGN_SYSTEM_AND_REUSABILITY.md`](../docs/DESIGN_SYSTEM_AND_REUSABILITY.md).
 
-Frontend work must follow the canonical **Dark Terminal Product UI** direction there and the glossary terms in [`../CONTEXT.md`](../CONTEXT.md):
+Frontend work must follow the canonical **Dark Terminal Product UI** direction there, the **100% Reusability & DRY Rules**, and the glossary terms in [`../CONTEXT.md`](../CONTEXT.md):
 
 - `Dark Terminal Product UI`
 - `Color Is Data`

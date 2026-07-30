@@ -287,7 +287,7 @@ router.delete("/watchlists/:ticker", async (req, res, next) => {
 
 // Journal Routes
 router.get("/journal", async (req, res, next) => {
-  if (!supabaseConfigured) {
+  if (!supabaseConfigured && !isTestMode()) {
     return res
       .status(200)
       .json(
@@ -310,7 +310,7 @@ router.get("/journal/:ticker", async (req, res, next) => {
   const ticker = normalizeTicker(req.params.ticker);
   if (!ticker) return res.status(400).json({ error: "Invalid ticker format" });
 
-  if (!supabaseConfigured) {
+  if (!supabaseConfigured && !isTestMode()) {
     return res
       .status(200)
       .json(
@@ -330,7 +330,7 @@ router.get("/journal/:ticker", async (req, res, next) => {
 });
 
 router.post("/journal", async (req, res, next) => {
-  if (!supabaseConfigured) {
+  if (!supabaseConfigured && !isTestMode()) {
     return res
       .status(503)
       .json(runtimeInsufficientData("Supabase is not configured"));

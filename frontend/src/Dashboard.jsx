@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
   const [tickerInput, setTickerInput] = useState('');
@@ -87,12 +88,12 @@ export default function Dashboard() {
 
   const signalBadgeClasses = (signalClass) => {
     if (signalClass === 'success') {
-      return 'bg-status-success-bg text-status-success border border-status-success/20';
+      return 'border border-fin-profit bg-fin-profit-dim text-fin-profit';
     }
     if (signalClass === 'destructive') {
-      return 'bg-status-danger-bg text-status-danger border border-status-danger/20';
+      return 'border border-fin-loss bg-fin-loss-dim text-fin-loss';
     }
-    return 'bg-status-warning-bg text-status-warning border border-status-warning/20';
+    return 'border border-fin-warning bg-fin-warning-dim text-fin-warning';
   };
 
   return (
@@ -100,7 +101,7 @@ export default function Dashboard() {
       <header className="max-w-5xl mx-auto mb-10 flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-status-success"></div>
+            <div className="size-2 rounded-full bg-fin-profit"></div>
             Market Oracle
           </h1>
           <span className="text-xs text-muted font-mono uppercase tracking-widest">v1.0.0</span>
@@ -168,7 +169,7 @@ export default function Dashboard() {
                     <X className="h-4 w-4" />
                   </Button>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-bold tracking-tight text-status-danger">{res.ticker}</CardTitle>
+                    <CardTitle className="text-lg font-bold tracking-tight text-fin-loss">{res.ticker}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted">{errors[res.ticker] || 'Failed to retrieve signal.'}</p>
@@ -196,7 +197,7 @@ export default function Dashboard() {
 
                 <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-xl font-bold tracking-tight">{res.ticker}</CardTitle>
-                  <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${signalBadgeClasses(signalClass)}`}>
+                  <div className={cn('rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest', signalBadgeClasses(signalClass))}>
                     {res.signal || 'WAIT'}
                   </div>
                 </CardHeader>
@@ -222,7 +223,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs text-muted uppercase tracking-wider font-semibold">Stop Loss</span>
-                      <span className="text-sm font-mono text-status-danger">{res.stop_loss || 'N/A'}</span>
+                      <span className="font-mono text-sm text-fin-loss">{res.stop_loss || 'N/A'}</span>
                     </div>
                   </div>
 

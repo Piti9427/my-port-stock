@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
+import { cn } from '../lib/utils.js';
 import PropTypes from 'prop-types';
+import { useTranslation } from '../i18n/useTranslation.js';
 
 const TABS = [
-  { id: 'swot', label: 'สรุป & SWOT' },
-  { id: 'fundamentals', label: 'งบการเงิน & ปัจจัยพื้นฐาน' },
-  { id: 'technicals', label: 'สัญญาณเทคนิคอล' },
-  { id: 'trade', label: 'แผนเทรด SOP' },
+  { id: 'swot', labelKey: 'command.summary_tab' },
+  { id: 'fundamentals', labelKey: 'command.fundamentals_tab' },
+  { id: 'technicals', labelKey: 'command.technicals_tab' },
+  { id: 'trade', labelKey: 'command.trade_plan_tab' },
 ];
 
 const SWOT_LABELS = {
@@ -37,11 +39,14 @@ function SwotAccordion({ swot }) {
   });
 
   return (
-    <div className="deep-analysis-stack">
+    <div className="[display:flex] [flex-direction:column] [gap:10px]">
       {Object.entries(SWOT_LABELS).map(([key, label]) => {
         const items = Array.isArray(swot?.[key]) ? swot[key] : [];
         return (
-          <section className="deep-analysis-accordion" key={key}>
+          <section
+            className="[border:1px_solid_var(--border-subtle)] [background:var(--bg-panel-solid)] [&_button]:[align-items:center] [&_button]:[background:transparent] [&_button]:[border:0] [&_button]:[color:var(--text-primary)] [&_button]:[cursor:pointer] [&_button]:[display:flex] [&_button]:[font-size:0.8rem] [&_button]:[font-weight:800] [&_button]:[justify-content:space-between] [&_button]:[padding:10px_12px] [&_button]:[width:100%] [&_ul]:[color:var(--text-secondary)] [&_ul]:[font-size:0.82rem] [&_ul]:[line-height:1.5] [&_ul]:[margin:0] [&_ul]:[padding:0_14px_12px_28px]"
+            key={key}
+          >
             <button type="button" onClick={() => setOpen((prev) => ({ ...prev, [key]: !prev[key] }))}>
               <span>{label}</span>
               <span>{open[key] ? 'Hide' : 'Show'}</span>
@@ -59,9 +64,9 @@ function FundamentalsTab({ deepAnalysis }) {
   const balanceSheet = deepAnalysis?.balance_sheet || {};
 
   return (
-    <div className="deep-analysis-stack">
-      <div className="deep-analysis-table-wrap">
-        <table className="deep-analysis-table">
+    <div className="[display:flex] [flex-direction:column] [gap:10px]">
+      <div className="[overflow-x:auto]">
+        <table className="[border-collapse:collapse] [min-width:560px] [width:100%] [&_th]:[border-bottom:1px_solid_var(--border-subtle)] [&_th]:[color:var(--text-secondary)] [&_th]:[font-size:0.78rem] [&_th]:[padding:8px] [&_th]:[text-align:right] [&_th]:[white-space:nowrap] [&_td]:[border-bottom:1px_solid_var(--border-subtle)] [&_td]:[color:var(--text-secondary)] [&_td]:[font-size:0.78rem] [&_td]:[padding:8px] [&_td]:[text-align:right] [&_td]:[white-space:nowrap] [&_th:first-child]:[text-align:left] [&_td:first-child]:[text-align:left] [&_th]:[color:var(--text-primary)] [&_th]:[font-weight:800]">
           <thead>
             <tr>
               <th>Quarter</th>
@@ -90,7 +95,7 @@ function FundamentalsTab({ deepAnalysis }) {
           </tbody>
         </table>
       </div>
-      <div className="deep-analysis-metric-grid">
+      <div className="[display:grid] [gap:8px] [grid-template-columns:repeat(3,_minmax(0,_1fr))] [&_div]:[border:1px_solid_var(--border-subtle)] [&_div]:[background:var(--bg-panel-solid)] [&_div]:[display:flex] [&_div]:[flex-direction:column] [&_div]:[gap:4px] [&_div]:[padding:10px] [&_span]:[color:var(--text-secondary)] [&_span]:[font-size:0.7rem] [&_span]:[text-transform:uppercase] [&_strong]:[color:var(--text-primary)] [&_strong]:font-mono [&_strong]:[font-size:0.88rem] [&_strong]:[overflow-wrap:anywhere] max-[760px]:[grid-template-columns:1fr]">
         <div>
           <span>Cash</span>
           <strong>{displayValue(balanceSheet.cash)}</strong>
@@ -113,8 +118,8 @@ function TechnicalsTab({ deepAnalysis }) {
   const daily = deepAnalysis?.daily_technicals || {};
 
   return (
-    <div className="deep-analysis-stack">
-      <div className="deep-analysis-metric-grid">
+    <div className="[display:flex] [flex-direction:column] [gap:10px]">
+      <div className="[display:grid] [gap:8px] [grid-template-columns:repeat(3,_minmax(0,_1fr))] [&_div]:[border:1px_solid_var(--border-subtle)] [&_div]:[background:var(--bg-panel-solid)] [&_div]:[display:flex] [&_div]:[flex-direction:column] [&_div]:[gap:4px] [&_div]:[padding:10px] [&_span]:[color:var(--text-secondary)] [&_span]:[font-size:0.7rem] [&_span]:[text-transform:uppercase] [&_strong]:[color:var(--text-primary)] [&_strong]:font-mono [&_strong]:[font-size:0.88rem] [&_strong]:[overflow-wrap:anywhere] max-[760px]:[grid-template-columns:1fr]">
         <div>
           <span>W1 Close</span>
           <strong>{displayValue(weekly.close)}</strong>
@@ -164,7 +169,7 @@ function TradePlanTab({ deepAnalysis }) {
   ];
 
   return (
-    <div className="deep-analysis-ticket">
+    <div className="[&_div]:[border:1px_solid_var(--border-subtle)] [&_div]:[background:var(--bg-panel-solid)] [&_div]:[display:flex] [&_div]:[flex-direction:column] [&_div]:[gap:4px] [&_div]:[padding:10px] [&_span]:[color:var(--text-secondary)] [&_span]:[font-size:0.7rem] [&_span]:[text-transform:uppercase] [&_strong]:[color:var(--text-primary)] [&_strong]:font-mono [&_strong]:[font-size:0.88rem] [&_strong]:[overflow-wrap:anywhere] [display:grid] [gap:8px] [grid-template-columns:repeat(2,_minmax(0,_1fr))] max-[760px]:[grid-template-columns:1fr]">
       {rows.map(([label, value]) => (
         <div key={label}>
           <span>{label}</span>
@@ -176,12 +181,17 @@ function TradePlanTab({ deepAnalysis }) {
 }
 
 export default function DeepAnalysisTabs({ deepAnalysis, fallbackAnalysis }) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('swot');
   const hasStructuredPayload = Boolean(deepAnalysis);
   const activeConfig = useMemo(() => TABS.find((tab) => tab.id === activeTab) || TABS[0], [activeTab]);
 
   if (!hasStructuredPayload && fallbackAnalysis) {
-    return <pre className="deep-analysis-fallback">{fallbackAnalysis}</pre>;
+    return (
+      <pre className="mt-3.5 max-h-[400px] overflow-auto whitespace-pre-wrap border border-border-subtle bg-panel-solid p-3 font-mono text-[0.8rem] leading-normal text-text-secondary">
+        {fallbackAnalysis}
+      </pre>
+    );
   }
 
   if (!hasStructuredPayload) {
@@ -189,22 +199,26 @@ export default function DeepAnalysisTabs({ deepAnalysis, fallbackAnalysis }) {
   }
 
   return (
-    <section className="deep-analysis-tabs" aria-label="Deep 7-Dimension SOP analysis">
-      <div className="deep-analysis-tab-list" role="tablist" aria-label="Deep analysis sections">
+    <section className="[display:flex] [flex-direction:column] [gap:12px] [margin-top:14px]" aria-label="Deep 7-Dimension SOP analysis">
+      <div
+        className="grid grid-cols-4 border border-border-subtle bg-panel-solid max-[760px]:grid-cols-2 [&_button]:min-h-[42px] [&_button]:cursor-pointer [&_button]:border-0 [&_button]:border-r [&_button]:border-border-subtle [&_button]:bg-transparent [&_button]:p-2 [&_button]:text-[0.76rem] [&_button]:font-bold [&_button]:text-text-secondary [&_button:last-child]:border-r-0"
+        role="tablist"
+        aria-label="Deep analysis sections"
+      >
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
-            className={tab.id === activeConfig.id ? 'active' : ''}
+            className={cn(tab.id === activeConfig.id && 'bg-brand-dim text-brand')}
             role="tab"
             aria-selected={tab.id === activeConfig.id}
             onClick={() => setActiveTab(tab.id)}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>
-      <div className="deep-analysis-tab-panel" role="tabpanel">
+      <div className="border border-border-subtle bg-panel-solid p-3" role="tabpanel">
         {activeConfig.id === 'swot' && <SwotAccordion swot={deepAnalysis.swot} />}
         {activeConfig.id === 'fundamentals' && <FundamentalsTab deepAnalysis={deepAnalysis} />}
         {activeConfig.id === 'technicals' && <TechnicalsTab deepAnalysis={deepAnalysis} />}

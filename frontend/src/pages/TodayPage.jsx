@@ -5,6 +5,8 @@ import { TrendingUp, Clock, ArrowRight, ChevronDown, ChevronUp, ShieldAlert, Hel
 import { useAuth } from '../auth/clerkAdapter';
 import { useToday } from '../hooks/useToday';
 import { EmptyState } from '../components/ui/EmptyState';
+import { useTranslation } from '../i18n/useTranslation';
+import { cn, cssVars } from '../lib/utils';
 
 // Helper for formatting large THB numbers
 function formatCurrency(value) {
@@ -26,6 +28,7 @@ function getDismissalKey(item) {
 export default function TodayPage() {
   const navigate = useNavigate();
   const { getToken } = useAuth();
+  const { t } = useTranslation();
   const { queue, pulse, loading, status, refetch } = useToday({ getToken });
   const [expandedCardId, setExpandedCardId] = useState(null);
   const [activeMobileIndex, setActiveMobileIndex] = useState(0);
@@ -105,36 +108,36 @@ export default function TodayPage() {
     switch (category) {
       case 'protect':
         return {
-          borderClass: 'today-card-protect',
-          icon: <ShieldAlert className="today-card-icon text-loss" />,
+          borderClass: 'border-fin-loss',
+          icon: <ShieldAlert className="[width:22px] [height:22px] [margin-top:1px] [flex-shrink:0] [color:var(--fin-loss)]" />,
           label: 'PROTECT CAPITAL',
-          labelClass: 'tag-protect',
+          labelClass: 'bg-fin-loss-dim text-fin-loss',
         };
       case 'prepare':
         return {
-          borderClass: 'today-card-prepare',
-          icon: <Clock className="today-card-icon text-warning" />,
+          borderClass: 'border-fin-warning',
+          icon: <Clock className="[width:22px] [height:22px] [margin-top:1px] [flex-shrink:0] [color:var(--fin-warning)]" />,
           label: 'PREPARE',
-          labelClass: 'tag-prepare',
+          labelClass: 'bg-fin-warning-dim text-fin-warning',
         };
       case 'opportunity':
         return {
-          borderClass: 'today-card-opportunity',
-          icon: <TrendingUp className="today-card-icon text-info" />,
+          borderClass: 'border-fin-info',
+          icon: <TrendingUp className="[width:22px] [height:22px] [margin-top:1px] [flex-shrink:0] [color:var(--accent-primary)]" />,
           label: 'OPPORTUNITY',
-          labelClass: 'tag-opportunity',
+          labelClass: 'bg-fin-info-dim text-fin-info',
         };
       case 'learn':
         return {
-          borderClass: 'today-card-learn',
-          icon: <CheckCircle className="today-card-icon text-profit" />,
+          borderClass: 'border-fin-profit',
+          icon: <CheckCircle className="[width:22px] [height:22px] [margin-top:1px] [flex-shrink:0] [color:var(--fin-profit)]" />,
           label: 'LEARN',
-          labelClass: 'tag-learn',
+          labelClass: 'bg-fin-profit-dim text-fin-profit',
         };
       default:
         return {
           borderClass: '',
-          icon: <HelpCircle className="today-card-icon" />,
+          icon: <HelpCircle className="[width:22px] [height:22px] [margin-top:1px] [flex-shrink:0]" />,
           label: 'ACTION REQUIRED',
           labelClass: '',
         };
@@ -142,66 +145,77 @@ export default function TodayPage() {
   };
 
   const pulseContent = (
-    <div className="today-pulse-container">
-      <div className="today-pulse-title">
-        <Activity className="pulse-title-icon" />
+    <div className="[background:var(--bg-shell)] [border:1px_solid_var(--border-subtle)] [border-radius:var(--radius-md)] [padding:24px] [display:flex] [flex-direction:column] [gap:20px]">
+      <div className="[display:flex] [align-items:center] [gap:10px] [font-size:0.78rem] [font-weight:700] [letter-spacing:0.1em] [color:var(--text-secondary)]">
+        <Activity className="[width:16px] [height:16px] [color:var(--brand-primary)]" />
         <span>PORTFOLIO PULSE</span>
       </div>
 
-      <div className="today-pulse-metric-row">
-        <div className="today-pulse-metric">
-          <div className="today-pulse-metric-label">TOTAL VALUE</div>
-          <div className="today-pulse-metric-value num-font">{formatCurrency(pulse.totalValue)}</div>
+      <div className="[display:grid] [grid-template-columns:1fr_1fr] [gap:16px]">
+        <div className="[display:flex] [flex-direction:column] [gap:4px]">
+          <div className="[font-size:0.65rem] [font-weight:700] [letter-spacing:0.08em] [color:var(--text-secondary)]">TOTAL VALUE</div>
+          <div className="[font-size:1.4rem] [font-weight:700] [color:var(--text-primary)] num-font">{formatCurrency(pulse.totalValue)}</div>
         </div>
-        <div className="today-pulse-metric">
-          <div className="today-pulse-metric-label">UNREALIZED P/L</div>
-          <div className={`today-pulse-metric-value num-font ${pulse.totalPl >= 0 ? 'text-profit' : 'text-loss'}`}>
+        <div className="[display:flex] [flex-direction:column] [gap:4px]">
+          <div className="[font-size:0.65rem] [font-weight:700] [letter-spacing:0.08em] [color:var(--text-secondary)]">UNREALIZED P/L</div>
+          <div className={cn('font-mono text-[1.4rem] font-bold', pulse.totalPl >= 0 ? 'text-fin-profit' : 'text-fin-loss')}>
             {formatPercent(pulse.totalCost > 0 ? (pulse.totalPl / pulse.totalCost) * 100 : 0)}
           </div>
         </div>
       </div>
 
-      <div className="today-pulse-section">
-        <div className="today-pulse-section-header">
+      <div className="[display:flex] [flex-direction:column] [gap:8px]">
+        <div className="[display:flex] [justify-content:space-between] [font-size:0.68rem] [font-weight:700] [letter-spacing:0.05em] [color:var(--text-secondary)]">
           <span>PORTFOLIO DRAWDOWN</span>
           <span className="num-font">
             {pulse.drawdownPct.toFixed(1)}% / {pulse.maxDrawdownPct}%
           </span>
         </div>
-        <div className="today-pulse-bar-track">
+        <div className="[height:6px] [background:var(--border-subtle)] [border-radius:3px] [overflow:hidden]">
           <div
-            className={`today-pulse-bar-fill ${pulse.drawdownPct >= pulse.maxDrawdownPct ? 'bar-breached' : ''}`}
-            style={{ transform: `scaleX(${Math.min(pulse.drawdownPct / pulse.maxDrawdownPct, 1)})`, transformOrigin: 'left' }}
+            className={cn(
+              'h-full origin-left scale-x-[var(--bar-scale)] rounded-[3px] bg-brand transition-transform duration-700 motion-reduce:transition-none',
+              pulse.drawdownPct >= pulse.maxDrawdownPct && 'bg-fin-loss'
+            )}
+            style={cssVars({ '--bar-scale': Math.min(pulse.drawdownPct / pulse.maxDrawdownPct, 1) })}
           />
         </div>
         {pulse.drawdownPct >= pulse.maxDrawdownPct && (
-          <div className="today-pulse-warning">🛑 Drawdown circuit-breaker active. New buys blocked.</div>
+          <div className="[font-size:0.72rem] [font-weight:600] [color:var(--fin-loss)] [margin-top:2px]">
+            🛑 Drawdown circuit-breaker active. New buys blocked.
+          </div>
         )}
       </div>
 
-      <div className="today-pulse-section">
-        <div className="today-pulse-section-header">
+      <div className="[display:flex] [flex-direction:column] [gap:8px]">
+        <div className="[display:flex] [justify-content:space-between] [font-size:0.68rem] [font-weight:700] [letter-spacing:0.05em] [color:var(--text-secondary)]">
           <span>SPECULATIVE EXPOSURE</span>
           <span className="num-font">{pulse.speculativeWeightPct.toFixed(1)}% / 20%</span>
         </div>
-        <div className="today-pulse-bar-track">
+        <div className="[height:6px] [background:var(--border-subtle)] [border-radius:3px] [overflow:hidden]">
           <div
-            className={`today-pulse-bar-fill ${pulse.speculativeWeightPct > 20 ? 'bar-breached' : ''}`}
-            style={{ transform: `scaleX(${Math.min(pulse.speculativeWeightPct / 20, 1)})`, transformOrigin: 'left' }}
+            className={cn(
+              'h-full origin-left scale-x-[var(--bar-scale)] rounded-[3px] bg-brand transition-transform duration-700 motion-reduce:transition-none',
+              pulse.speculativeWeightPct > 20 && 'bg-fin-loss'
+            )}
+            style={cssVars({ '--bar-scale': Math.min(pulse.speculativeWeightPct / 20, 1) })}
           />
         </div>
       </div>
 
       {pulse.sectorBreaches && pulse.sectorBreaches.length > 0 && (
-        <div className="today-pulse-section">
-          <div className="today-pulse-section-header text-warning">
+        <div className="[display:flex] [flex-direction:column] [gap:8px]">
+          <div className="[display:flex] [justify-content:space-between] [font-size:0.68rem] [font-weight:700] [letter-spacing:0.05em] [color:var(--text-secondary)] [color:var(--fin-warning)]">
             <span>SECTOR BREACHES</span>
           </div>
-          <div className="today-pulse-breach-list">
+          <div className="[display:flex] [flex-direction:column] [gap:6px]">
             {pulse.sectorBreaches.map((b) => (
-              <div key={b.sector} className="today-pulse-breach-item">
+              <div
+                key={b.sector}
+                className="[display:flex] [justify-content:space-between] [font-size:0.8rem] [font-weight:500] [color:var(--text-secondary)]"
+              >
                 <span>{b.sector}</span>
-                <span className="num-font text-loss">{b.weight}% &gt; 35%</span>
+                <span className="num-font [color:var(--fin-loss)]">{b.weight}% &gt; 35%</span>
               </div>
             ))}
           </div>
@@ -209,8 +223,8 @@ export default function TodayPage() {
       )}
 
       {pulse.missingStopCount > 0 && (
-        <div className="today-pulse-alert-box alert-loss">
-          <ShieldAlert className="alert-box-icon" />
+        <div className="flex items-center gap-2.5 rounded-sm border border-fin-loss bg-fin-loss-dim p-3 text-xs font-semibold leading-[1.4] text-fin-loss">
+          <ShieldAlert className="[width:16px] [height:16px] [flex-shrink:0]" />
           <span>
             {pulse.missingStopCount} position{pulse.missingStopCount > 1 ? 's' : ''} missing stop-loss definitions
           </span>
@@ -222,52 +236,46 @@ export default function TodayPage() {
   const isBrandNew = !loading && !unavailable && (!pulse || (pulse.totalValue === 0 && queue.length === 0));
 
   return (
-    <div className="today-page">
-      <div className="today-description">ตรวจสอบสัญญาณพอร์ตโฟลิโอและการกระทำตามระบบประเมินความเสี่ยงรายวัน</div>
+    <div className="[flex:1_1_auto] [min-height:0] [overflow-y:auto] [padding:24px_28px] [display:flex] [flex-direction:column] [gap:24px]">
+      <div className="[color:var(--text-secondary)] [font-size:0.85rem] [line-height:1.5] [margin-top:-8px] [margin-bottom:8px] [max-width:75ch]">
+        {t('today.subtitle')}
+      </div>
 
       {isBrandNew ? (
         <EmptyState
-          title="ยินดีต้อนรับสู่ระบบประเมินความเสี่ยงพอร์ตโฟลิโอ 📈"
-          description="ยังไม่มีหุ้นหรือประวัติคำสั่งซื้อขายในพอร์ตของคุณในขณะนี้ เริ่มต้นโดยการเพิ่มหุ้นตัวแรกผ่านเมนูบันทึกการเทรดเพื่อคำนวณและแสดงผลสัญญาณความเสี่ยงรายวัน"
-          action="บันทึกเทรดตัวแรก"
+          title={t('today.empty_portfolio_title')}
+          description={t('today.empty_portfolio_description')}
+          action={t('today.empty_portfolio_action')}
           onAction={() => navigate('/journal')}
         />
       ) : loading ? (
-        <div className="today-content-loading">
-          <EmptyState title="กำลังโหลดข้อมูลสัญญาณ..." description="ระบบกำลังตรวจสอบสถานะความเสี่ยงของพอร์ตและอัปเดตราคาตลาดปัจจุบัน" />
+        <div className="[flex:1] [display:flex] [align-items:center] [justify-content:center] [min-height:300px]">
+          <EmptyState title={t('today.loading_title')} description={t('today.loading_description')} />
         </div>
       ) : unavailable ? (
-        <div className="today-content-error">
-          <EmptyState
-            title="ไม่สามารถโหลดข้อมูลสัญญาณได้"
-            description="ไม่พบคอนฟิกระบบ Supabase หรือข้อมูลราคาตลาดขัดข้อง โปรดตรวจสอบคอนฟิกและลองใหม่อีกครั้ง"
-            action="Refetch Data"
-            onAction={refetch}
-          />
+        <div className="[flex:1] [display:flex] [align-items:center] [justify-content:center] [min-height:300px]">
+          <EmptyState title={t('today.error_title')} description={t('today.error_description')} action="Refetch Data" onAction={refetch} />
         </div>
       ) : activeQueue.length === 0 ? (
-        <div className="today-main-layout empty-layout">
-          <div className="today-queue-area">
+        <div className="grid grid-cols-[minmax(0,1fr)_360px] items-start gap-8 max-[768px]:grid-cols-1 max-[768px]:gap-6">
+          <div className="[display:flex] [flex-direction:column] [gap:16px]">
             {queue.length > 0 ? (
-              <EmptyState
-                title="เคลียร์คิวสัญญาณเรียบร้อยแล้ว 🎯"
-                description="สัญญาณที่มีทั้งหมดได้รับการ Dismiss หรือตรวจสอบชั่วคราวแล้ว ระบบจะแสดงสัญญาณอีกครั้งตามเงื่อนไขความเสี่ยงใหม่"
-              />
+              <EmptyState title={t('today.cleared_title')} description={t('today.cleared_description')} />
             ) : (
               <EmptyState
-                title="พอร์ตโฟลิโอเป็นปกติ ไม่มีสัญญาณเตือนภัยวันนี้ 🎉"
-                description="พอร์ตการลงทุนปัจจุบันมีความสอดคล้องกับมาตรฐานความเสี่ยงและกฎ SOP ทุกข้อเรียบร้อย"
-                action="วิเคราะห์หุ้นเพิ่ม"
+                title={t('today.healthy_title')}
+                description={t('today.healthy_description')}
+                action={t('today.healthy_action')}
                 onAction={() => navigate('/command-center')}
               />
             )}
           </div>
-          <div className="today-sidebar-area">{pulseContent}</div>
+          <div className="[position:sticky] [top:32px] max-[768px]:[position:static]">{pulseContent}</div>
         </div>
       ) : (
-        <div className="today-main-layout">
+        <div className="[display:grid] [grid-template-columns:1fr_360px] [gap:32px] [align-items:start] max-[768px]:[grid-template-columns:1fr] max-[768px]:[gap:24px]">
           {/* Desktop view list */}
-          <div className="today-queue-area desktop-only">
+          <div className="[display:flex] [flex-direction:column] [gap:16px] max-[768px]:![display:none]">
             <AnimatePresence initial={false}>
               {activeQueue.map((item, idx) => {
                 const styles = getCategoryStyles(item.category);
@@ -287,41 +295,62 @@ export default function TodayPage() {
                     }}
                     whileHover={{ scale: 1.008 }}
                     whileTap={{ scale: 0.992 }}
-                    className={`today-card ${styles.borderClass}`}
+                    className={cn(
+                      'relative flex cursor-pointer flex-col gap-4 overflow-hidden rounded-md border bg-shell p-5 transition-[border-color,background-color,transform] duration-200 hover:bg-panel motion-reduce:transition-none',
+                      styles.borderClass
+                    )}
                     onClick={() => toggleExpand(cardId)}
                   >
-                    <div className="today-card-header">
-                      <div className="today-card-badge-row">
-                        <span className={`today-card-category-tag ${styles.labelClass}`}>
-                          {item.category === 'protect' && <span className="tag-pulse-dot" />}
+                    <div className="[display:flex] [justify-content:space-between] [align-items:center]">
+                      <div className="[display:flex] [gap:8px] [align-items:center]">
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1.5 rounded px-2 py-1 text-[0.68rem] font-bold tracking-[0.08em]',
+                            styles.labelClass
+                          )}
+                        >
+                          {item.category === 'protect' && (
+                            <span className="[width:6px] [height:6px] [border-radius:50%] [background:var(--fin-loss)] [animation:pulse-breathe_2.5s_ease-in-out_infinite] motion-reduce:[animation:none]" />
+                          )}
                           {styles.label}
                         </span>
-                        {item.ticker && <span className="today-card-ticker-tag num-font">{item.ticker}</span>}
+                        {item.ticker && (
+                          <span className="font-mono [font-size:0.75rem] [font-weight:700] [background:var(--border-subtle)] [color:var(--text-primary)] [padding:2px_6px] [border-radius:4px] num-font">
+                            {item.ticker}
+                          </span>
+                        )}
                       </div>
-                      <button className="today-card-dismiss-btn" onClick={(e) => handleDismiss(item, e)} aria-label="Dismiss alarm">
-                        <X className="dismiss-btn-icon" />
+                      <button
+                        className="flex cursor-pointer items-center justify-center rounded-full bg-transparent p-1 text-text-secondary transition-colors hover:bg-surface-hover hover:text-foreground"
+                        onClick={(e) => handleDismiss(item, e)}
+                        aria-label="Dismiss alarm"
+                      >
+                        <X className="[width:16px] [height:16px]" />
                       </button>
                     </div>
 
-                    <div className="today-card-body">
+                    <div className="[display:flex] [gap:16px] [align-items:flex-start]">
                       {styles.icon}
-                      <div className="today-card-text">
-                        <div className="today-card-reason">{item.reason}</div>
+                      <div className="[display:flex] [flex-direction:column] [gap:4px]">
+                        <div className="[font-size:0.95rem] [font-weight:500] [line-height:1.5] [color:var(--text-primary)]">{item.reason}</div>
                       </div>
                     </div>
 
-                    <div className="today-card-actions">
-                      <button className="today-card-cta-btn button-primary" onClick={(e) => handleCtaClick(item.ctaRoute, e)}>
+                    <div className="[display:flex] [justify-content:space-between] [align-items:center] [margin-top:8px]">
+                      <button
+                        className="inline-flex cursor-pointer items-center gap-2 rounded-md border-0 bg-brand px-3 py-1.5 text-[0.85rem] font-semibold text-text-inverse transition-colors hover:bg-brand-dark max-[768px]:flex-1 max-[768px]:justify-center max-[768px]:py-2.5"
+                        onClick={(e) => handleCtaClick(item.ctaRoute, e)}
+                      >
                         <span>{item.cta}</span>
-                        <ArrowRight className="cta-icon" />
+                        <ArrowRight className="[width:14px] [height:14px]" />
                       </button>
                       <button
                         type="button"
-                        className="today-card-expand-btn"
-                        aria-label={isExpanded ? `ย่อรายละเอียด ${item.title}` : `ขยายรายละเอียด ${item.title}`}
+                        className="[background:transparent] [border:none] [color:var(--text-secondary)] [cursor:pointer] [padding:6px] [border-radius:6px]"
+                        aria-label={t(isExpanded ? 'today.collapse_details' : 'today.expand_details', { title: item.title })}
                         aria-expanded={isExpanded}
                       >
-                        {isExpanded ? <ChevronUp className="expand-icon" /> : <ChevronDown className="expand-icon" />}
+                        {isExpanded ? <ChevronUp className="[width:18px] [height:18px]" /> : <ChevronDown className="[width:18px] [height:18px]" />}
                       </button>
                     </div>
 
@@ -331,15 +360,17 @@ export default function TodayPage() {
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2, ease: 'easeOut' }}
-                        className="today-card-expanded-content"
+                        className="[overflow:hidden]"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="today-card-evidence-divider" />
-                        <div className="today-card-evidence-grid">
+                        <div className="[height:1px] [background:var(--border-subtle)] [margin:12px_0]" />
+                        <div className="[display:grid] [grid-template-columns:repeat(auto-fill,_minmax(130px,_1fr))] [gap:12px]">
                           {Object.entries(item.evidence || {}).map(([key, val]) => (
-                            <div key={key} className="today-card-evidence-item">
-                              <div className="evidence-label">{key.replace(/([A-Z])/g, ' $1').toUpperCase()}</div>
-                              <div className="evidence-value num-font">
+                            <div key={key} className="[display:flex] [flex-direction:column] [gap:2px]">
+                              <div className="[font-size:0.62rem] [font-weight:700] [letter-spacing:0.05em] [color:var(--text-secondary)]">
+                                {key.replace(/([A-Z])/g, ' $1').toUpperCase()}
+                              </div>
+                              <div className="font-mono [font-size:0.85rem] [font-weight:600] [color:var(--text-primary)] num-font">
                                 {typeof val === 'number' ? val.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(val)}
                               </div>
                             </div>
@@ -354,7 +385,7 @@ export default function TodayPage() {
           </div>
 
           {/* Mobile view cycler (1 card at a time with buttons) */}
-          <div className="today-queue-area mobile-only">
+          <div className="[display:flex] [flex-direction:column] [gap:16px] ![display:none] max-[768px]:![display:flex]">
             {(() => {
               const currentItem = activeQueue[activeMobileIndex];
               if (!currentItem) return null;
@@ -362,11 +393,9 @@ export default function TodayPage() {
               const cardId = `mobile_${currentItem.category}_${currentItem.type}_${currentItem.ticker || 'global'}`;
 
               return (
-                <div className="today-mobile-card-container">
-                  <div className="today-mobile-card-indicator">
-                    <span>
-                      สัญญาณเตือน {activeMobileIndex + 1} จาก {activeQueue.length}
-                    </span>
+                <div className="max-[768px]:[display:flex] max-[768px]:[flex-direction:column] max-[768px]:[gap:16px]">
+                  <div className="max-[768px]:[font-size:0.8rem] max-[768px]:[font-weight:600] max-[768px]:[color:var(--text-secondary)] max-[768px]:[text-align:center]">
+                    <span>{t('today.alert_position', { current: activeMobileIndex + 1, total: activeQueue.length })}</span>
                   </div>
 
                   <motion.div
@@ -374,62 +403,89 @@ export default function TodayPage() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className={`today-card ${styles.borderClass}`}
+                    className={cn(
+                      'relative flex cursor-pointer flex-col gap-4 overflow-hidden rounded-md border bg-shell p-5 transition-[border-color,background-color,transform] duration-200 hover:bg-panel motion-reduce:transition-none',
+                      styles.borderClass
+                    )}
                   >
-                    <div className="today-card-header">
-                      <div className="today-card-badge-row">
-                        <span className={`today-card-category-tag ${styles.labelClass}`}>
-                          {currentItem.category === 'protect' && <span className="tag-pulse-dot" />}
+                    <div className="[display:flex] [justify-content:space-between] [align-items:center]">
+                      <div className="[display:flex] [gap:8px] [align-items:center]">
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1.5 rounded px-2 py-1 text-[0.68rem] font-bold tracking-[0.08em]',
+                            styles.labelClass
+                          )}
+                        >
+                          {currentItem.category === 'protect' && (
+                            <span className="[width:6px] [height:6px] [border-radius:50%] [background:var(--fin-loss)] [animation:pulse-breathe_2.5s_ease-in-out_infinite] motion-reduce:[animation:none]" />
+                          )}
                           {styles.label}
                         </span>
-                        {currentItem.ticker && <span className="today-card-ticker-tag num-font">{currentItem.ticker}</span>}
+                        {currentItem.ticker && (
+                          <span className="font-mono [font-size:0.75rem] [font-weight:700] [background:var(--border-subtle)] [color:var(--text-primary)] [padding:2px_6px] [border-radius:4px] num-font">
+                            {currentItem.ticker}
+                          </span>
+                        )}
                       </div>
-                      <button className="today-card-dismiss-btn" onClick={(e) => handleDismiss(currentItem, e)} aria-label="Dismiss Alarm">
-                        <X className="dismiss-btn-icon" />
+                      <button
+                        className="flex cursor-pointer items-center justify-center rounded-full bg-transparent p-1 text-text-secondary transition-colors hover:bg-surface-hover hover:text-foreground"
+                        onClick={(e) => handleDismiss(currentItem, e)}
+                        aria-label="Dismiss Alarm"
+                      >
+                        <X className="[width:16px] [height:16px]" />
                       </button>
                     </div>
 
-                    <div className="today-card-body">
+                    <div className="[display:flex] [gap:16px] [align-items:flex-start]">
                       {styles.icon}
-                      <div className="today-card-text">
-                        <div className="today-card-reason">{currentItem.reason}</div>
+                      <div className="[display:flex] [flex-direction:column] [gap:4px]">
+                        <div className="[font-size:0.95rem] [font-weight:500] [line-height:1.5] [color:var(--text-primary)]">
+                          {currentItem.reason}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="today-card-actions">
-                      <button className="today-card-cta-btn button-primary" onClick={(e) => handleCtaClick(currentItem.ctaRoute, e)}>
+                    <div className="[display:flex] [justify-content:space-between] [align-items:center] [margin-top:8px]">
+                      <button
+                        className="inline-flex cursor-pointer items-center gap-2 rounded-md border-0 bg-brand px-3 py-1.5 text-[0.85rem] font-semibold text-text-inverse transition-colors hover:bg-brand-dark max-[768px]:flex-1 max-[768px]:justify-center max-[768px]:py-2.5"
+                        onClick={(e) => handleCtaClick(currentItem.ctaRoute, e)}
+                      >
                         <span>{currentItem.cta}</span>
-                        <ArrowRight className="cta-icon" />
+                        <ArrowRight className="[width:14px] [height:14px]" />
                       </button>
                     </div>
 
-                    <div className="today-card-expanded-content mobile-evidence">
-                      <div className="today-card-evidence-divider" />
-                      <div className="today-card-evidence-grid">
+                    <div className="[overflow:hidden] mobile-evidence">
+                      <div className="[height:1px] [background:var(--border-subtle)] [margin:12px_0]" />
+                      <div className="[display:grid] [grid-template-columns:repeat(auto-fill,_minmax(130px,_1fr))] [gap:12px]">
                         {Object.entries(currentItem.evidence || {}).map(([key, val]) => (
-                          <div key={key} className="today-card-evidence-item">
-                            <div className="evidence-label">{key.toUpperCase()}</div>
-                            <div className="evidence-value num-font">{typeof val === 'number' ? val.toFixed(2) : String(val)}</div>
+                          <div key={key} className="[display:flex] [flex-direction:column] [gap:2px]">
+                            <div className="[font-size:0.62rem] [font-weight:700] [letter-spacing:0.05em] [color:var(--text-secondary)]">
+                              {key.toUpperCase()}
+                            </div>
+                            <div className="font-mono [font-size:0.85rem] [font-weight:600] [color:var(--text-primary)] num-font">
+                              {typeof val === 'number' ? val.toFixed(2) : String(val)}
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   </motion.div>
 
-                  <div className="today-mobile-navigation-row">
+                  <div className="max-[768px]:[display:flex] max-[768px]:[gap:12px]">
                     <button
-                      className="today-mobile-nav-btn"
+                      className="max-[768px]:[flex:1] max-[768px]:[text-align:center] max-[768px]:[font-size:0.85rem] max-[768px]:[font-weight:600] max-[768px]:[padding:10px] max-[768px]:[border-radius:8px] max-[768px]:[background:var(--bg-shell)] max-[768px]:[border:1px_solid_var(--border-subtle)] max-[768px]:[color:var(--text-primary)] max-[768px]:[cursor:pointer] max-[768px]:disabled:[opacity:0.4] max-[768px]:disabled:[cursor:not-allowed]"
                       disabled={activeMobileIndex === 0}
                       onClick={() => setActiveMobileIndex((prev) => prev - 1)}
                     >
-                      ย้อนกลับ / Prev
+                      {t('today.previous')}
                     </button>
                     <button
-                      className="today-mobile-nav-btn button-primary"
+                      className="flex-1 cursor-pointer rounded-md border-0 bg-brand p-2.5 text-center text-[0.85rem] font-semibold text-text-inverse hover:bg-brand-dark disabled:cursor-not-allowed disabled:bg-surface-hover disabled:text-text-muted"
                       disabled={activeMobileIndex === activeQueue.length - 1}
                       onClick={() => setActiveMobileIndex((prev) => prev + 1)}
                     >
-                      ถัดไป / Next
+                      {t('today.next')}
                     </button>
                   </div>
                 </div>
@@ -437,7 +493,7 @@ export default function TodayPage() {
             })()}
           </div>
 
-          <div className="today-sidebar-area">{pulseContent}</div>
+          <div className="[position:sticky] [top:32px] max-[768px]:[position:static]">{pulseContent}</div>
         </div>
       )}
     </div>

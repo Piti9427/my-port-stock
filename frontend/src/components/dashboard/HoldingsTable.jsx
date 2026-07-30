@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { formatCurrency } from '../../lib/format.js';
 import { DataTable } from '../ui/DataTable.jsx';
 import { EmptyState } from '../ui/EmptyState.jsx';
+import { useTranslation } from '../../i18n/useTranslation.js';
 
 function numberValue(value) {
   const numeric = Number(value);
@@ -11,7 +12,7 @@ function numberValue(value) {
 function semanticValue(value, ticker, { signed = false } = {}) {
   const numeric = Number.isFinite(Number(value)) ? Number(value) : 0;
   return (
-    <span className={numeric > 0 ? 'semantic-positive' : numeric < 0 ? 'semantic-negative' : 'semantic-neutral'}>
+    <span className={numeric > 0 ? 'text-fin-profit' : numeric < 0 ? 'text-fin-loss' : 'text-text-secondary'}>
       {formatCurrency(numeric, ticker, { signed })}
     </span>
   );
@@ -26,6 +27,7 @@ export function HoldingsTable({
   onRetry = null,
   onFirstRunAction = null,
 }) {
+  const { t } = useTranslation();
   const rows = useMemo(() => {
     const totalValue = holdings.reduce((sum, holding) => sum + numberValue(holding.shares) * numberValue(holding.price), 0);
 
@@ -72,7 +74,7 @@ export function HoldingsTable({
         render: (row) => {
           const val = Number.isFinite(Number(row.pnlPct)) ? Number(row.pnlPct) : 0;
           return (
-            <span className={val > 0 ? 'semantic-positive' : val < 0 ? 'semantic-negative' : 'semantic-neutral'}>
+            <span className={val > 0 ? 'text-fin-profit' : val < 0 ? 'text-fin-loss' : 'text-text-secondary'}>
               {val >= 0 ? '+' : ''}
               {val.toFixed(2)}%
             </span>
@@ -86,26 +88,28 @@ export function HoldingsTable({
         align: 'right',
         render: (row) => (
           <button
-            className="btn-secondary holdings-plan-button"
+            className="min-h-[30px] rounded-lg border border-border bg-panel-solid px-[9px] py-1 text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:text-foreground"
             type="button"
-            aria-label={`วางแผน ${row.ticker}`}
+            aria-label={t('dashboard.plan_ticker', { ticker: row.ticker })}
             onClick={(event) => {
               event.stopPropagation();
               onPlan?.(row.ticker);
             }}
           >
-            วางแผน
+            {t('dashboard.plan')}
           </button>
         ),
       },
     ],
-    [onPlan]
+    [onPlan, t]
   );
 
   if (['INSUFFICIENT_DATA', 'UNAUTHORIZED', 'ERROR'].includes(status)) {
     return (
-      <section className="dashboard-holdings" aria-labelledby="dashboard-holdings-title">
-        <h2 id="dashboard-holdings-title">Holdings</h2>
+      <section className="min-w-0 overflow-hidden rounded-xl border border-border bg-surface p-5" aria-labelledby="dashboard-holdings-title">
+        <h2 id="dashboard-holdings-title" className="mb-4 text-[0.95rem] font-semibold text-foreground">
+          Holdings
+        </h2>
         <EmptyState
           title="Portfolio data unavailable"
           description="Supabase holdings could not be loaded for this account."
@@ -116,11 +120,15 @@ export function HoldingsTable({
   }
 
   return (
-    <section className="dashboard-holdings" aria-labelledby="dashboard-holdings-title">
-      <div className="dashboard-section-heading">
+    <section className="min-w-0 overflow-hidden rounded-xl border border-border bg-surface p-5" aria-labelledby="dashboard-holdings-title">
+      <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 id="dashboard-holdings-title">Holdings</h2>
-          <p>Positions derived from the authenticated Supabase portfolio.</p>
+          <h2 id="dashboard-holdings-title" className="m-0 text-[0.95rem] font-semibold text-foreground">
+            Holdings
+          </h2>
+          <p className="mt-1 max-w-[64ch] text-[0.78rem] leading-[1.45] text-text-secondary">
+            Positions derived from the authenticated Supabase portfolio.
+          </p>
         </div>
       </div>
       <DataTable
@@ -130,9 +138,9 @@ export function HoldingsTable({
         skeletonRows={5}
         onRowClick={onOpenTicker ? (row) => onOpenTicker(row.ticker) : undefined}
         emptyState={{
-          title: 'เริ่มต้นโดยเพิ่มหุ้นในพอร์ต',
-          description: 'No portfolio data yet. บันทึก trade แรกเพื่อให้ Supabase holdings สร้างสถานะจริง',
-          action: onFirstRunAction ? { label: 'บันทึกเทรดครั้งแรก', onClick: onFirstRunAction } : undefined,
+          title: t('dashboard.empty_holdings_title'),
+          description: t('dashboard.empty_holdings_description'),
+          action: onFirstRunAction ? { label: t('dashboard.empty_holdings_action'), onClick: onFirstRunAction } : undefined,
         }}
       />
     </section>

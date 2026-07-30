@@ -84,7 +84,7 @@ test('Market Explorer shows market, sector, and theme overview without fake perf
 test('Market Explorer quick analyze buttons route each ticker to Command Center prefilled ticker', async () => {
   renderMarketExplorer();
 
-  const tickerList = await screen.findByRole('listbox', { name: 'Ticker list' });
+  const tickerList = await screen.findByRole('list', { name: 'Ticker list' });
   fireEvent.click(within(tickerList).getByRole('button', { name: 'Quick analyze NVDA' }));
 
   await waitFor(() => {
@@ -109,13 +109,12 @@ test('Market Explorer flashes refreshed quotes with semantic direction', async (
 
   renderMarketExplorer();
 
-  expect(await screen.findByText('฿200.00')).toHaveClass('data-update-flash', 'data-update-flash--up');
+  expect(await screen.findByText('฿200.00')).toHaveClass('animate-[data-update-flash-up_0.6s_ease-out]');
 
-  const tickerList = screen.getByRole('listbox', { name: 'Ticker list' });
-  const nvdaOption = within(tickerList).getByRole('option', { name: /NVDA.*NVIDIA Corp\./i });
-  fireEvent.click(within(nvdaOption).getAllByRole('button')[0]);
+  const tickerList = screen.getByRole('list', { name: 'Ticker list' });
+  fireEvent.click(within(tickerList).getByRole('button', { name: /NVDA.*NVIDIA Corp\./i }));
 
-  expect(await screen.findByText('฿190.00')).toHaveClass('data-update-flash', 'data-update-flash--down');
+  expect(await screen.findByText('฿190.00')).toHaveClass('animate-[data-update-flash-down_0.6s_ease-out]');
 });
 
 test('Market Explorer treats a successful but incomplete quote payload as unavailable', async () => {

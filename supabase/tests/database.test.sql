@@ -1,11 +1,42 @@
 BEGIN;
-SELECT plan(18);
+SELECT plan(22);
 
 SELECT has_table('public', 'holdings', 'holdings exists after empty-database migration replay');
 SELECT has_table('public', 'watchlists', 'watchlists exists after empty-database migration replay');
 SELECT has_table('public', 'journal', 'journal exists after empty-database migration replay');
 SELECT has_table('public', 'import_batches', 'import_batches exists after empty-database migration replay');
 SELECT has_table('public', 'user_preferences', 'user_preferences exists after empty-database migration replay');
+SELECT has_column('public', 'user_preferences', 'language', 'user_preferences language column exists');
+SELECT ok(
+  (
+    SELECT is_nullable = 'NO'
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'user_preferences'
+      AND column_name = 'language'
+  ),
+  'user_preferences language is not nullable'
+);
+SELECT ok(
+  (
+    SELECT column_default = '''th''::text'
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'user_preferences'
+      AND column_name = 'language'
+  ),
+  'user_preferences language defaults to th'
+);
+SELECT ok(
+  EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'user_preferences_language_check'
+      AND conrelid = 'public.user_preferences'::regclass
+      AND contype = 'c'
+  ),
+  'user_preferences language allows only supported values'
+);
 SELECT has_function('public', 'requesting_user_id', ARRAY[]::text[], 'requesting_user_id exists');
 SELECT has_function('private', 'recalculate_holdings', ARRAY[]::text[], 'private holdings trigger function exists');
 SELECT has_trigger('public', 'journal', 'trg_journal_recalculate_holdings', 'journal recalculation trigger exists');

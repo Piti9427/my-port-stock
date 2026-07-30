@@ -7,6 +7,7 @@ import { EmptyState } from '../components/ui/EmptyState.jsx';
 import { JournalFilters } from '../components/journal/JournalFilters.jsx';
 import { JournalTradeTable } from '../components/journal/JournalTradeTable.jsx';
 import { TradeLogDrawer } from '../components/journal/TradeLogDrawer.jsx';
+import { useTranslation } from '../i18n/useTranslation.js';
 
 function normalizeTicker(value) {
   return String(value || '')
@@ -63,6 +64,7 @@ function parseSort(searchParams) {
 }
 
 export default function JournalPage() {
+  const { t } = useTranslation();
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -177,39 +179,49 @@ export default function JournalPage() {
     });
   };
 
-  const emptyDescription = trades.length === 0 ? 'บันทึกเทรดครั้งแรกเพื่อเริ่มติดตาม' : 'ไม่มี trade ที่ตรงกับ filter นี้';
+  const emptyDescription = trades.length === 0 ? t('journal.empty_first') : t('journal.empty_filter');
 
   return (
-    <div className="journal-page">
-      <header className="glass-panel journal-header">
-        <div className="journal-header-top">
+    <div className="[flex:1_1_auto] [min-height:0] [overflow-y:auto] [padding:24px_28px] [display:grid] [grid-template-columns:minmax(0,_1fr)_320px] [grid-template-rows:auto_1fr] [gap:20px] [grid-template-areas:'header_header'_'trades_perf'] max-[1100px]:[grid-template-columns:1fr] max-[1100px]:[grid-template-areas:'header'_'perf'_'trades'] max-[560px]:[padding:var(--space-4)] max-[768px]:![overflow-y:visible] max-[768px]:![height:auto] max-[768px]:![min-height:0]">
+      <header className="rounded-lg border border-border bg-panel p-5 sm:p-6 shadow-none [grid-area:header] [display:grid] [gap:var(--space-5)] [&_h2]:[margin:0_0_var(--space-1)] [&_h2]:[color:var(--text-primary)] [&_h2]:[font-size:1.2rem] [&_p]:[margin:0] [&_p]:[color:var(--text-secondary)] [&_p]:[font-size:0.84rem] [&_p]:[line-height:1.55]">
+        <div className="[display:flex] [align-items:flex-start] [justify-content:space-between] [gap:var(--space-4)] max-[1100px]:[flex-direction:column]">
           <div>
-            <h2>บันทึกการเทรดและวิเคราะห์หลังจบเกม</h2>
-            <p>ทบทวน thesis, execution, risk/reward และ post-mortem จาก Supabase journal</p>
+            <h2>{t('journal.title')}</h2>
+            <p>{t('journal.subtitle')}</p>
           </div>
-          <button className="btn-analyze journal-log-button" type="button" onClick={() => setDrawerOpen(true)}>
+          <button
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-transparent bg-brand px-5 py-3 font-sans text-sm font-bold tracking-wide text-text-inverse transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-hover disabled:text-text-secondary"
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+          >
             <Plus size={16} aria-hidden="true" />
-            Log trade
+            {t('journal.log_trade')}
           </button>
         </div>
         <JournalFilters filters={filters} modeOptions={modeOptions} tickerOptions={tickerOptions} onFilterChange={setFilter} onReset={resetFilters} />
       </header>
 
-      <section className="glass-panel journal-trades" aria-labelledby="journal-trades-title">
-        <div className="panel-header">
-          <span id="journal-trades-title" className="panel-title">
-            ประวัติคำสั่งซื้อขาย
+      <section
+        className="rounded-lg border border-border bg-panel shadow-none [grid-area:trades] [display:flex] [flex-direction:column] [overflow:hidden]"
+        aria-labelledby="journal-trades-title"
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-border-subtle px-6 py-4 max-[640px]:flex-col max-[640px]:items-start">
+          <span
+            id="journal-trades-title"
+            className="[font-size:0.85rem] [font-weight:600] [letter-spacing:0.06em] [text-transform:uppercase] [color:var(--text-secondary)]"
+          >
+            {t('journal.trade_history')}
           </span>
-          <span className="data-stamp">
+          <span className="font-mono [font-size:0.75rem] [color:var(--text-secondary)] [display:flex] [align-items:center] [gap:4px]">
             <Clock size={10} aria-hidden="true" />
             <span>Supabase journal data</span>
           </span>
         </div>
         {error ? (
-          <EmptyState title="Insufficient data" description={error} action={{ label: 'Retry', onClick: loadData }} />
+          <EmptyState title={t('common.insufficient_data')} description={error} action={{ label: t('common.retry'), onClick: loadData }} />
         ) : (
           <JournalTradeTable
-            emptyAction={trades.length === 0 ? { label: 'บันทึกเทรดครั้งแรก', onClick: () => setDrawerOpen(true) } : undefined}
+            emptyAction={trades.length === 0 ? { label: t('journal.log_trade'), onClick: () => setDrawerOpen(true) } : undefined}
             emptyDescription={emptyDescription}
             expandedTradeId={expandedTradeId}
             loading={loading}
@@ -221,25 +233,31 @@ export default function JournalPage() {
         )}
       </section>
 
-      <aside className="glass-panel journal-perf" aria-labelledby="journal-loop-title">
-        <div id="journal-loop-title" className="panel-title">
-          Decision loop
+      <aside
+        className="rounded-lg border border-border bg-panel p-5 sm:p-6 shadow-none [&_p]:[margin:0] [&_p]:[color:var(--text-secondary)] [&_p]:[font-size:0.84rem] [&_p]:[line-height:1.55] [grid-area:perf] [display:flex] [flex-direction:column] [gap:16px]"
+        aria-labelledby="journal-loop-title"
+      >
+        <div
+          id="journal-loop-title"
+          className="[font-size:0.85rem] [font-weight:600] [letter-spacing:0.06em] [text-transform:uppercase] [color:var(--text-secondary)]"
+        >
+          {t('journal.decision_loop')}
         </div>
-        <div className="journal-loop-summary">
+        <div className="[&_div]:[display:flex] [&_div]:[align-items:center] [&_div]:[justify-content:space-between] [&_div]:[gap:var(--space-3)] [&_span]:[color:var(--text-secondary)] [&_span]:[font-size:0.72rem] [&_span]:[text-transform:uppercase] [&_strong]:[margin:0] [&_strong]:[color:var(--text-primary)] [&_strong]:font-mono [display:grid] [gap:var(--space-3)]">
           <div>
-            <span>Total</span>
+            <span>{t('common.total')}</span>
             <strong>{trades.length}</strong>
           </div>
           <div>
-            <span>Filtered</span>
+            <span>{t('journal.filtered')}</span>
             <strong>{filteredTrades.length}</strong>
           </div>
           <div>
-            <span>Closed</span>
+            <span>{t('journal.status_closed')}</span>
             <strong>{trades.filter((trade) => String(trade.status).toUpperCase() === 'CLOSED').length}</strong>
           </div>
         </div>
-        <p>Closed rows should carry thesis and post-mortem notes so Analytics can learn from realized outcomes.</p>
+        <p>{t('journal.closed_notes')}</p>
       </aside>
 
       <TradeLogDrawer

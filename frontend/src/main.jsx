@@ -12,48 +12,40 @@ const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const devAuthBypass = isDevAuthBypassEnabled();
 const clerkAppearance = {
   variables: {
-    colorPrimary: '#10b981',
-    colorBackground: '#111111',
-    colorForeground: '#ededed',
-    colorInput: '#171717',
-    colorBorder: '#262626',
-    colorNeutral: '#a3a3a3',
+    colorPrimary: 'var(--brand-primary)',
+    colorBackground: 'var(--surface-elevated)',
+    colorForeground: 'var(--text-primary)',
+    colorInput: 'var(--surface)',
+    colorBorder: 'var(--border)',
+    colorNeutral: 'var(--text-secondary)',
     borderRadius: '0.5rem',
     fontFamily: '"Plus Jakarta Sans", "IBM Plex Sans Thai", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   elements: {
-    modalBackdrop: 'bg-black/80 backdrop-blur-none',
-    modalContent: 'bg-[#111111] text-[#ededed] border border-[#262626] shadow-none',
-    cardBox: 'bg-[#111111] border border-[#262626] shadow-none',
-    card: 'bg-[#111111] text-[#ededed] shadow-none',
-    headerTitle: 'text-[#ededed]',
-    headerSubtitle: 'text-[#a3a3a3]',
-    socialButtonsBlockButton: 'bg-[#171717] border-[#262626] text-[#ededed] shadow-none hover:bg-[#1f1f1f]',
-    dividerLine: 'bg-[#262626]',
-    dividerText: 'text-[#737373]',
-    formFieldLabel: 'text-[#ededed]',
-    formFieldInput: 'bg-[#171717] border-[#262626] text-[#ededed] shadow-none placeholder:text-[#737373] focus:border-[#10b981]',
-    formButtonPrimary: 'bg-[#10b981] text-[#020617] shadow-none hover:bg-[#34d399]',
-    footer: 'bg-[#0f0f0f] border-t border-[#262626]',
-    footerActionText: 'text-[#a3a3a3]',
-    footerActionLink: 'text-[#34d399] hover:text-[#6ee7b7]',
-    identityPreviewText: 'text-[#ededed]',
-    identityPreviewEditButton: 'text-[#34d399]',
-    otpCodeFieldInput: 'bg-[#171717] border-[#262626] text-[#ededed]',
+    modalBackdrop: 'bg-overlay backdrop-blur-none',
+    modalContent: 'border border-border bg-surface-elevated text-foreground shadow-none',
+    cardBox: 'border border-border bg-surface-elevated shadow-none',
+    card: 'bg-surface-elevated text-foreground shadow-none',
+    headerTitle: 'text-foreground',
+    headerSubtitle: 'text-text-secondary',
+    socialButtonsBlockButton: 'border-border bg-surface text-foreground shadow-none hover:bg-surface-hover',
+    dividerLine: 'bg-border',
+    dividerText: 'text-text-muted',
+    formFieldLabel: 'text-foreground',
+    formFieldInput: 'border-border bg-surface text-foreground shadow-none placeholder:text-text-muted focus:border-brand',
+    formButtonPrimary: 'bg-brand text-text-inverse shadow-none hover:bg-brand-dark',
+    footer: 'border-t border-border bg-shell',
+    footerActionText: 'text-text-secondary',
+    footerActionLink: 'text-brand hover:text-fin-profit',
+    identityPreviewText: 'text-foreground',
+    identityPreviewEditButton: 'text-brand',
+    otpCodeFieldInput: 'border-border bg-surface text-foreground',
   },
 };
 
 if (!PUBLISHABLE_KEY && !devAuthBypass) {
   createRoot(document.getElementById('root')).render(
-    <div
-      style={{
-        padding: '2rem',
-        color: 'white',
-        background: 'black',
-        height: '100vh',
-        fontFamily: 'sans-serif',
-      }}
-    >
+    <div className="h-screen bg-background p-8 font-sans text-foreground">
       <h2>Missing Clerk Publishable Key</h2>
       <p>
         Please add <code>VITE_CLERK_PUBLISHABLE_KEY</code> to your <code>frontend/.env</code> file.

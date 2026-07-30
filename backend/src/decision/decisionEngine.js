@@ -432,7 +432,7 @@ function evaluateDecision(packet, options = {}) {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     if (diffDays >= 0 && diffDays <= 5) {
       warnings.push(
-        `Earnings proximity gate: Next earnings in ${diffDays} days (≤ 5 days). Position size capped to ไม้ 1 (30% max).`,
+        `Earnings proximity gate: Next earnings in ${diffDays} days (≤ 5 days). Position size capped to Tranche 1 (30% max).`,
       );
     }
   }

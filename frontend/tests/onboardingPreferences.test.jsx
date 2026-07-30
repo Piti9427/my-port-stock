@@ -71,8 +71,8 @@ describe('Onboarding and Preferences Provider Flow', () => {
     // Default choices: THB, beginner, light should be active
     const thbBtn = screen.getByRole('button', { name: /THB/ });
     const usdBtn = screen.getByRole('button', { name: /USD/ });
-    expect(thbBtn).toHaveClass('active');
-    expect(usdBtn).not.toHaveClass('active');
+    expect(thbBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(usdBtn).toHaveAttribute('aria-pressed', 'false');
 
     // Click USD and Advanced and Dark mode
     fireEvent.click(usdBtn);
@@ -101,10 +101,55 @@ describe('Onboarding and Preferences Provider Flow', () => {
           reporting_currency: 'USD',
           disclosure_level: 'advanced',
           theme: 'dark',
+          language: 'th',
         },
       })
     );
 
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+  });
+
+  test('new user can switch onboarding content to English before saving preferences', async () => {
+    const fetchSpy = vi.spyOn(api, 'fetchWithAuth');
+    fetchSpy.mockResolvedValueOnce({
+      reporting_currency: 'THB',
+      disclosure_level: 'beginner',
+      theme: 'light',
+      language: 'th',
+      onboarding_completed_at: null,
+    });
+
+    await act(async () => {
+      render(
+        <PreferencesProvider>
+          <OnboardingPage />
+        </PreferencesProvider>
+      );
+    });
+
+    expect(screen.getByRole('heading', { name: 'ยินดีต้อนรับสู่ MyPortStock' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to English' }));
+    expect(screen.getByRole('heading', { name: 'Welcome to MyPortStock' })).toBeInTheDocument();
+
+    fetchSpy.mockResolvedValueOnce({
+      reporting_currency: 'THB',
+      disclosure_level: 'beginner',
+      theme: 'light',
+      language: 'en',
+      onboarding_completed_at: '2026-07-29T00:00:00.000Z',
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Save and continue' }));
+    });
+
+    expect(fetchSpy).toHaveBeenLastCalledWith(
+      '/api/preferences',
+      expect.any(Function),
+      expect.objectContaining({
+        method: 'PUT',
+        body: expect.objectContaining({ language: 'en' }),
+      })
+    );
   });
 });

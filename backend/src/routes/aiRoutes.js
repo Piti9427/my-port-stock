@@ -30,6 +30,10 @@ const { broadcast } = require("../ws/agentEventBus");
 
 const router = express.Router();
 
+function normalizeResponseLanguage(value) {
+  return value === "en" ? "en" : "th";
+}
+
 function containsDisallowedControlCharacter(message) {
   // Intentionally reject non-whitespace C0 control characters in user prompts.
   // eslint-disable-next-line no-control-regex
@@ -45,8 +49,12 @@ const ChatMessageSchema = z
 
 router.post("/chat", async (req, res, next) => {
   const ticker = normalizeTicker(req.body?.ticker);
+  const language = normalizeResponseLanguage(req.body?.language);
   if (!ticker) {
-    return res.status(200).json(insufficientData("Invalid ticker format"));
+    return res.status(200).json({
+      language,
+      ...insufficientData("Invalid ticker format"),
+    });
   }
 
   const parsedMessage = ChatMessageSchema.safeParse(req.body?.message);
@@ -69,6 +77,7 @@ router.post("/chat", async (req, res, next) => {
         as_of: new Date().toISOString(),
         ticker,
         decision_mode: decisionMode,
+        language,
         ...packet,
         message: packet.error_details,
       });
@@ -79,12 +88,14 @@ router.post("/chat", async (req, res, next) => {
       message,
       decisionMode,
       packet,
+      language,
     });
 
     return res.status(200).json({
       as_of: new Date().toISOString(),
       ticker,
       decision_mode: decisionMode,
+      language,
       ...chat,
     });
   } catch (error) {
@@ -94,8 +105,12 @@ router.post("/chat", async (req, res, next) => {
 
 router.post("/analyze", async (req, res, next) => {
   const ticker = normalizeTicker(req.body?.ticker);
+  const language = normalizeResponseLanguage(req.body?.language);
   if (!ticker) {
-    return res.status(200).json(insufficientData("Invalid ticker format"));
+    return res.status(200).json({
+      language,
+      ...insufficientData("Invalid ticker format"),
+    });
   }
 
   const decisionMode = normalizeDecisionMode(req.body.decision_mode);
@@ -123,9 +138,10 @@ router.post("/analyze", async (req, res, next) => {
         { type: "AGENT_STATE_CHANGE", agent: "cio", state: "IDLE", ticker },
         { userId },
       );
-      return res
-        .status(200)
-        .json(buildInsufficientAnalyzeResponse(packet, ticker, decisionMode));
+      return res.status(200).json({
+        language,
+        ...buildInsufficientAnalyzeResponse(packet, ticker, decisionMode),
+      });
     }
 
     const oracleData = await runMarketOracle(ticker);
@@ -133,6 +149,7 @@ router.post("/analyze", async (req, res, next) => {
       ticker,
       packet.portfolio_context,
       oracleData,
+      language,
     );
 
     packet.fundamental_packet = {
@@ -154,6 +171,7 @@ router.post("/analyze", async (req, res, next) => {
 
     return res.status(200).json({
       as_of: new Date().toISOString(),
+      language,
       packet,
       ...analysis,
     });
